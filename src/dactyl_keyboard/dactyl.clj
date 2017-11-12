@@ -18,27 +18,7 @@
 (def mount-width (+ keyswitch-width 3))
 (def mount-height (+ keyswitch-height 3))
 
-(def old-single-plate
-  (let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
-                      (translate [0
-                                  (+ (/ 1.5 2) (/ keyswitch-height 2))
-                                  (/ plate-thickness 2)]))
-        left-wall (->> (cube 1.5 (+ keyswitch-height 3) plate-thickness)
-                       (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
-                                   0
-                                   (/ plate-thickness 2)]))
-        side-nub (->> (binding [*fn* 30] (cylinder 1 2.75))
-                      (rotate (/ π 2) [1 0 0])
-                      (translate [(+ (/ keyswitch-width 2)) 0 1])
-                      (hull (->> (cube 1.5 2.75 plate-thickness)
-                                 (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
-                                             0
-                                             (/ plate-thickness 2)]))))
-        plate-half (union top-wall left-wall (with-fn 100 side-nub))]
-    (union plate-half
-           (->> plate-half
-                (mirror [1 0 0])
-                (mirror [0 1 0])))))
+
 
 (def alps-width 15.6)
 (def alps-notch-width 15.5)
@@ -65,6 +45,46 @@
            (->> plate-half
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
+
+; Paddles that stick out below, so the fingers and thumb can be
+; printed separately then glued together.
+
+(let [glue-joint-height (* 5 plate-thickness)
+      glue-joint-wall-thickness 0.1 ; how much plastic for the paddle
+      glue-joint-glue-thickness 0.1 ; how much thickness to leave for glue
+      glue-joint-lr-shape (cube glue-joint-wall-thickness
+                                mount-height
+                                glue-joint-height)
+      glue-joint-tb-shape (cube mount-width
+                                glue-joint-wall-thickness
+                                glue-joint-height)]
+      
+  (def glue-joint-left
+    (->> glue-joint-lr-shape
+         (translate [(- 0
+                        (/ mount-width 2)
+                        (/ glue-joint-glue-thickness 2)
+                        glue-joint-wall-thickness)
+                     0
+                     (- plate-thickness (/ glue-joint-height 2))])))
+  (def glue-joint-right
+    (->> glue-joint-lr-shape
+         (translate [(+ (/ mount-width 2)
+                        (/ glue-joint-glue-thickness 2)
+                        glue-joint-wall-thickness)
+                     0
+                     (- plate-thickness (/ glue-joint-height 2))])))
+  (def glue-joint-center-left
+    (->> glue-joint-lr-shape
+         (translate [(/ glue-joint-glue-thickness 2)
+                     0
+                     (- plate-thickness (/ glue-joint-height 2))])))
+  (def glue-joint-center-right
+    (->> glue-joint-lr-shape
+         (translate [(- 0 glue-joint-wall-thickness (/ glue-joint-glue-thickness 2))
+                     0
+                     (- plate-thickness (/ glue-joint-height 2))]))))
+  
 
 
 ;;;;;;;;;;;;;;;;
@@ -145,6 +165,34 @@
     (->> placed-shape
          (rotate (/ π 12) [0 1 0])
          (translate [0 0 13]))))
+
+(defn between-key-place [column column1 column2 row row1 row2 shape]
+  ; For placing things on the sides of key places that need to be
+  ; parallel. Column and row are as in key-place. Column1, column2,
+  ; row1, row2 are for averaging angles. If column1 == column2 ==
+  ; column and row1 == row2 == row, this works the same as key-place.
+  (let [column-for-rotation (/ (+ column1 column2) 2)
+        row-for-rotation (/ (+ row1 row2) 2)
+        row-placed-shape (->> shape
+                              (rotate (- 0 (* α (- (- 2 row) (- 2 row-for-rotation)))) [1 0 0])
+                              (translate [0 0 (- row-radius)])
+                              (rotate (* α (- 2 row)) [1 0 0])
+                              (translate [0 0 row-radius]))
+        column-offset (cond
+                        (= column 2) [0 2.82 -3.0] ;;was moved -4.5
+                        (>= column 4) [0 -5.8 5.64]
+                        :else [0 0 0])
+        column-angle (* β (- 2 column))
+        placed-shape (->> row-placed-shape
+                          (rotate (- 0 (* β (- (- 2 column) (- 2 column-for-rotation)))) [0 1 0])
+                          (translate [0 0 (- column-radius)])
+                          (rotate column-angle [0 1 0])
+                          (translate [0 0 column-radius])
+                          (translate column-offset))]
+    (->> placed-shape
+         (rotate (/ π 12) [0 1 0])
+         (translate [0 0 13]))))
+
 
 (defn case-place [column row shape]
   (let [row-placed-shape (->> shape
@@ -357,7 +405,7 @@
             (thumb-place 2 -1 web-post-br))
 
       ;;Connecting the thumb to everything
-      (triangle-hulls (thumb-place 0 -1/2 thumb-br)
+      #_(triangle-hulls (thumb-place 0 -1/2 thumb-br)
                       (key-place 1 4 web-post-bl)
                       (thumb-place 0 -1/2 thumb-tr)
                       (key-place 1 4 web-post-tl)
@@ -374,10 +422,11 @@
                       (key-place 0 3 web-post-tl)
                       (thumb-place 1 1 web-post-br)
                       (thumb-place 1 1 web-post-tr))
-      (hull (thumb-place 0 -1/2 web-post-tr)
+      #_(hull (thumb-place 0 -1/2 web-post-tr)
             (thumb-place 0 -1/2 thumb-tr)
             (key-place 1 4 web-post-bl)
-            (key-place 1 4 web-post-tl))))))
+            (key-place 1 4 web-post-tl))
+      ))))
 
 (def thumb
   (union
@@ -403,7 +452,7 @@
   (concat (range start end step) [end]))
 
 (def wall-step 0.2)
-(def wall-sphere-n 20) ;;Sphere resolution, lower for faster renders
+(def wall-sphere-n 3) ;;Sphere resolution, lower for faster renders
 
 (defn wall-sphere-at [coords]
   (->> (sphere 1)
@@ -733,12 +782,14 @@
            (place 1 -1/2 thumb-br)
            (place 2 -1 web-post-br)))))
 
-(def new-case
+(def new-case-fingers
   (union front-wall
          right-wall
          back-wall
-         left-wall
-         thumb-back-wall
+         left-wall))
+
+(def new-case-thumb
+  (union thumb-back-wall
          thumb-left-wall
          thumb-front-wall))
 
@@ -1112,7 +1163,7 @@
 
 (def teensy-width 20)
 (def teensy-height 12)
-(def teensy-length 33)
+(def teensy-length 40)
 
 (def io-exp-cover (circuit-cover io-exp-width io-exp-length io-exp-height))
 (def teensy-cover (circuit-cover teensy-width teensy-length teensy-height))
@@ -1191,6 +1242,17 @@
          (key-place 1/2 3/2))))
 
 ;;;;;;;;;;;;;;;;;;
+;; Glue Joints  ;;
+;;;;;;;;;;;;;;;;;;
+(def fingers-glue-joints
+  (union
+   #_(key-place 1 4 (color [1 0 0] glue-joint-left))
+   #_(key-place 0 4 (color [0 1 0] glue-joint-right))
+   (between-key-place 0.5 0 1 4 4 4 (color [1 0 0] glue-joint-center-left))
+   (between-key-place 0.5 0 1 4 4 4 (color [0 1 0] glue-joint-center-right))))
+
+
+;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
 
@@ -1225,8 +1287,8 @@
   (difference
    (union key-holes
           connectors
-          thumb
-          new-case
+          #_new-case-fingers
+          fingers-glue-joints
           teensy-support)
    trrs-hole-just-circle
    screw-holes))
@@ -1241,26 +1303,32 @@
            trrs-hole-just-circle
            screw-holes)))
 
-(spit "things/switch-hole.scad"
-      (write-scad single-plate))
+(def dactyl-top-right-thumb
+  (union new-case-thumb thumb))
 
-(spit "things/alps-holes.scad"
-      (write-scad (union connectors key-holes)))
+(spit "things/dactyl-top-right-thumb.scad" (write-scad dactyl-top-right-thumb))
+
+
+;; (spit "things/switch-hole.scad"
+      ;; (write-scad single-plate))
+
+;; (spit "things/alps-holes.scad"
+      ;; (write-scad (union connectors key-holes)))
 
 (spit "things/dactyl-top-right.scad"
       (write-scad dactyl-top-right))
 
-(spit "things/dactyl-bottom-right.scad"
-      (write-scad dactyl-bottom-right))
+;; (spit "things/dactyl-bottom-right.scad"
+;;       (write-scad dactyl-bottom-right))
 
-(spit "things/dactyl-top-left.scad"
-      (write-scad dactyl-top-left))
+;; (spit "things/dactyl-top-left.scad"
+      ;; (write-scad dactyl-top-left))
 
-(spit "things/dactyl-bottom-left.scad"
-      (write-scad dactyl-bottom-left))
+;; (spit "things/dactyl-bottom-left.scad"
+       ;; (write-scad dactyl-bottom-left))
 
-(spit "things/dactyl-top-left-with-teensy.scad"
-      (write-scad (mirror [-1 0 0] dactyl-top-right)))
+;; (spit "things/dactyl-top-left-with-teensy.scad"
+;;       (write-scad (mirror [-1 0 0] dactyl-top-right)))
 
-(spit "things/dactyl-bottom-left-with-teensy.scad"
-      (write-scad (mirror [-1 0 0] dactyl-bottom-right)))
+;; (spit "things/dactyl-bottom-left-with-teensy.scad"
+;;       (write-scad (mirror [-1 0 0] dactyl-bottom-right)))
