@@ -49,31 +49,16 @@
 ; Paddles that stick out below, so the fingers and thumb can be
 ; printed separately then glued together.
 
-(let [glue-joint-height (* 5 plate-thickness)
-      glue-joint-wall-thickness 0.1 ; how much plastic for the paddle
-      glue-joint-glue-thickness 0.1 ; how much thickness to leave for glue
-      glue-joint-lr-shape (cube glue-joint-wall-thickness
+(def glue-joint-height (* 3 plate-thickness))
+(def glue-joint-wall-thickness 1.2) ; how much plastic for the paddle
+(def glue-joint-glue-thickness 0.1) ; how much thickness to leave for glue
+(def glue-joint-lr-shape (cube glue-joint-wall-thickness
                                 mount-height
-                                glue-joint-height)
-      glue-joint-tb-shape (cube mount-width
+                                glue-joint-height))
+(def glue-joint-tb-shape (cube mount-width
                                 glue-joint-wall-thickness
-                                glue-joint-height)]
+                                glue-joint-height))
       
-  (def glue-joint-left
-    (->> glue-joint-lr-shape
-         (translate [(- 0
-                        (/ mount-width 2)
-                        (/ glue-joint-glue-thickness 2)
-                        glue-joint-wall-thickness)
-                     0
-                     (- plate-thickness (/ glue-joint-height 2))])))
-  (def glue-joint-right
-    (->> glue-joint-lr-shape
-         (translate [(+ (/ mount-width 2)
-                        (/ glue-joint-glue-thickness 2)
-                        glue-joint-wall-thickness)
-                     0
-                     (- plate-thickness (/ glue-joint-height 2))])))
   (def glue-joint-center-left
     (->> glue-joint-lr-shape
          (translate [(/ glue-joint-glue-thickness 2)
@@ -83,7 +68,7 @@
     (->> glue-joint-lr-shape
          (translate [(- 0 glue-joint-wall-thickness (/ glue-joint-glue-thickness 2))
                      0
-                     (- plate-thickness (/ glue-joint-height 2))]))))
+                     (- plate-thickness (/ glue-joint-height 2))])))
   
 
 
@@ -166,33 +151,6 @@
          (rotate (/ π 12) [0 1 0])
          (translate [0 0 13]))))
 
-(defn between-key-place [column column1 column2 row row1 row2 shape]
-  ; For placing things on the sides of key places that need to be
-  ; parallel. Column and row are as in key-place. Column1, column2,
-  ; row1, row2 are for averaging angles. If column1 == column2 ==
-  ; column and row1 == row2 == row, this works the same as key-place.
-  (let [column-for-rotation (/ (+ column1 column2) 2)
-        row-for-rotation (/ (+ row1 row2) 2)
-        row-placed-shape (->> shape
-                              (rotate (- 0 (* α (- (- 2 row) (- 2 row-for-rotation)))) [1 0 0])
-                              (translate [0 0 (- row-radius)])
-                              (rotate (* α (- 2 row)) [1 0 0])
-                              (translate [0 0 row-radius]))
-        column-offset (cond
-                        (= column 2) [0 2.82 -3.0] ;;was moved -4.5
-                        (>= column 4) [0 -5.8 5.64]
-                        :else [0 0 0])
-        column-angle (* β (- 2 column))
-        placed-shape (->> row-placed-shape
-                          (rotate (- 0 (* β (- (- 2 column) (- 2 column-for-rotation)))) [0 1 0])
-                          (translate [0 0 (- column-radius)])
-                          (rotate column-angle [0 1 0])
-                          (translate [0 0 column-radius])
-                          (translate column-offset))]
-    (->> placed-shape
-         (rotate (/ π 12) [0 1 0])
-         (translate [0 0 13]))))
-
 
 (defn case-place [column row shape]
   (let [row-placed-shape (->> shape
@@ -241,8 +199,11 @@
 (def post-adj (/ post-size 2))
 (def web-post-tr (translate [(- (/ mount-width 2) post-adj) (- (/ mount-height 2) post-adj) 0] web-post))
 (def web-post-tl (translate [(+ (/ mount-width -2) post-adj) (- (/ mount-height 2) post-adj) 0] web-post))
+(def web-post-t  (translate [0 (- (/ mount-height 2) post-adj) 0] web-post))
+
 (def web-post-bl (translate [(+ (/ mount-width -2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
 (def web-post-br (translate [(- (/ mount-width 2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
+(def web-post-b  (translate [0 (+ (/ mount-height -2) post-adj) 0] web-post))
 
 (def connectors
   (apply union
@@ -452,7 +413,7 @@
   (concat (range start end step) [end]))
 
 (def wall-step 0.2)
-(def wall-sphere-n 3) ;;Sphere resolution, lower for faster renders
+(def wall-sphere-n 20) ;;Sphere resolution, lower for faster renders
 
 (defn wall-sphere-at [coords]
   (->> (sphere 1)
@@ -1244,13 +1205,25 @@
 ;;;;;;;;;;;;;;;;;;
 ;; Glue Joints  ;;
 ;;;;;;;;;;;;;;;;;;
+
+
 (def fingers-glue-joints
   (union
-   #_(key-place 1 4 (color [1 0 0] glue-joint-left))
-   #_(key-place 0 4 (color [0 1 0] glue-joint-right))
-   (between-key-place 0.5 0 1 4 4 4 (color [1 0 0] glue-joint-center-left))
-   (between-key-place 0.5 0 1 4 4 4 (color [0 1 0] glue-joint-center-right))))
+   (key-place 1/2 4 (color [1 0 0] glue-joint-center-left))
+   (key-place -1/2 3   (color [1 0 0] glue-joint-center-left))
+(color [1 0 1] (hull (key-place 0 3 web-post-tl) (key-place -1/2 3 web-post-t)
+                     (key-place 0 3 web-post-bl) (key-place -1/2 3 web-post-b)))))
 
+(def thumb-glue-joints
+  (union
+
+   (key-place 1/2 4 (color [0 1 0] glue-joint-center-right))
+(color [1 0 1] (hull (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-tr)) (key-place 1/2 4 (translate [(- 0 glue-joint-wall-thickness) 0 0] web-post-t))
+                     (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-br)) (key-place 1/2 4 (translate [(- 0 glue-joint-wall-thickness) 0 0] web-post-b))))
+
+   (key-place -1/2 3 (color [0 1 0] glue-joint-center-right))
+(color [1 0 1] (hull (thumb-place 1 1 web-post-tr) (key-place -1/2 3 (translate [(- 0 glue-joint-wall-thickness) 0 0] web-post-t))
+                     (thumb-place 1 1 web-post-br) (key-place -1/2 3 (translate [(- 0 glue-joint-wall-thickness) 0 0] web-post-b))))))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
@@ -1263,7 +1236,8 @@
     (difference
      bottom-plate
      (hull teensy-cover)
-     new-case
+     new-case-fingers
+     new-case-thumb
      teensy-cover
      trrs-cutout
      (->> (cube 1000 1000 10) (translate [0 0 -5]))
@@ -1277,7 +1251,8 @@
            (difference
             bottom-plate
             (hull io-exp-cover)
-            new-case
+            new-case-fingers
+	    new-case-thumb
             io-exp-cover
             trrs-cutout
             (->> (cube 1000 1000 10) (translate [0 0 -5]))
@@ -1299,12 +1274,22 @@
            (union key-holes
                   connectors
                   thumb
-                  new-case)
+                  new-case-fingers new-case-thumb)
            trrs-hole-just-circle
            screw-holes)))
 
 (def dactyl-top-right-thumb
-  (union new-case-thumb thumb))
+  (union thumb
+         thumb-glue-joints))
+
+(let [abbreviation-cylinder (translate [-30 -40 0] (cylinder 40 140))]
+  (def dactyl-top-right-abbreviated
+    (intersection dactyl-top-right abbreviation-cylinder))
+  (def dactyl-top-right-thumb-abbreviated
+    (intersection dactyl-top-right-thumb abbreviation-cylinder))
+  (def dactyl-top-right-both-abbreviated
+    (intersection (union dactyl-top-right dactyl-top-right-thumb) abbreviation-cylinder)))
+
 
 (spit "things/dactyl-top-right-thumb.scad" (write-scad dactyl-top-right-thumb))
 
@@ -1316,7 +1301,12 @@
       ;; (write-scad (union connectors key-holes)))
 
 (spit "things/dactyl-top-right.scad"
-      (write-scad dactyl-top-right))
+      (write-scad dactyl-top-right-abbreviated))
+
+(spit "things/dactyl-top-right-thumb.scad"
+      (write-scad dactyl-top-right-thumb-abbreviated))
+
+
 
 ;; (spit "things/dactyl-bottom-right.scad"
 ;;       (write-scad dactyl-bottom-right))
