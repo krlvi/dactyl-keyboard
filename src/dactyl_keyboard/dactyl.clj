@@ -25,6 +25,28 @@
 (def alps-notch-height 1)
 (def alps-height 13)
 
+(def old-single-plate
+  (let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
+                      (translate [0
+                                  (+ (/ 1.5 2) (/ keyswitch-height 2))
+                                  (/ plate-thickness 2)]))
+        left-wall (->> (cube 1.5 (+ keyswitch-height 3) plate-thickness)
+                       (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
+                                   0
+                                   (/ plate-thickness 2)]))
+        side-nub (->> (binding [*fn* 30] (cylinder 1 2.75))
+                      (rotate (/ π 2) [1 0 0])
+                      (translate [(+ (/ keyswitch-width 2)) 0 1])
+                      (hull (->> (cube 1.5 2.75 plate-thickness)
+                                 (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
+                                             0
+                                             (/ plate-thickness 2)]))))
+        plate-half (union top-wall left-wall (with-fn 100 side-nub))]
+    (union plate-half
+           (->> plate-half
+                (mirror [1 0 0])
+                (mirror [0 1 0])))))
+
 (def single-plate
   (let [top-wall (->> (cube (+ keyswitch-width 3) 2.2 plate-thickness)
                       (translate [0
@@ -174,7 +196,7 @@
                row rows
                :when (or (not= column 0)
                          (not= row 4))]
-           (->> single-plate
+           (->> old-single-plate
                 (key-place column row)))))
 
 (def caps
@@ -392,7 +414,7 @@
 (def thumb
   (union
    thumb-connectors
-   (thumb-layout (rotate (/ π 2) [0 0 1] single-plate))
+   (thumb-layout (rotate (/ π 2) [0 0 1] old-single-plate))
    (thumb-place 0 -1/2 double-plates)
    (thumb-place 1 -1/2 double-plates)))
 
@@ -1291,8 +1313,6 @@
     (intersection (union dactyl-top-right dactyl-top-right-thumb) abbreviation-cylinder)))
 
 
-(spit "things/dactyl-top-right-thumb.scad" (write-scad dactyl-top-right-thumb))
-
 
 ;; (spit "things/switch-hole.scad"
       ;; (write-scad single-plate))
@@ -1301,11 +1321,13 @@
       ;; (write-scad (union connectors key-holes)))
 
 (spit "things/dactyl-top-right.scad"
-      (write-scad dactyl-top-right-abbreviated))
+      (write-scad dactyl-top-right))
 
 (spit "things/dactyl-top-right-thumb.scad"
-      (write-scad dactyl-top-right-thumb-abbreviated))
+      (write-scad dactyl-top-right-thumb))
 
+(spit "things/dactyl-top-right-all.scad"
+      (write-scad (union dactyl-top-right dactyl-top-right-thumb)))
 
 
 ;; (spit "things/dactyl-bottom-right.scad"
