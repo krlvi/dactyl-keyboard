@@ -25,7 +25,7 @@
 (def alps-notch-height 1)
 (def alps-height 13)
 
-(def old-single-plate
+(def cherry-single-plate
   (let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
                       (translate [0
                                   (+ (/ 1.5 2) (/ keyswitch-height 2))
@@ -47,7 +47,7 @@
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
 
-(def single-plate
+(def alps-single-plate
   (let [top-wall (->> (cube (+ keyswitch-width 3) 2.2 plate-thickness)
                       (translate [0
                                   (+ (/ 2.2 2) (/ alps-height 2))
@@ -67,6 +67,8 @@
            (->> plate-half
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
+
+(def chosen-single-plate-type cherry-single-plate)
 
 ; Paddles that stick out below, so the fingers and thumb can be
 ; printed separately then glued together.
@@ -251,7 +253,7 @@
                row rows
                :when (or (not= column 0)
                          (not= row 4))]
-           (->> old-single-plate
+           (->> chosen-single-plate-type
                 (key-place column row)))))
 
 (def key-holes-a (key-holes-for-columns columns-a))
@@ -486,7 +488,7 @@
 (def thumb
   (union
    thumb-connectors
-   (thumb-layout (rotate (/ π 2) [0 0 1] old-single-plate))
+   (thumb-layout (rotate (/ π 2) [0 0 1] chosen-single-plate-type))
    (thumb-place 0 -1/2 double-plates)
    (thumb-place 1 -1/2 double-plates)))
 
@@ -1421,11 +1423,12 @@
    trrs-hole-just-circle
    screw-holes))
 
-(def dactyl-top-left
+#_(def dactyl-top-left
   (mirror [-1 0 0]
           (difference
            (union key-holes
-                  connectors
+                  connectors-a
+                  connectors-b
                   thumb
                   new-case-fingers new-case-thumb)
            trrs-hole-just-circle
@@ -1435,7 +1438,7 @@
   (union thumb
          thumb-glue-joints))
 
-(let [abbreviation-cylinder (translate [-30 -40 0] (cylinder 40 140))]
+#_(let [abbreviation-cylinder (translate [-30 -40 0] (cylinder 40 140))]
   (def dactyl-top-right-abbreviated
     (intersection dactyl-top-right abbreviation-cylinder))
   (def dactyl-top-right-thumb-abbreviated
