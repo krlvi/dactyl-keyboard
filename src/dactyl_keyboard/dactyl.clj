@@ -196,9 +196,9 @@
 ;; Placement Functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def columns-a (range 0 3))
-(def columns-b (range 3 6))
-(def columns   (concat columns-a columns-b))
+; we split the keyholes into pieces for smaller print volume and quicker printing
+(def columns-pieces [(range -1 1) (range 1 3) (range 3 6)])
+(def columns   (apply concat columns-pieces))
 (def rows (range 0 5))
 
 (def α (/ π 12))
@@ -251,13 +251,15 @@
   (apply union
          (for [column columns
                row rows
-               :when (or (not= column 0)
-                         (not= row 4))]
+               :when (and
+                      (or (not= column 0)
+                          (not= row 4))
+                      (or (not= column -1)
+                          (not= row 4)))]
            (->> chosen-single-plate-type
                 (key-place column row)))))
 
-(def key-holes-a (key-holes-for-columns columns-a))
-(def key-holes-b (key-holes-for-columns columns-b))
+(def key-holes-pieces (map key-holes-for-columns columns-pieces))
 (def key-holes   (key-holes-for-columns columns))
 
 (def caps
@@ -290,8 +292,11 @@
 
 (defn row-connectors [column]
   (for [row rows
-        :when (or (not= column 0)
-                  (not= row 4))]
+        :when (and
+               (or (not= column 0)
+                   (not= row 4))
+               (or (not= column -1)
+                   (not= row 4)))]
     (triangle-hulls
      (key-place (inc column) row web-post-tl)
      (key-place column row web-post-tr)
@@ -300,8 +305,11 @@
 
 (defn diagonal-connectors [column]
   (for [row (drop-last rows)
-        :when (or (not= column 0)
-                  (not= row 3))]
+        :when (and
+               (or (not= column 0)
+                   (not= row 3))
+               (or (not= column -1)
+                   (not= row 3)))]
     (triangle-hulls
      (key-place column row web-post-br)
      (key-place column (inc row) web-post-tr)
@@ -310,32 +318,29 @@
 
 (defn column-connectors [column]
   (for [row (drop-last rows)
-        :when (or (not= column 0)
-                  (not= row 3))]
+        :when (and
+               (or (not= column 0)
+                   (not= row 3))
+               (or (not= column -1)
+                   (not= row 3)))]
     (triangle-hulls
      (key-place column row web-post-bl)
      (key-place column row web-post-br)
      (key-place column (inc row) web-post-tl)
      (key-place column (inc row) web-post-tr))))
   
-(def connectors-a
-  (apply union
-         (for [column (drop-last columns-a)]
-           (concat
-            (row-connectors column)
-            (diagonal-connectors column)))
-         (for [column columns-a]
-            (column-connectors column))))
-           
-
-(def connectors-b
-  (apply union
-         (for [column (drop-last columns-b)]
-           (concat
-            (row-connectors column)
-            (diagonal-connectors column)))
-         (for [column columns-b]
-           (column-connectors column))))
+(def connectors-inside-fingerpieces
+  (let
+      [connectors-for-columns
+       (fn [columns]
+         (apply union
+                (for [column (drop-last columns)]
+                  (concat
+                   (row-connectors column)
+                   (diagonal-connectors column)))
+                 (for [column columns]
+                   (column-connectors column))))]
+    (map connectors-for-columns columns-pieces)))
 
 ;;;;;;;;;;;;
 ;; Thumbs ;;
@@ -370,8 +375,7 @@
   (thumb-place 0 -1/2 shape))
 
 (defn thumb-2x+1-column [shape]
-  (union (thumb-place 1 -1/2 shape)
-         (thumb-place 1 1 shape)))
+  (thumb-place 1 -1/2 shape))
 
 (defn thumb-1x-column [shape]
   (union (thumb-place 2 -1 shape)
@@ -409,7 +413,7 @@
   (union
    (apply union
           (concat
-           (for [column [2] row [1]]
+           #_(for [column [2] row [1]]
              (triangle-hulls (thumb-place column row web-post-br)
                              (thumb-place column row web-post-tr)
                              (thumb-place (dec column) row web-post-bl)
@@ -437,14 +441,8 @@
                       (thumb-place 1 -1/2 thumb-tr)
                       (thumb-place 1 -1/2 thumb-br))
 
-      ;;Connecting the double to the one above it
-      (triangle-hulls (thumb-place 1 -1/2 thumb-tr)
-                      (thumb-place 1 -1/2 thumb-tl)
-                      (thumb-place 1 1 web-post-br)
-                      (thumb-place 1 1 web-post-bl))
-
       ;;Connecting the 4 with the double in the bottom left
-      (triangle-hulls (thumb-place 1 1 web-post-bl)
+      #_(triangle-hulls (thumb-place 1 1 web-post-bl)
                       (thumb-place 1 -1/2 thumb-tl)
                       (thumb-place 2 1 web-post-br)
                       (thumb-place 2 0 web-post-tr))
@@ -1303,9 +1301,9 @@
 ;;;;;;;;;;;;;;;;;;
 
 
-(def fingers-glue-joints
+(defn fingers-to-thumb-glue-joints-for-columns [columns]
   (apply union
-         (for [[column row] [ [0 3] [1 4] ]]
+         (for [[column row] [ [-1 3] [1 4] ] :when (some (partial = column) columns)]
            (union
             (key-place (- column 1/2) row
                        (color [1 0 0] glue-joint-center-left))
@@ -1323,53 +1321,74 @@
                                         ; get the same loopy
                                         ; treatment, because the 2x1
                                         ; key is different
-(def thumb-glue-joints
+(def thumb-to-fingers-glue-joints
   (union
 
    (key-place 1/2 4 (color [0 1 0] glue-joint-center-right))
    (color [1 0 1] (hull (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-tr)) (key-place 1/2 4 (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0] web-post-t))
                         (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-br)) (key-place 1/2 4 (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0] web-post-b))))
 
-   (key-place -1/2 3 (color [0 1 0] glue-joint-center-right))
-   (color [1 0 1] (hull (thumb-place 1 1 web-post-tr) (key-place -1/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] web-post-t))
-                        (thumb-place 1 1 web-post-br) (key-place -1/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] web-post-b))))))
+   (key-place -3/2 3 (color [0 1 0] glue-joint-center-right))
+   (color [1 0 1] (hull (thumb-place 2 1 web-post-tr) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] web-post-t))
+                        (thumb-place 2 1 web-post-br) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] web-post-b))))))
 
-(def mid-fingers-left-glue-joints
-  (apply union
-         (for [column '(2)
-               row rows]
-           (key-place (+ column 1/2) row (color [1 0 0] glue-joint-center-right)))
-         (for [column '(2)
-               row rows]
-            (color [1 0 1]
-                   (hull
-                    (key-place column row web-post-tr)
-                    (key-place (+ column 1/2) row
-                               (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0]
-                                          web-post-t))
-                    (key-place column row web-post-br)
-                    (key-place (+ column 1/2) row
-                               (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0]
-                                          web-post-b)))))))
+(def right-glue-joints-for-fingerpieces
+  (let [rgj-for-this
+        (fn [leftmostp rightmostp columns]
+          (if (not rightmostp)
+            (let [column (last columns)
+                  joint-column (+ column 1/2)
+                  other-way (- column 1/2)]
+              (apply union
+                     (for [row rows :when (not (and (= column 0) (= row 4)))]
+                       (union
+                                        ; the actual paddle
+                        (key-place joint-column row
+                                   (color [0 1 0] glue-joint-center-right))
+                                        ; connect paddle to key-place
+                        (color [1 0 1]
+                               (hull
+                                (key-place column row web-post-tr)
+                                (key-place joint-column row
+                                           (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0]
+                                                      web-post-t))
+                                (key-place column row web-post-br)
+                                (key-place joint-column row
+                                           (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0]
+                                                      web-post-b))))))))))]
+    (map #_(fn [a b c] ()) rgj-for-this
+         (cons true (repeat false))
+         (concat (repeat (- (count columns-pieces) 1) false) '(true))
+         columns-pieces)))
 
-(def mid-fingers-right-glue-joints
-  (apply union
-         (for [column '(3)
-               row rows]
-           (key-place 5/2 row (color [0 1 0] glue-joint-center-left)))
-         (for [column '(3)
-               row rows]
-           (color [1 0 1]
-                  (hull
-                   (key-place (- column 1/2) row
-                              (translate [(/ glue-joint-wall-thickness 2) 0 0]
-                                         web-post-t))
-                   (key-place column row web-post-tl)
-                   (key-place (- column 1/2) row
-                              (translate [(/ glue-joint-wall-thickness 2) 0 0]
-                                         web-post-b))
-                   (key-place column row web-post-bl))))))
-
+(def left-glue-joints-for-fingerpieces
+  (let [lgj-for-this
+        (fn [leftmostp rightmostp columns]
+          (if (not leftmostp)
+            (let [column (first columns)
+                  joint-column (- column 1/2)
+                  other-way (+ column 1/2)]
+              (apply union
+                     (for [row rows :when (not (and (= column 1) (= row 4)))]
+                       (union
+                                        ; the actual paddle
+                        (key-place joint-column row
+                                   (color [1 0 0] glue-joint-center-left))
+                                        ; connect paddle to key-place
+                        (color [1 0 1]
+                               (hull
+                                (key-place joint-column row
+                                           (translate [(/ glue-joint-wall-thickness 2) 0 0]
+                                                      web-post-t))
+                                (key-place column row web-post-tl)
+                                (key-place joint-column row
+                                           (translate [(/ glue-joint-wall-thickness 2) 0 0]
+                                                      web-post-b))
+                                (key-place column row web-post-bl)))))))))]
+    (map #_(fn [a b c] ()) lgj-for-this
+         (cons true (repeat false))
+         (concat (repeat (- (count columns-pieces) 1) false) '(true))
+         columns-pieces)))
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
@@ -1403,25 +1422,20 @@
             (->> (cube 1000 1000 10) (translate [0 0 -5]))
             screw-holes))))
 
-(def dactyl-top-right-a
-  (difference
-   (union key-holes-a
-          connectors-a
-          #_new-case-fingers
-          fingers-glue-joints
-          mid-fingers-left-glue-joints
-          teensy-support)
-   trrs-hole-just-circle
-   screw-holes))
-
-(def dactyl-top-right-b
-  (difference
-   (union key-holes-b
-          connectors-b
-          #_new-case-fingers
-          mid-fingers-right-glue-joints)
-   trrs-hole-just-circle
-   screw-holes))
+(def dactyl-top-right-pieces
+  ; agh i made bad names and now i pay for it
+  (let [pieces-of-pieces (map vector
+                              (map fingers-to-thumb-glue-joints-for-columns columns-pieces)
+                              right-glue-joints-for-fingerpieces
+                              key-holes-pieces
+                              connectors-inside-fingerpieces
+                              left-glue-joints-for-fingerpieces
+                              (repeat teensy-support))]
+    (for [pieces-of-this-piece pieces-of-pieces]
+      (difference
+       (apply union pieces-of-this-piece)
+       trrs-hole-just-circle
+       screw-holes))))
 
 #_(def dactyl-top-left
   (mirror [-1 0 0]
@@ -1436,7 +1450,7 @@
 
 (def dactyl-top-right-thumb
   (union thumb
-         thumb-glue-joints))
+         thumb-to-fingers-glue-joints))
 
 #_(let [abbreviation-cylinder (translate [-30 -40 0] (cylinder 40 140))]
   (def dactyl-top-right-abbreviated
@@ -1454,17 +1468,14 @@
 ;; (spit "things/alps-holes.scad"
       ;; (write-scad (union connectors key-holes)))
 
-(spit "things/dactyl-top-right-a.scad"
-      (write-scad dactyl-top-right-a))
-
-(spit "things/dactyl-top-right-b.scad"
-      (write-scad dactyl-top-right-b))
-
-(spit "things/dactyl-top-right-thumb.scad"
-      (write-scad dactyl-top-right-thumb))
+(doseq [[partno part] (map vector (range) dactyl-top-right-pieces)]
+  (spit (format "things/dactyl-top-right-%02d.scad" partno)
+        (write-scad part)))
 
 (spit "things/dactyl-top-right-all.scad"
-      (write-scad (union dactyl-top-right-a dactyl-top-right-b dactyl-top-right-thumb)))
+      (write-scad
+       (union dactyl-top-right-thumb
+              (apply union dactyl-top-right-pieces))))
 
 
 ;; (spit "things/dactyl-bottom-right.scad"
