@@ -197,7 +197,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; we split the keyholes into pieces for smaller print volume and quicker printing
-(def columns-pieces [(range -1 1) (range 1 3) (range 3 6)])
+(def columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)])
 (def columns   (apply concat columns-pieces))
 (def rows (range 0 5))
 
@@ -1340,7 +1340,8 @@
                   joint-column (+ column 1/2)
                   other-way (- column 1/2)]
               (apply union
-                     (for [row rows :when (not (and (= column 0) (= row 4)))]
+                     (for [row rows :when (not (or (and (= column 0) (= row 4))
+                                                   (and (= column -1) (= row 4))))]
                        (union
                                         ; the actual paddle
                         (key-place joint-column row
@@ -1369,7 +1370,8 @@
                   joint-column (- column 1/2)
                   other-way (+ column 1/2)]
               (apply union
-                     (for [row rows :when (not (and (= column 1) (= row 4)))]
+                     (for [row rows :when (not (or (and (= column 1) (= row 4))
+                                                   (and (= column 0) (= row 4))))]
                        (union
                                         ; the actual paddle
                         (key-place joint-column row
