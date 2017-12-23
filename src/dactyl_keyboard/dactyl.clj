@@ -266,8 +266,10 @@
   (apply union
          (for [column columns
                row rows
-               :when (or (not= column 0)
-                         (not= row 4))]
+               :when (and (or (not= column 0)
+                              (not= row 4))
+			  (or (not= column -1)
+			      (not= row 4)))]
            (->> (sa-cap (if (= column 5) 1 1))
                 (key-place column row)))))
 
@@ -406,7 +408,7 @@
   (union
    (thumb-2x-column (sa-cap 2))
    (thumb-place 1 -1/2 (sa-cap 2))
-   (thumb-place 1 1 (sa-cap 1))
+   #_(thumb-place 1 1 (sa-cap 1))
    (thumb-1x-column (sa-cap 1))))
 
 (def thumb-connectors
@@ -1477,7 +1479,9 @@
 (spit "things/dactyl-top-right-all.scad"
       (write-scad
        (union dactyl-top-right-thumb
-              (apply union dactyl-top-right-pieces))))
+              (apply union dactyl-top-right-pieces)
+	      caps
+	      thumbcaps)))
 
 
 ;; (spit "things/dactyl-bottom-right.scad"
