@@ -48,6 +48,13 @@
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
 
+(def cherry-blank-single-plate
+  (->>
+    (cube (+ keyswitch-width (* 2 cherry-bezel-width))
+          (+ keyswitch-height (* 2 cherry-bezel-width))
+          plate-thickness)
+    (translate [0 0 (/ plate-thickness 2)])))
+
 (def alps-single-plate
   (let [top-wall (->> (cube (+ keyswitch-width 3) 2.2 plate-thickness)
                       (translate [0
@@ -69,7 +76,8 @@
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
 
-(def chosen-single-plate-type cherry-single-plate)
+(def chosen-single-plate cherry-single-plate)
+(def chosen-blank-single-plate cherry-blank-single-plate)
 
 ; Paddles that stick out below, so the fingers and thumb can be
 ; printed separately then glued together.
@@ -260,16 +268,20 @@
     (and (= column 1) (= row 4)) true
     true false))
 
-(defn key-holes-for-columns [columns]
+(defn key-shapes-for-columns [shape columns]
   (apply union
          (for [column columns
                row rows
                :when (finger-has-key-place-p row column)]
-           (->> chosen-single-plate-type
+           (->> shape
                 (key-place column row)))))
 
-(def key-holes-pieces (map key-holes-for-columns columns-pieces))
-(def key-holes   (key-holes-for-columns columns))
+(def key-holes-pieces (map #(key-shapes-for-columns chosen-single-plate %) columns-pieces))
+(def key-holes   (key-shapes-for-columns chosen-single-plate columns))
+
+(def key-blanks-pieces (map #(key-shapes-for-columns chosen-blank-single-plate %) columns-pieces))
+(def key-blanks (key-shapes-for-columns chosen-blank-single-plate columns))
+
 
 (def caps
   (apply union
@@ -484,7 +496,7 @@
 (def thumb
   (union
    thumb-connectors
-   (thumb-layout (rotate (/ π 2) [0 0 1] chosen-single-plate-type))
+   (thumb-layout (rotate (/ π 2) [0 0 1] chosen-single-plate))
    (thumb-place 0 -1/2 double-plates)
    (thumb-place 1 -1/2 double-plates)))
 
@@ -1446,12 +1458,12 @@
             (->> (cube 1000 1000 10) (translate [0 0 -5]))
             screw-holes))))
 
-(def dactyl-top-right-pieces
+(defn dactyl-top-right-pieces [key-pieces]
   ; agh i made bad names and now i pay for it
   (let [pieces-of-pieces (map vector
                               (map fingers-to-thumb-glue-joints-for-columns columns-pieces)
                               right-glue-joints-for-fingerpieces
-                              key-holes-pieces
+                              key-pieces
                               connectors-inside-fingerpieces
                               left-glue-joints-for-fingerpieces
                               (repeat teensy-support))]
@@ -1492,17 +1504,49 @@
 ;; (spit "things/alps-holes.scad"
       ;; (write-scad (union connectors key-holes)))
 
-(doseq [[partno part] (map vector (range) dactyl-top-right-pieces)]
+(doseq [[partno part] (map vector (range) (dactyl-top-right-pieces key-holes-pieces))]
   (spit (format "things/dactyl-top-right-%02d.scad" partno)
         (write-scad part)))
 
 (spit "things/dactyl-top-right-all.scad"
       (write-scad
        (union dactyl-top-right-thumb
-              (apply union dactyl-top-right-pieces)
+              (apply union (dactyl-top-right-pieces key-holes-pieces))
 	      caps
 	      thumbcaps)))
 
+(def ellipsoid-height-to-clear-electronics 9)
+(def inside-clearance 0)
+
+(def case-outline-shape
+  (hull key-blanks-pieces (translate [0 0 -30] key-blanks-pieces)))
+
+(def spheroidal-bottom-case
+  (let [ellipsoid-height-to-clear-electronics 9
+        inside-clearance 0
+        shell-thickness 3
+        the-sphere (->> (sphere row-radius)
+                                        ; i don't see why this ratio
+                                        ; is scaled by half
+                        (scale [(/ (/ column-radius row-radius) 2) 1 1])
+                        (color [1 0 0 0.2])
+                        (translate [0 0 row-radius])
+                                        ; not sure why this is what it
+                                        ; is; tenting is pi over 12,
+                                        ; see key-place
+                        (rotate (/ π 20) [0 1 0])
+                        (translate [(- ellipsoid-height-to-clear-electronics
+                                       inside-clearance) 0 0]))]
+    (intersection
+     (difference the-sphere (translate [0 0 shell-thickness] the-sphere))
+     case-outline-shape)))
+
+
+(spit "things/dactyl-blank-all.scad"
+      (write-scad
+       (union dactyl-top-right-thumb
+              (apply union (dactyl-top-right-pieces key-blanks-pieces))
+              spheroidal-bottom-case)))
 
 (spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
