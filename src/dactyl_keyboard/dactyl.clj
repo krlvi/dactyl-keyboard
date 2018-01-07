@@ -1519,46 +1519,89 @@
 	      caps
 	      thumbcaps)))
 
-(defn finger-case-outline-shape [distance-below]
-  (let [untent (fn [shape] (rotate (- tenting-angle) [0 1 0] shape))
-        retent (fn [shape] (rotate tenting-angle [0 1 0] shape))
-        untented-key-blanks (untent key-blanks-pieces)
+(defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
+(defn retent [shape] (rotate tenting-angle [0 1 0] shape))
+
+; badly named.
+(defn finger-top-outline-prism [distance-below narrow-percent]
+  (let [untented-key-blanks (untent key-blanks-pieces)
+        narrower-key-blanks (scale [(/ (- 100 narrow-percent) 100)
+                                    (/ (- 100 narrow-percent) 100)
+                                    1] untented-key-blanks)
         adjusted (scale [(/ (+ distance-below column-radius) column-radius)
                          (/ (+ distance-below row-radius) row-radius)
-                         1] untented-key-blanks)]
+                         1] narrower-key-blanks)
+        adjusted-above (scale [(/ (- column-radius distance-below) column-radius)
+                               (/ (- row-radius distance-below) row-radius)
+                              1] narrower-key-blanks)]
     (retent
-     (hull untented-key-blanks (translate [0 0 (- distance-below)] adjusted)))))
+     (hull
+      (translate [0 0 distance-below] adjusted-above)
+      (translate [0 0 (- distance-below)] adjusted)))))
 
-(def spheroidal-finger-bottom-case
-  (let [ellipsoid-height-to-clear-top-plastic 24
-        inside-clearance 14
-        distance-below-to-intersect 60
-        shell-thickness 3
-        sph-row-radius (+ ellipsoid-height-to-clear-top-plastic row-radius)
-        sph-column-radius (+ ellipsoid-height-to-clear-top-plastic column-radius)
-        the-sphere (->> (sphere sph-row-radius)
+(defn finger-case-bottom-sphere [flatness downness]
+  "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
+  (let [
+        sph-row-radius (+ flatness row-radius)
+        sph-column-radius (+ flatness column-radius)]
+    (->> (sphere sph-row-radius)
                                         ; i don't see why this ratio
                                         ; is scaled by half
-                        (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1])
-                        (color [0 0.7 0.7 0.8])
-                        (translate [0 0 sph-row-radius])
+         (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1])
+         (color [0 0.7 0.7 0.8])
+         (translate [0 0 sph-row-radius])
                                         ; tenting is pi over 12; outer
                                         ; rows raised so rotate a little less
-                        (rotate (* (/ π 12) 0.85) [0 1 0])
-                        (translate [0 0 (- sph-row-radius)])
-                        (translate [0 0 row-radius])
-                        (translate [0 0 (- ellipsoid-height-to-clear-top-plastic
-                                           inside-clearance)]))]
-    (intersection
-     (difference the-sphere (translate [0 0 shell-thickness] the-sphere))
-     (finger-case-outline-shape distance-below-to-intersect))))
+         (rotate (* (/ π 12) 0.85) [0 1 0])
+         (translate [0 0 (- sph-row-radius)])
+         (translate [0 0 row-radius])
+         (translate [0 0 (- flatness downness)]))))
 
+(defn finger-case-bottom-shell [flatness downness thickness]
+  (let [the-sphere (finger-case-bottom-sphere flatness downness)
+        the-shell (difference the-sphere (translate [0 0 thickness] the-sphere))
+        distance-below-to-intersect (max (+ downness flatness) 20)
+        big-intersection-shape (finger-top-outline-prism distance-below-to-intersect 0)]
+    (intersection the-shell big-intersection-shape)))
+
+(defn big-marshmallowy-sides [flatness downness thickness radius]
+  (let [
+        the-sphere (finger-case-bottom-sphere flatness downness)
+        outline-thickness 1
+        gasket-sphere-fn 9 ; detail of sphere. normally 20 or so?
+                           ; severe performance impact. for me, with
+                           ; openscad 2015.03-2, this looked like big
+                           ; delays with lots of memory usage after
+                           ; the progress bar got to 1000.
+        the-shell (difference the-sphere (translate [0 0 thickness] the-sphere))
+        thick-shell (difference (translate [0 0 (- thickness)] the-sphere)
+                                (translate [0 0 (* 2 thickness)] the-sphere))
+        distance-below-to-intersect (max (+ downness flatness) 20)
+        big-intersection-shape (finger-top-outline-prism distance-below-to-intersect 0)
+        little-intersection-shape (finger-top-outline-prism distance-below-to-intersect 2)
+        finger-case-outline (fn [flatness downness]
+                              (difference (intersection the-shell big-intersection-shape)
+                                          (intersection thick-shell little-intersection-shape)))
+        the-outline (finger-case-outline flatness downness)
+        marshmallow-gasket (fn [r] (minkowski
+                                    (finger-case-outline flatness downness)
+                                    (binding [*fn* gasket-sphere-fn]
+                                      (sphere r))))
+        sides (difference
+               (difference (marshmallow-gasket radius)
+                           (marshmallow-gasket (- radius thickness)))
+               big-intersection-shape)]
+    sides))
   
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union dactyl-top-right-thumb
               (apply union (dactyl-top-right-pieces key-blanks-pieces))
-              spheroidal-finger-bottom-case)))
+              (binding [*fn* 12]
+                (union
+                 (finger-case-bottom-shell 40 19 3)
+                 (big-marshmallowy-sides 40 0 3 19)))
+              caps)))
 
 (spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
