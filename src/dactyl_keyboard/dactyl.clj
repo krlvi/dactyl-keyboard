@@ -144,7 +144,7 @@
 (def glue-joint-tb-shape (cube mount-width
                                 glue-joint-wall-thickness
                                 glue-joint-height))
-      
+
   (def glue-joint-center-left
     (->> glue-joint-l-shape
          (translate [(/ glue-joint-glue-thickness 2)
@@ -155,7 +155,7 @@
          (translate [(- 0 glue-joint-wall-thickness (/ glue-joint-glue-thickness 2))
                      0
                      (- plate-thickness (/ glue-joint-height 2))])))
-  
+
 
 
 ;;;;;;;;;;;;;;;;
@@ -262,7 +262,7 @@
     (and (= column 0) (= row 4)) false
     (and (= column -1) (= row 4)) false
     true true))
- 
+
 (defn thumb-glue-joint-left-of-p [row column]
   (cond
     (and (= column -1) (= row 3)) true
@@ -339,7 +339,7 @@
      (key-place column row web-post-br)
      (key-place column (inc row) web-post-tl)
      (key-place column (inc row) web-post-tr))))
-  
+
 (def connectors-inside-fingerpieces
   (let
       [connectors-for-columns
@@ -1456,7 +1456,7 @@
             bottom-plate
             (hull io-exp-cover)
             new-case-fingers
-	    new-case-thumb
+            new-case-thumb
             io-exp-cover
             trrs-cutout
             (->> (cube 1000 1000 10) (translate [0 0 -5]))
@@ -1516,8 +1516,8 @@
       (write-scad
        (union dactyl-top-right-thumb
               (apply union (dactyl-top-right-pieces key-holes-pieces))
-	      caps
-	      thumbcaps)))
+              caps
+              thumbcaps)))
 
 (defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
 (defn retent [shape] (rotate tenting-angle [0 1 0] shape))
@@ -1538,6 +1538,31 @@
      (hull
       (translate [0 0 distance-below] adjusted-above)
       (translate [0 0 (- distance-below)] adjusted)))))
+
+(defn finger-top-outline-prism2 [distance-below narrow-percent]
+  (let [pyramid (fn [shape]
+                  (let [below (scale [(/ (+ column-radius distance-below) column-radius)
+                                      (/ (+ row-radius distance-below) row-radius)
+                                      1] shape)
+                        above (scale [(/ (- column-radius distance-below) column-radius)
+                                      (/ (- row-radius distance-below) row-radius)
+                                      1] shape)]
+                    (hull
+                     (translate [0 0 distance-below] above)
+                     (translate [0 0 (- distance-below)] below))))]
+    (apply union
+           (for [column columns
+                 row rows
+                 :when (finger-has-key-place-p row column)]
+             (->> chosen-blank-single-plate
+                  (scale [(/ (- 100 narrow-percent) 100)
+                          (/ (- 100 narrow-percent) 100)
+                          1])
+                  (key-place column row)
+                  untent
+                  pyramid
+                  retent)))))
+
 
 (defn finger-case-bottom-sphere [flatness downness]
   "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
@@ -1592,10 +1617,16 @@
                            (marshmallow-gasket (- radius thickness)))
                big-intersection-shape)]
     sides))
-  
+
 (spit "things/dactyl-blank-all.scad"
       (write-scad
-       (union dactyl-top-right-thumb
+       (union
+        (apply union key-blanks-pieces)
+        #_(color [1 0 0 0.5] (finger-top-outline-prism 30 0))
+        (color [0 1 0 0.7] (finger-top-outline-prism2 30 0)))
+
+
+       #_(union dactyl-top-right-thumb
               (apply union (dactyl-top-right-pieces key-blanks-pieces))
               (binding [*fn* 12]
                 (union
@@ -1603,7 +1634,7 @@
                  (big-marshmallowy-sides 40 0 3 19)))
               caps)))
 
-(spit "things/dactyl-bottom-right.scad"
+#_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
 
 ;; (spit "things/dactyl-top-left.scad"
