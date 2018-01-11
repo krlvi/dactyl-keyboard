@@ -221,6 +221,30 @@
                          (Math/sin (/ β 2)))
                       cap-top-height))
 
+                                        ; this defines the keys
+                                        ; missing from the finger part
+                                        ; that make room for the thumb
+(defn finger-has-key-place-p [row column]
+  (cond
+    (and (= column 0) (= row 4)) false
+    (and (= column -1) (= row 4)) false
+    true true))
+
+                                        ; coordinates of keys around
+                                        ; the edge of the finger
+(def around-edge [[-1 3] [-1 2] [-1 1] [-1 0]
+                  [0 0] [1 0] [2 0] [3 0] [4 0] [5 0]
+                  [5 1] [5 2] [5 3] [5 4]
+                  [4 4] [3 4] [2 4] [1 4]
+                  [1 3] [0 3]])
+
+(defn thumb-glue-joint-left-of-p [row column]
+  (cond
+    (and (= column -1) (= row 3)) true
+    (and (= column 1) (= row 4)) true
+    true false))
+
+
 (defn key-place [column row shape]
   (let [row-placed-shape (->> shape
                               (translate [0 0 (- row-radius)])
@@ -240,6 +264,24 @@
          (rotate tenting-angle [0 1 0])
          (translate [0 0 13]))))
 
+(defn key-unplace [column row shape]
+  (let [column-unoffset (cond
+                        (and (>= column 2) (< column 3)) [0 -2.82 3.0]
+                        (>= column 4) [0 5.8 -5.64]
+                        :else [0 0 0])
+        column-angle (* β (- 2 column))]
+    (->> shape
+       (translate [0 0 -13])
+       (rotate (- tenting-angle) [0 1 0])
+       (translate column-unoffset)
+       (translate [0 0 (- column-radius)])
+       (rotate (- column-angle) [0 1 0])
+       (translate [0 0 column-radius])
+       (translate [0 0 (- row-radius)])
+       (rotate (* (- α) (- 2 row)) [1 0 0])
+       (translate [0 0 row-radius]))))
+                   
+                  
 
 (defn case-place [column row shape]
   (let [row-placed-shape (->> shape
@@ -256,18 +298,6 @@
     (->> placed-shape
          (rotate tenting-angle [0 1 0])
          (translate [0 0 13]))))
-
-(defn finger-has-key-place-p [row column]
-  (cond
-    (and (= column 0) (= row 4)) false
-    (and (= column -1) (= row 4)) false
-    true true))
-
-(defn thumb-glue-joint-left-of-p [row column]
-  (cond
-    (and (= column -1) (= row 3)) true
-    (and (= column 1) (= row 4)) true
-    true false))
 
 (defn key-shapes-for-columns [shape columns]
   (apply union
@@ -311,34 +341,59 @@
 (def web-post-br (translate [(- (/ mount-width 2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
 (def web-post-b  (translate [0 (+ (/ mount-height -2) post-adj) 0] web-post))
 
-(defn row-connectors [column]
-  (for [row rows
-        :when (finger-has-key-place-p row column)]
-    (triangle-hulls
+(defn row-connector [row column]
+  (triangle-hulls
      (key-place (inc column) row web-post-tl)
      (key-place column row web-post-tr)
      (key-place (inc column) row web-post-bl)
-     (key-place column row web-post-br))))
+     (key-place column row web-post-br)))
+(defn row-connector-untranslate [shape]
+  (translate [(- (- (/ mount-width 2) post-adj)) 0 0] shape))
+(defn row-connector-retranslate [shape]
+  (translate [(- (/ mount-width 2) post-adj) 0 0] shape))
+
+(defn row-connectors [column]
+  (for [row rows
+        :when (finger-has-key-place-p row column)]
+    (row-connector row column)))
+
+(defn diagonal-connector [row column]
+  (triangle-hulls
+     (key-place column row web-post-br)
+     (key-place column (inc row) web-post-tr)
+     (key-place (inc column) row web-post-bl)
+     (key-place (inc column) (inc row) web-post-tl)))
+(defn diagonal-connector-untranslate [shape]
+  (translate [(- (- (/ mount-width 2) post-adj))
+              (- (- (/ mount-height 2) post-adj))
+              0] shape))
+(defn diagonal-connector-retranslate [shape]
+  (translate [(- (/ mount-width 2) post-adj)
+              (- (/ mount-height 2) post-adj)
+              0] shape))
 
 (defn diagonal-connectors [column]
   (for [row (drop-last rows)
         :when (and
                (finger-has-key-place-p (inc row) (inc column))
                (not (thumb-glue-joint-left-of-p (inc row) (inc column))))]
-    (triangle-hulls
+    (diagonal-connector row column)))
+
+(defn column-connector [row column]
+  (triangle-hulls
+     (key-place column row web-post-bl)
      (key-place column row web-post-br)
-     (key-place column (inc row) web-post-tr)
-     (key-place (inc column) row web-post-bl)
-     (key-place (inc column) (inc row) web-post-tl))))
+     (key-place column (inc row) web-post-tl)
+     (key-place column (inc row) web-post-tr)))
+(defn column-connector-untranslate [shape]
+  (translate [0 (- (- (/ mount-height 2) post-adj)) 0] shape))
+(defn column-connector-retranslate [shape]
+  (translate [0 (- (/ mount-height 2) post-adj) 0] shape))
 
 (defn column-connectors [column]
   (for [row (drop-last rows)
         :when (finger-has-key-place-p (inc row) column)]
-    (triangle-hulls
-     (key-place column row web-post-bl)
-     (key-place column row web-post-br)
-     (key-place column (inc row) web-post-tl)
-     (key-place column (inc row) web-post-tr))))
+    (column-connector row column)))
 
 (def connectors-inside-fingerpieces
   (let
@@ -414,6 +469,13 @@
                                       (translate [0.5 12 (- plate-thickness (/ web-thickness 2) 1.4)])
                                       (color [1 0 0 1/2])))
         top-plate (difference top-plate stabilizer-cutout)]
+    (union top-plate (mirror [0 1 0] top-plate))))
+
+(def double-plates-blank
+  (let [plate-height (/ (- sa-double-length mount-height) 2)
+        top-plate (->> (cube mount-width plate-height web-thickness)
+                       (translate [0 (/ (+ plate-height mount-height) 2)
+                                   (- plate-thickness (/ web-thickness 2))]))]
     (union top-plate (mirror [0 1 0] top-plate))))
 
 (def thumbcaps
@@ -503,6 +565,13 @@
    (thumb-layout (rotate (/ π 2) [0 0 1] chosen-single-plate))
    (thumb-place 0 -1/2 double-plates)
    (thumb-place 1 -1/2 double-plates)))
+
+(def thumb-blanks
+  (union
+   (thumb-layout (rotate (/ π 2) [0 0 1] chosen-blank-single-plate))
+   (thumb-place 0 -1/2 double-plates-blank)
+   (thumb-place 1 -1/2 double-plates-blank)))
+
 
 ;;;;;;;;;;
 ;; Case ;;
@@ -1549,20 +1618,68 @@
                                       1] shape)]
                     (hull
                      (translate [0 0 distance-below] above)
-                     (translate [0 0 (- distance-below)] below))))]
-    (apply union
-           (for [column columns
-                 row rows
-                 :when (finger-has-key-place-p row column)]
-             (->> chosen-blank-single-plate
-                  (scale [(/ (- 100 narrow-percent) 100)
-                          (/ (- 100 narrow-percent) 100)
-                          1])
-                  (key-place column row)
-                  untent
-                  pyramid
-                  retent)))))
-
+                     (translate [0 0 (- distance-below)] below))))
+        key-frustum (fn [column row]
+                      (->> chosen-blank-single-plate
+                           (scale [(/ (- 100 narrow-percent) 100)
+                                   (/ (- 100 narrow-percent) 100)
+                                   1])
+                           (key-place column row)
+                           untent
+                           pyramid
+                           retent))
+        around-edge-p (fn [row column]
+                        (and
+                         (finger-has-key-place-p row column)
+                         (or (= column (first columns))
+                             (= column (last columns))
+                             (not (finger-has-key-place-p row (inc column)))
+                             (= row (first rows))
+                             (= row (last rows))
+                             (not (finger-has-key-place-p (inc row) column))
+                             (not (finger-has-key-place-p (inc row) (dec column))))))]
+    (union
+     (apply union
+            ; hah! around the edge, take successive pairs of key
+            ; frusta, and hull them together.
+            (for [[[column1 row1] [column2 row2]]
+                  (map vector around-edge
+                       (concat (rest around-edge) (list (first around-edge))))]
+              (hull (key-frustum column1 row1)
+                    (key-frustum column2 row2))))
+     ; hull from the edge diagonally in one key, one way... 
+     (apply union
+            (for [column (drop-last columns)
+                  row (drop-last rows)
+                  :when (and (finger-has-key-place-p row column)
+                             (finger-has-key-place-p (inc row) (inc column))
+                             (or (not (around-edge-p row column))
+                                 (not (around-edge-p (inc row) (inc column))))
+                             (not (and (not (around-edge-p row column))
+                                       (not (around-edge-p (inc row) (inc column))))))]
+              (hull (key-frustum column row)
+                    (key-frustum (inc column) (inc row)))))
+     ; ... then the other.
+     (apply union
+            (for [column (drop 1 columns)
+                  row (drop-last rows)
+                  :when (and (finger-has-key-place-p row column)
+                             (finger-has-key-place-p (inc row) (dec column))
+                             (or (not (around-edge-p row column))
+                                 (not (around-edge-p (inc row) (dec column))))
+                             (not (and (not (around-edge-p row column))
+                                       (not (around-edge-p (inc row) (dec column))))))]
+              (hull (key-frustum column row)
+                    (key-frustum (dec column) (inc row)))))
+                             
+     ; A single blob for the middle.
+     (apply hull
+            (for [column (drop-last (drop 1 columns))
+                  row (drop-last (drop 1 rows))
+                  :when (and (finger-has-key-place-p row column)
+                             (finger-has-key-place-p (inc row) column)
+                             (finger-has-key-place-p row (inc column)))]
+              (key-frustum column row))))))
 
 (defn finger-case-bottom-sphere [flatness downness]
   "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
@@ -1586,7 +1703,7 @@
   (let [the-sphere (finger-case-bottom-sphere flatness downness)
         the-shell (difference the-sphere (translate [0 0 thickness] the-sphere))
         distance-below-to-intersect (max (+ downness flatness) 20)
-        big-intersection-shape (finger-top-outline-prism distance-below-to-intersect 0)]
+        big-intersection-shape (finger-top-outline-prism2 distance-below-to-intersect 0)]
     (intersection the-shell big-intersection-shape)))
 
 (defn big-marshmallowy-sides [flatness downness thickness radius]
@@ -1602,8 +1719,8 @@
         thick-shell (difference (translate [0 0 (- thickness)] the-sphere)
                                 (translate [0 0 (* 2 thickness)] the-sphere))
         distance-below-to-intersect (max (+ downness flatness) 20)
-        big-intersection-shape (finger-top-outline-prism distance-below-to-intersect 0)
-        little-intersection-shape (finger-top-outline-prism distance-below-to-intersect 2)
+        big-intersection-shape (finger-top-outline-prism2 distance-below-to-intersect 0)
+        little-intersection-shape (finger-top-outline-prism2 distance-below-to-intersect 2)
         finger-case-outline (fn [flatness downness]
                               (difference (intersection the-shell big-intersection-shape)
                                           (intersection thick-shell little-intersection-shape)))
@@ -1620,17 +1737,19 @@
 
 (spit "things/dactyl-blank-all.scad"
       (write-scad
-       (union
+       #_(union
         (apply union key-blanks-pieces)
         #_(color [1 0 0 0.5] (finger-top-outline-prism 30 0))
-        (color [0 1 0 0.7] (finger-top-outline-prism2 30 0)))
+        #_(color [0 1 0 0.7] (finger-top-outline-prism2 30 0)))
 
-
-       #_(union dactyl-top-right-thumb
+       #_(union
+        thumb-blanks
+        #_(color [0 1 0 0.7] (thumb-top-outline-prism2 30 0)))
+       (union #_dactyl-top-right-thumb
               (apply union (dactyl-top-right-pieces key-blanks-pieces))
               (binding [*fn* 12]
                 (union
-                 (finger-case-bottom-shell 40 19 3)
+                 #_(finger-case-bottom-shell 40 19 3)
                  (big-marshmallowy-sides 40 0 3 19)))
               caps)))
 
