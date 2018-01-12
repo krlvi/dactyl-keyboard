@@ -264,25 +264,6 @@
          (rotate tenting-angle [0 1 0])
          (translate [0 0 13]))))
 
-(defn key-unplace [column row shape]
-  (let [column-unoffset (cond
-                        (and (>= column 2) (< column 3)) [0 -2.82 3.0]
-                        (>= column 4) [0 5.8 -5.64]
-                        :else [0 0 0])
-        column-angle (* β (- 2 column))]
-    (->> shape
-       (translate [0 0 -13])
-       (rotate (- tenting-angle) [0 1 0])
-       (translate column-unoffset)
-       (translate [0 0 (- column-radius)])
-       (rotate (- column-angle) [0 1 0])
-       (translate [0 0 column-radius])
-       (translate [0 0 (- row-radius)])
-       (rotate (* (- α) (- 2 row)) [1 0 0])
-       (translate [0 0 row-radius]))))
-                   
-                  
-
 (defn case-place [column row shape]
   (let [row-placed-shape (->> shape
                               (translate [0 0 (- row-radius)])
@@ -413,15 +394,20 @@
 ;;;;;;;;;;;;
 
 (defn thumb-place [column row shape]
-  (let [cap-top-height (+ plate-thickness sa-profile-key-height)
-        α (/ π 12)
-        row-radius (+ (/ (/ (+ mount-height 1) 2)
-                         (Math/sin (/ α 2)))
-                      cap-top-height)
-        β (/ π 36)
-        column-radius (+ (/ (/ (+ mount-width 2) 2)
-                            (Math/sin (/ β 2)))
-                         cap-top-height)
+  (let [
+                                        ; these are the same as above;
+                                        ; commenting out. we will use
+                                        ; row-radius and column-radius
+                                        ; in thumb-case-bottom-sphere
+
+        ;; α (/ π 12)
+        ;; row-radius (+ (/ (/ (+ mount-height 1) 2)
+                         ;; (Math/sin (/ α 2)))
+                      ;; cap-top-height)
+        ;; β (/ π 36)
+        ;; column-radius (+ (/ (/ (+ mount-width 2) 2)
+                            ;; (Math/sin (/ β 2)))
+                         ;; cap-top-height)
         #_(+ (/ (/ (+ pillar-width 5) 2)
                             (Math/sin (/ β 2)))
                          cap-top-height)]
@@ -435,10 +421,19 @@
          (translate [mount-width 0 0])
          (rotate (* π (- 1/4 3/16)) [0 0 1])
          ; perhaps this should be tenting-angle, but look at the
-         ; axis. that will influence what the translation after it
-         ; needs to be
+         ; axis. that will change what the translation after it
+         ; needs to be when you change tenting-angle.
          (rotate (/ π 12) [1 1 0])
          (translate [-53 -45 40]))))
+
+(defn thumb-untent [shape]
+  (->> shape
+       (translate [53 45 -40])
+       (rotate (- (/ π 12)) [1 1 0])))
+(defn thumb-retent [shape]
+  (->> shape
+       (rotate (/ π 12) [1 1 0])
+       (translate [-53 -45 40])))
 
 (defn thumb-2x-column [shape]
   (thumb-place 0 -1/2 shape))
@@ -1591,22 +1586,46 @@
 (defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
 (defn retent [shape] (rotate tenting-angle [0 1 0] shape))
 
-; badly named.
-(defn finger-top-outline-prism [distance-below narrow-percent]
-  (let [untented-key-blanks (untent key-blanks-pieces)
-        narrower-key-blanks (scale [(/ (- 100 narrow-percent) 100)
-                                    (/ (- 100 narrow-percent) 100)
-                                    1] untented-key-blanks)
-        adjusted (scale [(/ (+ distance-below column-radius) column-radius)
-                         (/ (+ distance-below row-radius) row-radius)
-                         1] narrower-key-blanks)
-        adjusted-above (scale [(/ (- column-radius distance-below) column-radius)
-                               (/ (- row-radius distance-below) row-radius)
-                              1] narrower-key-blanks)]
-    (retent
-     (hull
-      (translate [0 0 distance-below] adjusted-above)
-      (translate [0 0 (- distance-below)] adjusted)))))
+
+(defn thumb-top-outline-prism2 [distance-below narrow-percent]
+  (let [pyramid (fn [shape]
+                  (let [below (scale [(/ (+ column-radius distance-below) column-radius)
+                                      (/ (+ row-radius distance-below) row-radius)
+                                      1] shape)
+                        above (scale [(/ (- column-radius distance-below) column-radius)
+                                      (/ (- row-radius distance-below) row-radius)
+                                      1] shape)]
+                    (hull
+                     (translate [0 0 distance-below] above)
+                     (translate [0 0 (- distance-below)] below))))
+        thumb-frustum (fn [column row shape]
+                        (->> shape
+                             (scale [(/ (- 100 narrow-percent) 100)
+                                     (/ (- 100 narrow-percent) 100)
+                                     1])
+                             (thumb-place column row)
+                             thumb-untent
+                             pyramid
+                             thumb-retent))]
+    (union
+                                        ; the key at thumb-place 1,1
+                                        ; is not in this keyboard, but
+                                        ; to make the outline be
+                                        ; shaped right we need its
+                                        ; frustum in our union
+     #_(hull (thumb-frustum 1 1 chosen-blank-single-plate)
+           (thumb-frustum 2 1 chosen-blank-single-plate)
+           (thumb-frustum 2 0 chosen-blank-single-plate))
+     #_(hull (thumb-frustum 1 1 chosen-blank-single-plate)
+           (thumb-frustum 1 -1/2 double-plates-blank))
+     (hull (thumb-frustum 2 1 chosen-blank-single-plate)
+           (thumb-frustum 2 0  chosen-blank-single-plate))
+     (hull (thumb-frustum 2 0  chosen-blank-single-plate)
+           (thumb-frustum 2 -1  chosen-blank-single-plate)
+           (thumb-frustum 0 -1/2 double-plates-blank))
+     (hull (thumb-frustum 0 -1/2 double-plates-blank)
+           (thumb-frustum 1 -1/2 double-plates-blank)))))
+
 
 (defn finger-top-outline-prism2 [distance-below narrow-percent]
   (let [pyramid (fn [shape]
@@ -1647,7 +1666,7 @@
                        (concat (rest around-edge) (list (first around-edge))))]
               (hull (key-frustum column1 row1)
                     (key-frustum column2 row2))))
-     ; hull from the edge diagonally in one key, one way... 
+     ; hull from the edge diagonally in one key, one way...
      (apply union
             (for [column (drop-last columns)
                   row (drop-last rows)
@@ -1671,7 +1690,7 @@
                                        (not (around-edge-p (inc row) (dec column))))))]
               (hull (key-frustum column row)
                     (key-frustum (dec column) (inc row)))))
-                             
+
      ; A single blob for the middle.
      (apply hull
             (for [column (drop-last (drop 1 columns))
@@ -1683,18 +1702,37 @@
 
 (defn finger-case-bottom-sphere [flatness downness]
   "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
-  (let [
-        sph-row-radius (+ flatness row-radius)
+  (let [sph-row-radius (+ flatness row-radius)
         sph-column-radius (+ flatness column-radius)]
     (->> (sphere sph-row-radius)
                                         ; i don't see why this ratio
                                         ; is scaled by half
          (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1])
          (color [0 0.7 0.7 0.8])
+                                        ; from key-place
          (translate [0 0 sph-row-radius])
                                         ; tenting is pi over 12; outer
                                         ; rows raised so rotate a little less
          (rotate (* (/ π 12) 0.85) [0 1 0])
+         (translate [0 0 (- sph-row-radius)])
+         (translate [0 0 row-radius])
+         (translate [0 0 (- flatness downness)]))))
+
+(defn thumb-case-bottom-sphere [flatness downness]
+  (let [sph-row-radius (+ flatness row-radius)
+        sph-column-radius (+ flatness column-radius)]
+    (->> (sphere sph-row-radius)
+         (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1])
+         (color [0.7 0 0.7 0.8])
+                                        ; from thumb-place
+         (translate [mount-width 0 0])
+         (translate [0 0 sph-row-radius])
+         (rotate (* π (- 1/4 3/16)) [0 0 1])
+         ; perhaps this should be tenting-angle, but look at the
+         ; axis. that will change what the translation after it
+         ; needs to be when you change tenting-angle.
+         (rotate (* (/ π 12) 0.9) [1 1 0])
+         (translate [-53 -45 40])
          (translate [0 0 (- sph-row-radius)])
          (translate [0 0 row-radius])
          (translate [0 0 (- flatness downness)]))))
@@ -1708,50 +1746,69 @@
 
 (defn big-marshmallowy-sides [flatness downness thickness radius]
   (let [
-        the-sphere (finger-case-bottom-sphere flatness downness)
+        finger-sphere (finger-case-bottom-sphere flatness downness)
+        thumb-sphere (thumb-case-bottom-sphere flatness (+ downness 10))
         outline-thickness 1
         gasket-sphere-fn 9 ; detail of sphere. normally 20 or so?
                            ; severe performance impact. for me, with
                            ; openscad 2015.03-2, this looked like big
                            ; delays with lots of memory usage after
                            ; the progress bar got to 1000.
-        the-shell (difference the-sphere (translate [0 0 thickness] the-sphere))
-        thick-shell (difference (translate [0 0 (- thickness)] the-sphere)
-                                (translate [0 0 (* 2 thickness)] the-sphere))
+        finger-shell (difference finger-sphere (translate [0 0 thickness] finger-sphere))
+        finger-thick-shell (difference (translate [0 0 (- thickness)] finger-sphere)
+                                       (translate [0 0 (* 2 thickness)] finger-sphere))
+        thumb-shell (difference thumb-sphere (translate [0 0 thickness] thumb-sphere))
+        thumb-thick-shell (difference (translate [0 0 (- thickness)] thumb-sphere)
+                                      (translate [0 0 (* 2 thickness)] thumb-sphere))
         distance-below-to-intersect (max (+ downness flatness) 20)
-        big-intersection-shape (finger-top-outline-prism2 distance-below-to-intersect 0)
-        little-intersection-shape (finger-top-outline-prism2 distance-below-to-intersect 2)
+        finger-big-intersection-shape
+        (finger-top-outline-prism2 distance-below-to-intersect 0)
+        finger-little-intersection-shape
+        (finger-top-outline-prism2 distance-below-to-intersect 2)
+        thumb-big-intersection-shape
+        (thumb-top-outline-prism2 (* 1.5 distance-below-to-intersect) 0)
+        thumb-little-intersection-shape
+        (thumb-top-outline-prism2 (* 1.5 distance-below-to-intersect) 2)
         finger-case-outline (fn [flatness downness]
-                              (difference (intersection the-shell big-intersection-shape)
-                                          (intersection thick-shell little-intersection-shape)))
-        the-outline (finger-case-outline flatness downness)
+                              (difference (intersection finger-shell
+                                                        finger-big-intersection-shape)
+                                          (intersection finger-thick-shell
+                                                        finger-little-intersection-shape)))
+        thumb-case-outline (fn [flatness downness]
+                              (difference (intersection thumb-shell
+                                                        thumb-big-intersection-shape)
+                                          (intersection thumb-thick-shell
+                                                        thumb-little-intersection-shape)))
+
+        the-outline (union (difference (finger-case-outline flatness downness)
+                                       thumb-big-intersection-shape)
+                           (difference (thumb-case-outline flatness (+ downness 20))
+                                       finger-big-intersection-shape))
         marshmallow-gasket (fn [r] (minkowski
-                                    (finger-case-outline flatness downness)
+                                    the-outline
                                     (binding [*fn* gasket-sphere-fn]
                                       (sphere r))))
         sides (difference
                (difference (marshmallow-gasket radius)
                            (marshmallow-gasket (- radius thickness)))
-               big-intersection-shape)]
+               finger-big-intersection-shape
+               thumb-big-intersection-shape)]
     sides))
 
 (spit "things/dactyl-blank-all.scad"
       (write-scad
-       #_(union
-        (apply union key-blanks-pieces)
-        #_(color [1 0 0 0.5] (finger-top-outline-prism 30 0))
-        #_(color [0 1 0 0.7] (finger-top-outline-prism2 30 0)))
-
-       #_(union
-        thumb-blanks
-        #_(color [0 1 0 0.7] (thumb-top-outline-prism2 30 0)))
-       (union #_dactyl-top-right-thumb
-              (apply union (dactyl-top-right-pieces key-blanks-pieces))
-              (binding [*fn* 12]
-                (union
-                 #_(finger-case-bottom-shell 40 19 3)
-                 (big-marshmallowy-sides 40 0 3 19)))
-              caps)))
+       (union
+        #_(apply union key-blanks-pieces)
+        #_(color [0 1 0 0.7] (finger-top-outline-prism2 30 0))
+        #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
+        (union #_dactyl-top-right-thumb
+               #_(apply union (dactyl-top-right-pieces key-holes-pieces))
+               (binding [*fn* 12]
+                 (union
+                  #_(finger-case-bottom-shell 40 19 3)
+                  (big-marshmallowy-sides 40 0 3 19)))
+               caps
+               thumbcaps))))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
