@@ -237,6 +237,8 @@
                   [5 1] [5 2] [5 3] [5 4]
                   [4 4] [3 4] [2 4] [1 4]
                   [1 3] [0 3]])
+(def around-edge-rot1 (concat (rest around-edge) (list (first around-edge))))
+
 
 (defn thumb-glue-joint-left-of-p [row column]
   (cond
@@ -1587,26 +1589,43 @@
 (defn retent [shape] (rotate tenting-angle [0 1 0] shape))
 
 
-(defn thumb-top-outline-prism2 [distance-below narrow-percent]
-  (let [pyramid (fn [shape]
-                  (let [below (scale [(/ (+ column-radius distance-below) column-radius)
-                                      (/ (+ row-radius distance-below) row-radius)
-                                      1] shape)
-                        above (scale [(/ (- column-radius distance-below) column-radius)
-                                      (/ (- row-radius distance-below) row-radius)
-                                      1] shape)]
-                    (hull
-                     (translate [0 0 distance-below] above)
-                     (translate [0 0 (- distance-below)] below))))
-        thumb-frustum (fn [column row shape]
-                        (->> shape
-                             (scale [(/ (- 100 narrow-percent) 100)
-                                     (/ (- 100 narrow-percent) 100)
-                                     1])
-                             (thumb-place column row)
-                             thumb-untent
-                             pyramid
-                             thumb-retent))]
+
+; This is the thing differenced out of the middle of the giant
+; marshmallow to make room for the keys. It is much more complicated
+; than just the hull of the key holes, because if it isn't concave,
+; the marshmallowy sides will shrink away from the keys unevenly in
+; places. It is a single definition, so that we can make hulls between
+; thumb places and key places. This is necessary because the thumb
+; tips away from the finger, so their separate prisms have a gorge
+; between them.
+(defn pyramid [distance-below shape]
+  (let [below (scale [(/ (+ column-radius distance-below) column-radius)
+                      (/ (+ row-radius distance-below) row-radius)
+                      1] shape)
+        above (scale [(/ (- column-radius distance-below) column-radius)
+                      (/ (- row-radius distance-below) row-radius)
+                      1] shape)]
+    (hull
+     (translate [0 0 distance-below] above)
+     (translate [0 0 (- distance-below)] below))))
+
+(defn frustum [distance-below narrow-percent place untent retent column row shape]
+          (->> shape
+               (scale [(/ (- 100 narrow-percent) 100)
+                       (/ (- 100 narrow-percent) 100)
+                       1])
+               (place column row)
+               untent
+               (pyramid distance-below)
+               retent))
+(defn key-frustum [distance-below narrow-percent column row]
+  (frustum distance-below narrow-percent
+           key-place untent retent column row chosen-blank-single-plate))
+(defn thumb-frustum [distance-below narrow-percent column row shape]
+  (frustum distance-below narrow-percent
+           thumb-place thumb-untent thumb-retent column row shape))
+(defn thumb-prism [distance-below narrow-percent]
+  (let [tfc #(thumb-frustum distance-below narrow-percent % %2 %3)]
     (union
                                         ; the key at thumb-place 1,1
                                         ; is not in this keyboard, but
@@ -1614,91 +1633,88 @@
                                         ; shaped right we need its
                                         ; frustum in our union
      #_(hull (thumb-frustum 1 1 chosen-blank-single-plate)
-           (thumb-frustum 2 1 chosen-blank-single-plate)
-           (thumb-frustum 2 0 chosen-blank-single-plate))
+             (thumb-frustum 2 1 chosen-blank-single-plate)
+             (thumb-frustum 2 0 chosen-blank-single-plate))
      #_(hull (thumb-frustum 1 1 chosen-blank-single-plate)
-           (thumb-frustum 1 -1/2 double-plates-blank))
-     (hull (thumb-frustum 2 1 chosen-blank-single-plate)
-           (thumb-frustum 2 0  chosen-blank-single-plate))
-     (hull (thumb-frustum 2 0  chosen-blank-single-plate)
-           (thumb-frustum 2 -1  chosen-blank-single-plate)
-           (thumb-frustum 0 -1/2 double-plates-blank))
-     (hull (thumb-frustum 0 -1/2 double-plates-blank)
-           (thumb-frustum 1 -1/2 double-plates-blank)))))
+             (thumb-frustum 1 -1/2 double-plates-blank))
+     (hull (tfc 2 1 chosen-blank-single-plate)
+           (tfc 2 0 chosen-blank-single-plate))
+     (hull (tfc 2 0    chosen-blank-single-plate)
+           (tfc 2 -1   chosen-blank-single-plate)
+           (tfc 0 -1/2 double-plates-blank))
+     (hull (tfc 0 -1/2 double-plates-blank)
+           (tfc 1 -1/2 double-plates-blank)))))
+                                        ; the around-edge vector is a
+                                        ; list of the key places
+                                        ; around the edge in
+                                        ; order. this is a description
+                                        ; of whether a given key place
+                                        ; is around the edge.
+(defn around-edge-p [row column]
+  (and
+   (finger-has-key-place-p row column)
+   (or (= column (first columns))
+       (= column (last columns))
+       (= row (first rows))
+       (= row (last rows))
+       (not (finger-has-key-place-p row (inc column)))
+       (not (finger-has-key-place-p (inc row) column))
+       (not (finger-has-key-place-p (inc row) (dec column))))))
+(defn finger-edge-prism [distance-below narrow-percent]
+  (apply union
+                                        ; hah! around the edge, take
+                                        ; successive pairs of key
+                                        ; frusta, and hull them
+                                        ; together.
+         (for [[[column1 row1] [column2 row2]]
+               (map vector around-edge around-edge-rot1)]
+           (hull (key-frustum distance-below narrow-percent column1 row1)
+                 (key-frustum distance-below narrow-percent column2 row2)))))
+                                        ; hull from the edge
+                                        ; diagonally in one key, one
+                                        ; way...
+(defn finger-edge-zig-in-1-prism [distance-below narrow-percent]
+  (apply union
+         (for [column (drop-last columns)
+               row (drop-last rows)
+               :when (and (finger-has-key-place-p row column)
+                          (finger-has-key-place-p (inc row) (inc column))
+                          (or (not (around-edge-p row column))
+                              (not (around-edge-p (inc row) (inc column))))
+                          (not (and (not (around-edge-p row column))
+                                    (not (around-edge-p (inc row) (inc column))))))]
+           (hull (key-frustum distance-below narrow-percent column row)
+                 (key-frustum distance-below narrow-percent (inc column) (inc row))))))
+                                        ; ... then the other.
+(defn finger-edge-zag-in-1-prism [distance-below narrow-percent]
+  (apply union
+         (for [column (drop 1 columns)
+               row (drop-last rows)
+               :when (and (finger-has-key-place-p row column)
+                          (finger-has-key-place-p (inc row) (dec column))
+                          (or (not (around-edge-p row column))
+                              (not (around-edge-p (inc row) (dec column))))
+                          (not (and (not (around-edge-p row column))
+                                    (not (around-edge-p (inc row) (dec column))))))]
+           (hull (key-frustum distance-below narrow-percent column row)
+                 (key-frustum distance-below narrow-percent (dec column) (inc row))))))
+(defn finger-middle-blob-prism [distance-below narrow-percent]
+  (apply hull
+         (for [column (drop-last (drop 1 columns))
+               row (drop-last (drop 1 rows))
+               :when (and (finger-has-key-place-p row column)
+                          (finger-has-key-place-p (inc row) column)
+                          (finger-has-key-place-p row (inc column)))]
+           (key-frustum distance-below narrow-percent column row))))
 
+(defn finger-prism [distance-below narrow-percent]
+  (apply union (for [prism
+                     [finger-edge-prism
+                      finger-edge-zig-in-1-prism
+                      finger-edge-zag-in-1-prism
+                      finger-middle-blob-prism]]
+                 (prism distance-below narrow-percent))))
 
-(defn finger-top-outline-prism2 [distance-below narrow-percent]
-  (let [pyramid (fn [shape]
-                  (let [below (scale [(/ (+ column-radius distance-below) column-radius)
-                                      (/ (+ row-radius distance-below) row-radius)
-                                      1] shape)
-                        above (scale [(/ (- column-radius distance-below) column-radius)
-                                      (/ (- row-radius distance-below) row-radius)
-                                      1] shape)]
-                    (hull
-                     (translate [0 0 distance-below] above)
-                     (translate [0 0 (- distance-below)] below))))
-        key-frustum (fn [column row]
-                      (->> chosen-blank-single-plate
-                           (scale [(/ (- 100 narrow-percent) 100)
-                                   (/ (- 100 narrow-percent) 100)
-                                   1])
-                           (key-place column row)
-                           untent
-                           pyramid
-                           retent))
-        around-edge-p (fn [row column]
-                        (and
-                         (finger-has-key-place-p row column)
-                         (or (= column (first columns))
-                             (= column (last columns))
-                             (not (finger-has-key-place-p row (inc column)))
-                             (= row (first rows))
-                             (= row (last rows))
-                             (not (finger-has-key-place-p (inc row) column))
-                             (not (finger-has-key-place-p (inc row) (dec column))))))]
-    (union
-     (apply union
-            ; hah! around the edge, take successive pairs of key
-            ; frusta, and hull them together.
-            (for [[[column1 row1] [column2 row2]]
-                  (map vector around-edge
-                       (concat (rest around-edge) (list (first around-edge))))]
-              (hull (key-frustum column1 row1)
-                    (key-frustum column2 row2))))
-     ; hull from the edge diagonally in one key, one way...
-     (apply union
-            (for [column (drop-last columns)
-                  row (drop-last rows)
-                  :when (and (finger-has-key-place-p row column)
-                             (finger-has-key-place-p (inc row) (inc column))
-                             (or (not (around-edge-p row column))
-                                 (not (around-edge-p (inc row) (inc column))))
-                             (not (and (not (around-edge-p row column))
-                                       (not (around-edge-p (inc row) (inc column))))))]
-              (hull (key-frustum column row)
-                    (key-frustum (inc column) (inc row)))))
-     ; ... then the other.
-     (apply union
-            (for [column (drop 1 columns)
-                  row (drop-last rows)
-                  :when (and (finger-has-key-place-p row column)
-                             (finger-has-key-place-p (inc row) (dec column))
-                             (or (not (around-edge-p row column))
-                                 (not (around-edge-p (inc row) (dec column))))
-                             (not (and (not (around-edge-p row column))
-                                       (not (around-edge-p (inc row) (dec column))))))]
-              (hull (key-frustum column row)
-                    (key-frustum (dec column) (inc row)))))
-
-     ; A single blob for the middle.
-     (apply hull
-            (for [column (drop-last (drop 1 columns))
-                  row (drop-last (drop 1 rows))
-                  :when (and (finger-has-key-place-p row column)
-                             (finger-has-key-place-p (inc row) column)
-                             (finger-has-key-place-p row (inc column)))]
-              (key-frustum column row))))))
 
 (defn finger-case-bottom-sphere [flatness downness]
   "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
@@ -1741,11 +1757,18 @@
   (let [the-sphere (finger-case-bottom-sphere flatness downness)
         the-shell (difference the-sphere (translate [0 0 thickness] the-sphere))
         distance-below-to-intersect (max (+ downness flatness) 20)
-        big-intersection-shape (finger-top-outline-prism2 distance-below-to-intersect 0)]
+        big-intersection-shape (finger-prism distance-below-to-intersect 0)]
     (intersection the-shell big-intersection-shape)))
 
 (defn big-marshmallowy-sides [flatness downness thickness radius]
-  (let [
+  (let [distance-below-to-intersect (max (+ downness flatness) 20)
+                                        ; the thumb is set above (+z)
+                                        ; the finger, but its prism
+                                        ; interacts with the
+                                        ; marshmallowy sides of the
+                                        ; finger. so its prism needs
+                                        ; to be taller.
+        thumb-distance-below (* 1.5 distance-below-to-intersect)
         finger-sphere (finger-case-bottom-sphere flatness downness)
         thumb-sphere (thumb-case-bottom-sphere flatness (+ downness 10))
         outline-thickness 1
@@ -1762,13 +1785,13 @@
                                       (translate [0 0 (* 2 thickness)] thumb-sphere))
         distance-below-to-intersect (max (+ downness flatness) 20)
         finger-big-intersection-shape
-        (finger-top-outline-prism2 distance-below-to-intersect 0)
+        (finger-prism distance-below-to-intersect 0)
         finger-little-intersection-shape
-        (finger-top-outline-prism2 distance-below-to-intersect 2)
+        (finger-prism distance-below-to-intersect 2)
         thumb-big-intersection-shape
-        (thumb-top-outline-prism2 (* 1.5 distance-below-to-intersect) 0)
+        (thumb-prism thumb-distance-below 0)
         thumb-little-intersection-shape
-        (thumb-top-outline-prism2 (* 1.5 distance-below-to-intersect) 2)
+        (thumb-prism thumb-distance-below 2)
         finger-case-outline (fn [flatness downness]
                               (difference (intersection finger-shell
                                                         finger-big-intersection-shape)
@@ -1807,8 +1830,8 @@
                  (union
                   #_(finger-case-bottom-shell 40 19 3)
                   (big-marshmallowy-sides 40 0 3 19)))
-               caps
-               thumbcaps))))
+               #_caps
+               #_thumbcaps))))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
