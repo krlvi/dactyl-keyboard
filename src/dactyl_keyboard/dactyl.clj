@@ -1632,11 +1632,16 @@
                                         ; to make the outline be
                                         ; shaped right we need its
                                         ; frustum in our union
-     #_(hull (thumb-frustum 1 1 chosen-blank-single-plate)
-             (thumb-frustum 2 1 chosen-blank-single-plate)
-             (thumb-frustum 2 0 chosen-blank-single-plate))
-     #_(hull (thumb-frustum 1 1 chosen-blank-single-plate)
-             (thumb-frustum 1 -1/2 double-plates-blank))
+     (hull (tfc 1 1 chosen-blank-single-plate)
+           (tfc 2 1 chosen-blank-single-plate)
+           (tfc 2 0 chosen-blank-single-plate))
+     (hull (tfc 1 1 chosen-blank-single-plate)
+           (tfc 1 -1/2 double-plates-blank))
+                                        ; yknow what, we're going to
+                                        ; do the same thing with 0,1
+     (hull (tfc 0 1 chosen-blank-single-plate)
+           (tfc 1 1 chosen-blank-single-plate)
+           (tfc 1 0 chosen-blank-single-plate))
      (hull (tfc 2 1 chosen-blank-single-plate)
            (tfc 2 0 chosen-blank-single-plate))
      (hull (tfc 2 0    chosen-blank-single-plate)
@@ -1761,7 +1766,7 @@
     (intersection the-shell big-intersection-shape)))
 
 (defn big-marshmallowy-sides [flatness downness thickness radius]
-  (let [distance-below-to-intersect (max (+ downness flatness) 20)
+  (let [distance-below-to-intersect (max (+ downness flatness) 35)
                                         ; the thumb is set above (+z)
                                         ; the finger, but its prism
                                         ; interacts with the
@@ -1789,9 +1794,9 @@
         finger-little-intersection-shape
         (finger-prism distance-below-to-intersect 2)
         thumb-big-intersection-shape
-        (thumb-prism thumb-distance-below 0)
+        (thumb-prism thumb-distance-below -5)
         thumb-little-intersection-shape
-        (thumb-prism thumb-distance-below 2)
+        (thumb-prism thumb-distance-below -3)
         finger-case-outline (fn [flatness downness]
                               (difference (intersection finger-shell
                                                         finger-big-intersection-shape)
@@ -1815,14 +1820,27 @@
                (difference (marshmallow-gasket radius)
                            (marshmallow-gasket (- radius thickness)))
                finger-big-intersection-shape
-               thumb-big-intersection-shape)]
+               thumb-big-intersection-shape
+                                        ; the key at 0,4 is not part
+                                        ; of the keyboard, but is
+                                        ; necessary to remove a tab of
+                                        ; the marshmallowy
+                                        ; side. rather than making it
+                                        ; part of around-edge, i've
+                                        ; manually written it here
+               (hull (key-frustum 30 0 0 4)
+                     (key-frustum 30 0 1 4))
+               (hull (key-frustum 30 0 0 4)
+                     (key-frustum 30 0 0 3))
+               (hull (key-frustum 30 0 0 4)
+                     (key-frustum 30 0 1 3)))]
     sides))
 
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
         #_(apply union key-blanks-pieces)
-        #_(color [0 1 0 0.7] (finger-top-outline-prism2 30 0))
+        #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
         (union #_dactyl-top-right-thumb
                #_(apply union (dactyl-top-right-pieces key-holes-pieces))
@@ -1830,8 +1848,8 @@
                  (union
                   #_(finger-case-bottom-shell 40 19 3)
                   (big-marshmallowy-sides 40 0 3 19)))
-               #_caps
-               #_thumbcaps))))
+               caps
+               thumbcaps))))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
