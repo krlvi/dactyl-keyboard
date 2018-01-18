@@ -232,6 +232,12 @@
 
                                         ; coordinates of keys around
                                         ; the edge of the finger
+                                        ;               >*****v
+                                        ;               *.....*
+                                        ;               *.....*
+                                        ; start here -> ^**...*
+                                        ;               xx****<
+
 (def around-edge [[-1 3] [-1 2] [-1 1] [-1 0]
                   [0 0] [1 0] [2 0] [3 0] [4 0] [5 0]
                   [5 1] [5 2] [5 3] [5 4]
@@ -1588,7 +1594,16 @@
 (defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
 (defn retent [shape] (rotate tenting-angle [0 1 0] shape))
 
-
+(defn around-edge-p [row column]
+  (and
+   (finger-has-key-place-p row column)
+   (or (= column (first columns))
+       (= column (last columns))
+       (= row (first rows))
+       (= row (last rows))
+       (not (finger-has-key-place-p row (inc column)))
+       (not (finger-has-key-place-p (inc row) column))
+       (not (finger-has-key-place-p (inc row) (dec column))))))
 
 ; This is the thing differenced out of the middle of the giant
 ; marshmallow to make room for the keys. It is much more complicated
@@ -1599,15 +1614,23 @@
 ; tips away from the finger, so their separate prisms have a gorge
 ; between them.
 (defn pyramid [distance-below shape]
-  (let [below (scale [(/ (+ column-radius distance-below) column-radius)
-                      (/ (+ row-radius distance-below) row-radius)
-                      1] shape)
-        above (scale [(/ (- column-radius distance-below) column-radius)
-                      (/ (- row-radius distance-below) row-radius)
-                      1] shape)]
-    (hull
-     (translate [0 0 distance-below] above)
-     (translate [0 0 (- distance-below)] below))))
+  (let [below (->> shape
+                   (scale [(/ (+ column-radius distance-below) column-radius)
+                           (/ (+ row-radius distance-below) row-radius)
+                           1])
+                   (translate [0 0 (- distance-below)]))
+        distance-above 0 ; taking the pyramid high enough above the
+                         ; top to get rid of the detritus from a
+                         ; hastily-formed keycap prism also takes away
+                         ; the details of the marshmallowy sides that
+                         ; the keycap prisms enable cutting out
+                         ; neatly.
+        above (->> shape
+                   (scale [(/ (- column-radius distance-above) column-radius)
+                           (/ (- row-radius distance-above) row-radius)
+                           1])
+                   (translate [0 0 distance-above]))]
+    (hull above below)))
 
 (defn frustum [distance-below narrow-percent place untent retent column row shape]
           (->> shape
@@ -1624,6 +1647,59 @@
 (defn thumb-frustum [distance-below narrow-percent column row shape]
   (frustum distance-below narrow-percent
            thumb-place thumb-untent thumb-retent column row shape))
+(defn silo [distance-above narrow-percent place widenings column row shape]
+                                        ; see key-place
+  (let [distance-below 6
+        lower #(translate [0 0 (- distance-below)] %)
+        shrink #(scale [(/ (- 100 narrow-percent) 100)
+                        (/ (- 100 narrow-percent) 100)
+                        1] %)
+        widen #(let [[l r] (widenings column)]
+                 (hull (translate [(- (* mount-width l)) 0 0] %)
+                       (translate [   (* mount-width r)  0 0] %)))
+        extrude #(hull % (translate [0 0 (+ distance-above distance-below)] %))]
+    (->> shape
+         lower
+         shrink
+         widen
+         extrude
+         (place column row))))
+
+(defn key-silo-widenings [col]
+  (cond
+    (= col (first columns)) [0 0]
+    (< col 2) [1 0]
+    (< col 3) [1 1]
+    (< col (last columns)) [0 1]
+    :else [0 0]))
+
+
+(defn finger-key-prism [distance-above narrow-percent]
+  (let [ks #(silo distance-above narrow-percent key-place key-silo-widenings % %2 (sa-cap 1))]
+                                        ; we do all rows and columns,
+                                        ; not knocking out those two
+                                        ; keys, because this prism is
+                                        ; for cutting out the top edge
+                                        ; of the marshmallowy sides.
+    (apply union
+           (for [c columns]
+             (apply hull (for [r rows] (ks c r)))))))
+
+(defn thumb-key-prism [distance-above narrow-percent]
+  (let [ts #(silo distance-above narrow-percent thumb-place (fn [c] [0 0]) % %2 %3)]
+    (union (hull (ts 2 1 (sa-cap 1))
+                 (ts 2 0 (sa-cap 1)))
+           (hull (ts 2 0 (sa-cap 1))
+                 (ts 2 -1 (sa-cap 1))
+                 (ts 1 -1/2 (sa-cap 2)))
+           (hull (ts 1 -1/2 (sa-cap 2))
+                 (ts 0 -1/2 (sa-cap 2)))
+           (hull (ts 2 1 (sa-cap 1))
+                 (ts 1 1 (sa-cap 1)))
+           (hull (ts 1 1 (sa-cap 1))
+                 (ts 0 1 (sa-cap 1))))))
+
+
 (defn thumb-prism [distance-below narrow-percent]
   (let [tfc #(thumb-frustum distance-below narrow-percent % %2 %3)]
     (union
@@ -1655,16 +1731,7 @@
                                         ; order. this is a description
                                         ; of whether a given key place
                                         ; is around the edge.
-(defn around-edge-p [row column]
-  (and
-   (finger-has-key-place-p row column)
-   (or (= column (first columns))
-       (= column (last columns))
-       (= row (first rows))
-       (= row (last rows))
-       (not (finger-has-key-place-p row (inc column)))
-       (not (finger-has-key-place-p (inc row) column))
-       (not (finger-has-key-place-p (inc row) (dec column))))))
+
 (defn finger-edge-prism [distance-below narrow-percent]
   (apply union
                                         ; hah! around the edge, take
@@ -1788,7 +1855,6 @@
         thumb-shell (difference thumb-sphere (translate [0 0 thickness] thumb-sphere))
         thumb-thick-shell (difference (translate [0 0 (- thickness)] thumb-sphere)
                                       (translate [0 0 (* 2 thickness)] thumb-sphere))
-        distance-below-to-intersect (max (+ downness flatness) 20)
         finger-big-intersection-shape
         (finger-prism distance-below-to-intersect 0)
         finger-little-intersection-shape
@@ -1816,6 +1882,9 @@
                                     the-outline
                                     (binding [*fn* gasket-sphere-fn]
                                       (sphere r))))
+        key-prism (union
+                   (thumb-key-prism thumb-distance-below -5)
+                   (finger-key-prism distance-below-to-intersect -5))
         sides (difference
                (difference (marshmallow-gasket radius)
                            (marshmallow-gasket (- radius thickness)))
@@ -1833,23 +1902,28 @@
                (hull (key-frustum 30 0 0 4)
                      (key-frustum 30 0 0 3))
                (hull (key-frustum 30 0 0 4)
-                     (key-frustum 30 0 1 3)))]
+                     (key-frustum 30 0 1 3))
+               key-prism)]
     sides))
 
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
-        #_(apply union key-blanks-pieces)
+        #_(union
+         (apply union key-blanks-pieces)
+         thumb-blanks)
+        (union caps thumbcaps)
+        #_(union
+         (thumb-key-prism 30 -5)
+         (finger-key-prism 30 -5))
         #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
-        (union #_dactyl-top-right-thumb
-               #_(apply union (dactyl-top-right-pieces key-holes-pieces))
-               (binding [*fn* 12]
-                 (union
-                  #_(finger-case-bottom-shell 40 19 3)
-                  (big-marshmallowy-sides 40 0 3 19)))
-               caps
-               thumbcaps))))
+        #_(union dactyl-top-right-thumb
+                 (apply union (dactyl-top-right-pieces key-holes-pieces)))
+        (binding [*fn* 12]
+          (union
+           #_(finger-case-bottom-shell 40 19 3)
+           (big-marshmallowy-sides 40 0 3 19))))))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
