@@ -1841,14 +1841,19 @@
                                         ; finger. so its prism needs
                                         ; to be taller.
         thumb-distance-below (* 1.5 distance-below-to-intersect)
+        thumb-sides-above-finger-sides -20 ; how far above the
+                                         ; marshmallowy sides of the
+                                         ; finger the marshmallowy
+                                         ; sides of the thumb should
+                                         ; be
         finger-sphere (finger-case-bottom-sphere flatness downness)
-        thumb-sphere (thumb-case-bottom-sphere flatness (+ downness 10))
+        thumb-sphere (thumb-case-bottom-sphere flatness (+ downness (- thumb-sides-above-finger-sides)))
         outline-thickness 1
-        gasket-sphere-fn 9 ; detail of sphere. normally 20 or so?
-                           ; severe performance impact. for me, with
-                           ; openscad 2015.03-2, this looked like big
-                           ; delays with lots of memory usage after
-                           ; the progress bar got to 1000.
+        gasket-sphere-fn 20 ; detail of sphere. normally 20 or so?
+                            ; severe performance impact. for me, with
+                            ; openscad 2015.03-2, this looked like big
+                            ; delays with lots of memory usage after
+                                        ; the progress bar got to 1000.
         finger-shell (difference finger-sphere (translate [0 0 thickness] finger-sphere))
         finger-thick-shell (difference (translate [0 0 (- thickness)] finger-sphere)
                                        (translate [0 0 (* 2 thickness)] finger-sphere))
@@ -1863,20 +1868,19 @@
         (thumb-prism thumb-distance-below -5)
         thumb-little-intersection-shape
         (thumb-prism thumb-distance-below -3)
-        finger-case-outline (fn [flatness downness]
-                              (difference (intersection finger-shell
-                                                        finger-big-intersection-shape)
-                                          (intersection finger-thick-shell
-                                                        finger-little-intersection-shape)))
-        thumb-case-outline (fn [flatness downness]
-                              (difference (intersection thumb-shell
-                                                        thumb-big-intersection-shape)
-                                          (intersection thumb-thick-shell
-                                                        thumb-little-intersection-shape)))
-
-        the-outline (union (difference (finger-case-outline flatness downness)
+        finger-case-outline 
+        (difference (intersection finger-shell
+                                  finger-big-intersection-shape)
+                    (intersection finger-thick-shell
+                                  finger-little-intersection-shape))
+        thumb-case-outline
+        (difference (intersection thumb-shell
+                                  thumb-big-intersection-shape)
+                    (intersection thumb-thick-shell
+                                  thumb-little-intersection-shape))
+        the-outline (union (difference finger-case-outline
                                        thumb-big-intersection-shape)
-                           (difference (thumb-case-outline flatness (+ downness 20))
+                           (difference thumb-case-outline
                                        finger-big-intersection-shape))
         marshmallow-gasket (fn [r] (minkowski
                                     the-outline
@@ -1920,10 +1924,10 @@
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
         #_(union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        (binding [*fn* 12]
+        (binding [*fn* 20]
           (union
            #_(finger-case-bottom-shell 40 19 3)
-           (big-marshmallowy-sides 40 0 3 19))))))
+           (big-marshmallowy-sides 40 -10 3 19))))))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
