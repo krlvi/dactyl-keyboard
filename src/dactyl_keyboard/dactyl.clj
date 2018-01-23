@@ -580,6 +580,26 @@
 ;; Case ;;
 ;;;;;;;;;;
 
+(def marshmallowy-sides-flatness 40) ; see flatness comments below
+(def marshmallowy-sides-downness -10)
+(def marshmallowy-sides-thickness 3)
+(def marshmallowy-sides-radius 19)
+(def thumb-sides-above-finger-sides -20) ; how far above the
+                                         ; marshmallowy sides of the
+                                         ; finger the marshmallowy
+                                         ; sides of the thumb should
+                                         ; be
+
+(def gasket-sphere-fn 20) ; detail of sphere minkowski'd around edges.
+                                        ; normally 20 or so?  severe
+                                        ; performance impact. for me,
+                                        ; with openscad 2015.03-2,
+                                        ; this looked like big delays
+                                        ; with lots of memory usage
+                                        ; after the progress bar got
+                                        ; to 1000.
+
+
 ;; In column units
 (def right-wall-column (+ (last columns) 0.55))
 (def left-wall-column (- (first columns) 1/2))
@@ -1382,6 +1402,46 @@
          (translate [0 0 (- teensy-offset-height)])
          (key-place 1/2 3/2))))
 
+                                        ; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
+                                        ; Micro USB Cables and
+                                        ; Connectors Specification
+                                        ; 1.01 Figure 4-5, Page 18.
+                                        ; An overmold is the plastic
+                                        ; that goes around the metal
+                                        ; and wires of a usb
+                                        ; connector. The standard
+                                        ; overmold size is very
+                                        ; chunky, and every actual
+                                        ; cable should be smaller.
+(def micro-b-overmold-width 11)
+(def micro-b-overmold-height 9)
+
+                                        ; Adafruit Panel Mount Extension USB Cable - Micro B Male to Micro B Female [ADA3258]
+                                        ; "4-40 screws... 18mm apart"
+                                        ; 4-40 -> 0.112" major diameter
+(def adafruit-usb-screws-diameter 2.5)
+(def adafruit-usb-screws-center 18)
+
+(def adafruit-usb-cutout
+  (let [overmold-hole (cube micro-b-overmold-width
+                            marshmallowy-sides-radius
+                            micro-b-overmold-height)
+        screw-hole-1 (->>
+                      (cylinder (/ adafruit-usb-screws-diameter 2)
+                                marshmallowy-sides-radius)
+                      (rotate (/ π 2) [1 0 0])
+                      (translate [(/ adafruit-usb-screws-center 2)
+                                  0 0]))
+        screw-hole-2 (mirror [-1 0 0] screw-hole-1)
+        all (union overmold-hole screw-hole-1 screw-hole-2)]
+    (->> all
+         (translate [0 (/ mount-height 2) 0])
+         (translate [0 marshmallowy-sides-radius
+                     (- marshmallowy-sides-radius)])
+         (translate [0 0 (- marshmallowy-sides-downness)])
+         #_(translate [0 0 -5]) ; for radius 12
+         (key-place 3 0))))
+
 ;;;;;;;;;;;;;;;;;;
 ;; Glue Joints  ;;
 ;;;;;;;;;;;;;;;;;;
@@ -1594,6 +1654,12 @@
 (defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
 (defn retent [shape] (rotate tenting-angle [0 1 0] shape))
 
+                                        ; the around-edge vector is a
+                                        ; list of the key places
+                                        ; around the edge in
+                                        ; order. this is a description
+                                        ; of whether a given key place
+                                        ; is around the edge.
 (defn around-edge-p [row column]
   (and
    (finger-has-key-place-p row column)
@@ -1654,7 +1720,7 @@
         shrink #(scale [(/ (- 100 narrow-percent) 100)
                         (/ (- 100 narrow-percent) 100)
                         1] %)
-        widen #(let [[l r] (widenings column)]
+        widen #(let [[l r] (widenings column row)]
                  (hull (translate [(- (* mount-width l)) 0 0] %)
                        (translate [   (* mount-width r)  0 0] %)))
         extrude #(hull % (translate [0 0 (+ distance-above distance-below)] %))]
@@ -1665,13 +1731,34 @@
          extrude
          (place column row))))
 
-(defn key-silo-widenings [col]
-  (cond
-    (= col (first columns)) [0 0]
-    (< col 2) [1 0]
-    (< col 3) [1 1]
-    (< col (last columns)) [0 1]
-    :else [0 0]))
+(defn key-silo-widenings [col row]
+  (let [bottom (fn [col]
+                 (cond
+                   (<= col (first columns)) [0 0]
+                   (< col 2) [1 0]
+                   (< col 3) [1 1]
+                   (< col (last columns)) [0 1]
+                   :else [0 0]))
+        top (fn [col]
+              (cond
+                (<= col (first columns)) [0 1]
+                (< col 2) [0 1]
+                (< col 3) [0 0]
+                (< col (last columns)) [1 0]
+                :else [0 0]))
+        linear (fn [col row]
+                 (let [[bl br] (bottom col)
+                       [tl tr] (top col)
+                       row-amount (/ (- row (first rows)) (- (last rows) (first rows)))
+                       left-widening (+ (* bl row-amount) (* tl (- 1 row-amount)))
+                       right-widening (+ (* br row-amount) (* tr (- 1 row-amount)))]
+                   [left-widening right-widening]))
+        step (fn [col row]
+               ; row numbers go up as you move from the top toward the thumb
+               (if (some #{row} (drop (/ (count rows) 2) rows))
+                 (bottom col)
+                 (top col)))]
+    (step col row)))
 
 
 (defn finger-key-prism [distance-above narrow-percent]
@@ -1683,10 +1770,12 @@
                                         ; of the marshmallowy sides.
     (apply union
            (for [c columns]
-             (apply hull (for [r rows] (ks c r)))))))
+             (union
+              (apply hull (for [r (take (/ (count rows) 2) rows)] (ks c r)))
+              (apply hull (for [r (drop (/ (count rows) 2) rows)] (ks c r))))))))
 
 (defn thumb-key-prism [distance-above narrow-percent]
-  (let [ts #(silo distance-above narrow-percent thumb-place (fn [c] [0 0]) % %2 %3)]
+  (let [ts #(silo distance-above narrow-percent thumb-place (fn [c r] [0 0]) % %2 %3)]
     (union (hull (ts 2 1 (sa-cap 1))
                  (ts 2 0 (sa-cap 1)))
            (hull (ts 2 0 (sa-cap 1))
@@ -1725,12 +1814,6 @@
            (tfc 0 -1/2 double-plates-blank))
      (hull (tfc 0 -1/2 double-plates-blank)
            (tfc 1 -1/2 double-plates-blank)))))
-                                        ; the around-edge vector is a
-                                        ; list of the key places
-                                        ; around the edge in
-                                        ; order. this is a description
-                                        ; of whether a given key place
-                                        ; is around the edge.
 
 (defn finger-edge-prism [distance-below narrow-percent]
   (apply union
@@ -1825,35 +1908,44 @@
          (translate [0 0 row-radius])
          (translate [0 0 (- flatness downness)]))))
 
-(defn finger-case-bottom-shell [flatness downness thickness]
-  (let [the-sphere (finger-case-bottom-sphere flatness downness)
-        the-shell (difference the-sphere (translate [0 0 thickness] the-sphere))
-        distance-below-to-intersect (max (+ downness flatness) 20)
-        big-intersection-shape (finger-prism distance-below-to-intersect 0)]
+(def case-bottom-shell
+  ; note these spheres are down farther than the ones used for the ribbon
+  (let [finger-sphere (finger-case-bottom-sphere
+                       marshmallowy-sides-flatness
+                       (+ marshmallowy-sides-downness
+                          marshmallowy-sides-radius))
+        thumb-sphere (thumb-case-bottom-sphere
+                      marshmallowy-sides-flatness
+                      (+ marshmallowy-sides-downness
+                         marshmallowy-sides-radius
+                         (- thumb-sides-above-finger-sides)))
+        bottom-spheres (union finger-sphere thumb-sphere)
+        the-shell (difference bottom-spheres
+                              (translate [0 0 marshmallowy-sides-thickness]
+                                         bottom-spheres))
+        big-intersection-shape (union
+                                (finger-prism distance-below-to-intersect 0)
+                                (thumb-prism thumb-distance-below 0))]
     (intersection the-shell big-intersection-shape)))
 
-(defn big-marshmallowy-sides [flatness downness thickness radius]
-  (let [distance-below-to-intersect (max (+ downness flatness) 35)
+(def distance-below-to-intersect (max (+ marshmallowy-sides-downness
+                                         marshmallowy-sides-flatness) 35))
                                         ; the thumb is set above (+z)
                                         ; the finger, but its prism
                                         ; interacts with the
                                         ; marshmallowy sides of the
                                         ; finger. so its prism needs
                                         ; to be taller.
-        thumb-distance-below (* 1.5 distance-below-to-intersect)
-        thumb-sides-above-finger-sides -20 ; how far above the
-                                         ; marshmallowy sides of the
-                                         ; finger the marshmallowy
-                                         ; sides of the thumb should
-                                         ; be
-        finger-sphere (finger-case-bottom-sphere flatness downness)
-        thumb-sphere (thumb-case-bottom-sphere flatness (+ downness (- thumb-sides-above-finger-sides)))
-        outline-thickness 1
-        gasket-sphere-fn 20 ; detail of sphere. normally 20 or so?
-                            ; severe performance impact. for me, with
-                            ; openscad 2015.03-2, this looked like big
-                            ; delays with lots of memory usage after
-                                        ; the progress bar got to 1000.
+(def thumb-distance-below (* 1.5 distance-below-to-intersect))
+(defn big-marshmallowy-sides [flatness downness thickness radius]
+  (let [outline-thickness 1
+        finger-sphere (finger-case-bottom-sphere
+                       marshmallowy-sides-flatness
+                       marshmallowy-sides-downness)
+        thumb-sphere (thumb-case-bottom-sphere
+                      marshmallowy-sides-flatness
+                      (- marshmallowy-sides-downness
+                         thumb-sides-above-finger-sides))
         finger-shell (difference finger-sphere (translate [0 0 thickness] finger-sphere))
         finger-thick-shell (difference (translate [0 0 (- thickness)] finger-sphere)
                                        (translate [0 0 (* 2 thickness)] finger-sphere))
@@ -1868,7 +1960,7 @@
         (thumb-prism thumb-distance-below -5)
         thumb-little-intersection-shape
         (thumb-prism thumb-distance-below -3)
-        finger-case-outline 
+        finger-case-outline
         (difference (intersection finger-shell
                                   finger-big-intersection-shape)
                     (intersection finger-thick-shell
@@ -1916,7 +2008,7 @@
         #_(union
          (apply union key-blanks-pieces)
          thumb-blanks)
-        (union caps thumbcaps)
+        #_(union caps thumbcaps)
         #_(union
          (thumb-key-prism 30 -5)
          (finger-key-prism 30 -5))
@@ -1924,10 +2016,15 @@
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
         #_(union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        (binding [*fn* 20]
-          (union
-           #_(finger-case-bottom-shell 40 19 3)
-           (big-marshmallowy-sides 40 -10 3 19))))))
+        (difference
+         (binding [*fn* 20]
+           (union
+            case-bottom-shell
+            (big-marshmallowy-sides marshmallowy-sides-flatness
+                                    marshmallowy-sides-downness
+                                    marshmallowy-sides-thickness
+                                    marshmallowy-sides-radius)))
+         adafruit-usb-cutout))))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
