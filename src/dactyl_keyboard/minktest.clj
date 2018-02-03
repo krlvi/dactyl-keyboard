@@ -112,16 +112,12 @@
                    (- ε)))
 
 
-(def gasket-with-joints-pieces
-  (let [r gasket-shell-radius
-        joint-places [(fn [shape] (translate [-30 50 0] shape))
-                      (fn [shape] (->> shape
-                                       (mirror [1 0 0])
-                                       (mirror [0 1 0])
-                                       (translate [-30 -50 0])))]
-        joint-places-rot1 (concat (rest joint-places) [(first joint-places)])
-        intersection-shapes [(translate [(- -40 30) 0 0] (cube 80 150 40))
-                             (translate [(- 90 30) 0 0] (cube 180 220 40))]]
+(defn pieces-with-x-pins-and-holes [x-pins-radius
+                                    joint-places
+                                    intersection-shapes]
+  (let [r x-pins-radius
+        joint-places-rot1 (concat (rest joint-places)
+                                  [(first joint-places)])]
     (for [[jp1 jp2 is] (map vector joint-places
                             joint-places-rot1
                             intersection-shapes)]
@@ -147,7 +143,17 @@
                (jp2 (x-pins r))
                hole-attachment-1
                (jp1 (x-holes r)))))))
-                                              
+
+(def gasket-with-joints-pieces
+  (pieces-with-x-pins-and-holes
+   gasket-shell-radius
+   [(fn [shape] (translate [-30 50 0] shape))
+    (fn [shape] (->> shape
+                     (mirror [1 0 0])
+                     (mirror [0 1 0])
+                     (translate [-30 -50 0])))]
+   [(translate [(- -40 30) 0 0] (cube 80 150 40))
+    (translate [(- 90 30) 0 0] (cube 180 220 40))]))
 
 (doseq [[partno part] (map vector (range) gasket-with-joints-pieces)]
   (spit (format "things/minktest-%02d.scad" partno)
