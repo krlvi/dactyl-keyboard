@@ -8,6 +8,9 @@
 ; https://tauday.com
 (def τ (* π 2))
 
+; csg food
+(def ε 0.001)
+
 (defn funky-shape [shrink]
   (let [d (- 100 shrink)]
     (union (cube d d d)
@@ -60,26 +63,28 @@
 
 (defn x-pin-hull [gasket-shape-radius]
   (let [height (* 1/3 pin-length)]
-    (x-half-cylinder gasket-shape-radius height 0)))
+    (x-half-cylinder gasket-shape-radius height (- height))))
 
 (defn x-pin-hull-intersect [gasket-shape-radius]
   (let [height (* 1/3 pin-length)]
-    (x-half-cylinder (* 2 gasket-shape-radius) height 0)))
+    (x-half-cylinder (* 2 gasket-shape-radius) height (- height))))
 
 (defn x-pins [gasket-shape-radius]
   (let [pin-block-height (* 1/3 pin-length)
         pin-radius (/ gasket-shape-radius 8)
-        pin-block (x-half-cylinder gasket-shape-radius pin-block-height 0)
+        pin-block (x-half-cylinder gasket-shape-radius pin-block-height
+                                   (- pin-block-height))
         pin (binding [*fn* pin-fn]
               (cylinder pin-radius pin-length))
-        pins (x-pin-places gasket-shape-radius pin)]
+        pins (translate [(- pin-block-height) 0 0]
+                        (x-pin-places gasket-shape-radius pin))]
     (union pin-block pins)))
 
 (defn x-holes [gasket-shape-radius]
   (let [hole-block-height (* 2/3 pin-length)
         pin-radius (/ gasket-shape-radius 8)
         hole-block (x-half-cylinder gasket-shape-radius hole-block-height
-                                    (+ (- pin-length hole-block-height)
+                                    (+ 0
                                        pin-tolerance))
         hole (binding [*fn* pin-fn]
                (cylinder (+ pin-radius pin-tolerance)
@@ -92,7 +97,7 @@
   (let [height (+ (* 1/3 pin-length) pin-tolerance)]
     (x-half-cylinder gasket-shape-radius
                      height
-                     (+ pin-length pin-tolerance))))
+                     (+ (* 2/3 pin-length) pin-tolerance))))
 
 (defn x-hole-hull-intersect [gasket-shape-radius]
   (let [height (+ (* 1/3 pin-length) pin-tolerance)]
@@ -104,7 +109,7 @@
 (defn x-gap [gasket-shape-radius]
   (x-half-cylinder (* 2 gasket-shape-radius)
                    pin-tolerance
-                   (* 1/3 pin-length)))
+                   (- ε)))
 
 
 (def gasket-with-joints-pieces
@@ -148,3 +153,4 @@
   (spit (format "things/minktest-%02d.scad" partno)
         (write-scad part)))
        
+#_(spit "things/minktest.scad" (write-scad (union (x-pins 8) (x-holes 8) (x-hole-hull 8))))
