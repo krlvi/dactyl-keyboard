@@ -10,11 +10,10 @@
 
 (defn funky-shape [shrink]
   (let [d (- 100 shrink)]
-    (rotate (/ τ 20) [0 0 1]
-            (union (cube d d d)
+    (union (cube d d d)
                    (->> (cube d d d)
                         (rotate (/ τ 4) [1 1 0])
-                        (translate [35 20 0]))))))
+                        (translate [35 20 0])))))
   
 (def ribbon (intersection
             (difference (funky-shape 0) (funky-shape 0.01))
@@ -28,8 +27,9 @@
 
 (def gasket (minkowski ribbon (gasket-shape 10)))
 
+(def gasket-shell-radius 8)
 (def gasket-shell
-  (let [little-gasket (minkowski ribbon (gasket-shape 8))]
+  (let [little-gasket (minkowski ribbon (gasket-shape gasket-shell-radius))]
     (difference
      (difference gasket little-gasket)
      (funky-shape 0))))
@@ -59,10 +59,12 @@
          (translate [position 0 0]))))
 
 (defn x-pin-hull [gasket-shape-radius]
-  (let [pin-hull-block-height (* 1/3 pin-length)]
-    (x-half-cylinder gasket-shape-radius
-                     pin-hull-block-height
-                     0)))
+  (let [height (* 1/3 pin-length)]
+    (x-half-cylinder gasket-shape-radius height 0)))
+
+(defn x-pin-hull-intersect [gasket-shape-radius]
+  (let [height (* 1/3 pin-length)]
+    (x-half-cylinder (* 2 gasket-shape-radius) height 0)))
 
 (defn x-pins [gasket-shape-radius]
   (let [pin-block-height (* 1/3 pin-length)
@@ -87,31 +89,62 @@
     (difference hole-block holes)))
 
 (defn x-hole-hull [gasket-shape-radius]
-  (let [hole-hull-block-height (+ (* 1/3 pin-length) pin-tolerance)
-        pin-radius (/ gasket-shape-radius 8)
-        hole-hull-block (x-half-cylinder gasket-shape-radius
-                                         hole-hull-block-height
-                                         (+ pin-length pin-tolerance))]
-    hole-hull-block))
-                                        
-(def ε 0.01)
+  (let [height (+ (* 1/3 pin-length) pin-tolerance)]
+    (x-half-cylinder gasket-shape-radius
+                     height
+                     (+ pin-length pin-tolerance))))
 
-(def parts [(translate [(+ ε 200) (+ ε 200) 0]
-                       (cube 400 400 400))
-            (translate [(+ ε 200) (- -200 ε) 0]
-                       (cube 400 400 400))
-            (translate [(- -200 ε) (+ ε 200) 0]
-                       (cube 400 400 400))
-            (translate [(- -200 ε) (- -200 ε) 0]
-                       (cube 400 400 400))])
+(defn x-hole-hull-intersect [gasket-shape-radius]
+  (let [height (+ (* 1/3 pin-length) pin-tolerance)]
+    (x-half-cylinder
+     (* 2 gasket-shape-radius)
+     height
+     (+ pin-length pin-tolerance))))
 
-(def bits
-  (let [rparts (concat (rest parts) [(first parts)])
-        all-bits (apply difference ribbon parts)
-        each-bit (for [[p1 p2] [parts rparts]]
-                   (intersection all-bits (hull p1 p2)))]
-    each-bit))
+(defn x-gap [gasket-shape-radius]
+  (x-half-cylinder (* 2 gasket-shape-radius)
+                   pin-tolerance
+                   (* 1/3 pin-length)))
 
-(spit "things/minktest.scad"
-      (write-scad (union (x-pin-hull 10) (x-pins 10) (x-holes 10) (x-hole-hull 10) )))
+
+(def gasket-with-joints-pieces
+  (let [r gasket-shell-radius
+        joint-places [(fn [shape] (translate [-30 50 0] shape))
+                      (fn [shape] (->> shape
+                                       (mirror [1 0 0])
+                                       (mirror [0 1 0])
+                                       (translate [-30 -50 0])))]
+        joint-places-rot1 (concat (rest joint-places) [(first joint-places)])
+        intersection-shapes [(translate [(- -40 30) 0 0] (cube 80 150 40))
+                             (translate [(- 90 30) 0 0] (cube 180 220 40))]]
+    (for [[jp1 jp2 is] (map vector joint-places
+                            joint-places-rot1
+                            intersection-shapes)]
+      (let [pin-attachment-1 (hull (jp1 (x-pin-hull r))
+                                   (intersection
+                                    gasket-shell
+                                    (jp1 (x-pin-hull-intersect r))))
+            hole-attachment-1 (hull (jp1 (x-hole-hull r))
+                                    (intersection
+                                     gasket-shell
+                                     (jp1 (x-hole-hull-intersect r))))
+            pin-attachment-2 (hull (jp2 (x-pin-hull r))
+                                   (intersection
+                                    gasket-shell
+                                    (jp2 (x-pin-hull-intersect r))))
+            hole-attachment-2 (hull (jp2 (x-pin-hull r))
+                                    (intersection
+                                     gasket-shell
+                                     (jp2 (x-hole-hull-intersect r))))]
+        (union (intersection
+                (difference gasket-shell (jp1 (x-gap r)) is))
+               pin-attachment-2
+               (jp2 (x-pins r))
+               hole-attachment-1
+               (jp1 (x-holes r)))))))
+                                              
+
+(doseq [[partno part] (map vector (range) gasket-with-joints-pieces)]
+  (spit (format "things/minktest-%02d.scad" partno)
+        (write-scad part)))
        
