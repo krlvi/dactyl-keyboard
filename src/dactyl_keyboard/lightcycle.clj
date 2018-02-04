@@ -264,33 +264,12 @@
 (defn thumb-2x-column [shape]
   (thumb-place 0 -1/2 (rotate (/ π 2) [0 0 1] shape)))
 
-(defn thumb-2x+1-column [shape]
-  (union (thumb-place 1 -1/2 (rotate (/ π 2) [0 0 1] shape))
-         (thumb-place 1 1 shape)))
-
 (defn thumb-1x-column [shape]
   (union (thumb-place 2 -1 shape)
          (thumb-place 2 0 shape)
          (thumb-place 2 1 shape)))
 
 
-
-(= (* 2 sa-length)
-   sa-double-length)
-(def double-plates
-  (let [plate-height (/ (- sa-double-length mount-height) 2)
-        top-plate (->> (cube mount-width plate-height web-thickness)
-                       (translate [0 (/ (+ plate-height mount-height) 2)
-                                   (- plate-thickness (/ web-thickness 2))]))
-        stabilizer-cutout (union (->> (cube 14.2 3.5 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2))])
-                                      (color [1 0 0 1/2]))
-                                 (->> (cube 16 3.5 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2) 1.4)])
-                                      (color [1 0 0 1/2])))
-        ;;top-plate (difference top-plate stabilizer-cutout)
-        ]
-    (color [1 0 0] (union top-plate (mirror [0 1 0] top-plate)))))
 
 (defn extended-plate-height [size] (/ (- (* (+ 1 sa-length) size) mount-height) 2))
 
@@ -324,28 +303,8 @@
    (thumb-place 2 3/4 shape)
    ))
 
-(def thumbcaps
-  (union
-   (thumb-2x-column (sa-cap 2))
-   (thumb-place 1 -1/2 (sa-cap 2))
-   (thumb-place 1 1 (sa-cap 1))
-   (thumb-1x-column (sa-cap 1))))
-
 (def thumb-connectors
   (union
-   #_(apply union
-            (concat
-             (for [column [2] row [1]]
-               (triangle-hulls (thumb-place column row web-post-br)
-                               (thumb-place column row web-post-tr)
-                               (thumb-place (dec column) row web-post-bl)
-                               (thumb-place (dec column) row web-post-tl)))
-             (for [column [2] row [0 1]]
-               (triangle-hulls
-                (thumb-place column row web-post-bl)
-                (thumb-place column row web-post-br)
-                (thumb-place column (dec row) web-post-tl)
-                (thumb-place column (dec row) web-post-tr)))))
    (let [thumb-tl #(->> web-post-tl
                         (translate [0 (extended-plate-height %) 0]))
          thumb-bl #(->> web-post-bl
@@ -411,13 +370,9 @@
                       )))))
 
 (def thumb
-
   (union
    (thumb-layout (rotate (/ Math/PI 2) [0 0 1] single-plate))
-   (color [1 0 0] thumb-connectors)
-
-   #_(thumb-place 0 -1/2 (extended-plates 2))
-   #_(thumb-place 1 -1/2 double-plates)))
+   (color [1 0 0] thumb-connectors)))
 
 ;;;;;;;;;;
 ;; Case ;;

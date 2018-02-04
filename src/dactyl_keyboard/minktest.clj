@@ -12,25 +12,23 @@
 (def ε 0.001)
 
 (defn funky-shape [shrink]
-  (let [d (- 100 shrink)]
+  (let [d (- 30 shrink)]
     (union (cube d d d)
-                   (->> (cube d d d)
+                   #_(->> (cube d d d)
                         (rotate (/ τ 4) [1 1 0])
                         (translate [35 20 0])))))
   
 (def ribbon (intersection
-            (difference (funky-shape 0) (funky-shape 0.01))
-            (cube 400 400 0.2)))
+             (difference (funky-shape 0) (funky-shape 0.01))
+             (cube 400 400 0.2)))
 
 (defn gasket-shape [radius]
   (let [diameter (* 2 radius)]
-    (->> (binding [*fn* 6] (sphere radius))
-         (rotate (/ τ 8) [0 0 1])
-         (rotate (/ τ 8) [1 0 0]))))
+    (binding [*fn* 15] (sphere radius))))
 
 (def gasket (minkowski ribbon (gasket-shape 10)))
 
-(def gasket-shell-radius 8)
+(def gasket-shell-radius 8.5)
 (def gasket-shell
   (let [little-gasket (minkowski ribbon (gasket-shape gasket-shell-radius))]
     (difference
@@ -111,7 +109,6 @@
                    pin-tolerance
                    (- ε)))
 
-
 (defn pieces-with-x-pins-and-holes [x-pins-radius
                                     joint-places
                                     intersection-shapes]
@@ -147,13 +144,13 @@
 (def gasket-with-joints-pieces
   (pieces-with-x-pins-and-holes
    gasket-shell-radius
-   [(fn [shape] (translate [-30 50 0] shape))
+   [(fn [shape] (translate [0 15 0] shape))
     (fn [shape] (->> shape
                      (mirror [1 0 0])
                      (mirror [0 1 0])
-                     (translate [-30 -50 0])))]
-   [(translate [(- -40 30) 0 0] (cube 80 150 40))
-    (translate [(- 90 30) 0 0] (cube 180 220 40))]))
+                     (translate [0 -15 0])))]
+   [(translate [-20 0 0] (cube 40 80 40))
+    (translate [20 0 0] (cube 40 80 40))]))
 
 (doseq [[partno part] (map vector (range) gasket-with-joints-pieces)]
   (spit (format "things/minktest-%02d.scad" partno)

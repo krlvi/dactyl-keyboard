@@ -5,6 +5,9 @@
             [dactyl-keyboard.util :refer :all]
             [unicode-math.core :refer :all]))
 
+; https://tauday.com
+(def τ (* π 2))
+
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
 ;;;;;;;;;;;;;;;;;
@@ -590,7 +593,7 @@
                                          ; sides of the thumb should
                                          ; be
 
-(def gasket-sphere-fn 20) ; detail of sphere minkowski'd around edges.
+(def gasket-sphere-fn 12) ; detail of sphere minkowski'd around edges.
                                         ; normally 20 or so?  severe
                                         ; performance impact. for me,
                                         ; with openscad 2015.03-2,
@@ -1402,6 +1405,71 @@
          (translate [0 0 (- teensy-offset-height)])
          (key-place 1/2 3/2))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Half-round glue joint for marshmallowy sides ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def npins 3)
+(def pin-tolerance 0.5)
+(def pin-length 8)
+(def pin-fn 8)
+
+(defn x-pin-places [gasket-shape-radius shape]
+  (apply union
+         (for [pin (range npins)]
+           (->> shape
+                (rotate (/ τ 4) [0 1 0])
+                (translate [0 0 (* 2/3 gasket-shape-radius)])
+                (rotate (* (+ 1 pin)
+                           (/ (/ τ 2) (+ 1 npins))) [-1 0 0])
+                (translate [(* 1/2 pin-length) 0 0])))))
+
+(defn x-half-cylinder [gasket-shape-radius height position]
+  (let [bigger (+ 2 (* 2 gasket-shape-radius))
+        half (translate [0 (* 1/2 bigger) 0] (cube bigger bigger bigger))
+        chop (intersection half (cylinder gasket-shape-radius height))]
+    (->> chop
+         (rotate (/ τ 4) [0 1 0])
+         (translate [(* 1/2 height) 0 0])
+         (translate [position 0 0]))))
+
+(defn x-pin-hull [gasket-shape-radius]
+  (let [pin-hull-block-height (* 1/3 pin-length)]
+    (x-half-cylinder gasket-shape-radius
+                     pin-hull-block-height
+                     0)))
+
+(defn x-pins [gasket-shape-radius]
+  (let [pin-block-height (* 1/3 pin-length)
+        pin-radius (/ gasket-shape-radius 8)
+        pin-block (x-half-cylinder gasket-shape-radius pin-block-height 0)
+        pin (binding [*fn* pin-fn]
+              (cylinder pin-radius pin-length))
+        pins (x-pin-places gasket-shape-radius pin)]
+    (union pin-block pins)))
+
+(defn x-holes [gasket-shape-radius]
+  (let [hole-block-height (* 2/3 pin-length)
+        pin-radius (/ gasket-shape-radius 8)
+        hole-block (x-half-cylinder gasket-shape-radius hole-block-height
+                                    (+ (- pin-length hole-block-height)
+                                       pin-tolerance))
+        hole (binding [*fn* pin-fn]
+               (cylinder (+ pin-radius pin-tolerance)
+                         (+ pin-length (* 2 pin-tolerance))))
+        holes (translate [pin-tolerance 0 0]
+                         (x-pin-places gasket-shape-radius hole))]
+    (difference hole-block holes)))
+
+(defn x-hole-hull [gasket-shape-radius]
+  (let [hole-hull-block-height (+ (* 1/3 pin-length) pin-tolerance)
+        pin-radius (/ gasket-shape-radius 8)
+        hole-hull-block (x-half-cylinder gasket-shape-radius
+                                         hole-hull-block-height
+                                         (+ pin-length pin-tolerance))]
+    hole-hull-block))
+                                        
+
                                         ; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
                                         ; Micro USB Cables and
                                         ; Connectors Specification
@@ -1442,9 +1510,15 @@
          #_(translate [0 0 -5]) ; for radius 12
          (key-place 3 0))))
 
-;;;;;;;;;;;;;;;;;;
-;; Glue Joints  ;;
-;;;;;;;;;;;;;;;;;;
+                                        ; https://www.mouser.com/ds/2/18/61835-1003706.pdf
+(def rj11-face-width 11.18)
+(def rj11-face-height 15.87)
+(def rj11-body-width 13.72)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Glue Joints for top ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def glue-post (->> (cube post-size post-size glue-joint-height)
                    (translate [0 0 (+ (/ glue-joint-height -2)
@@ -1745,7 +1819,7 @@
                 (< col 2) [0 1]
                 (< col 3) [0 0]
                 (< col (last columns)) [1 0]
-                :else [0 0]))
+                :else [1 0]))
         linear (fn [col row]
                  (let [[bl br] (bottom col)
                        [tl tr] (top col)
@@ -1762,17 +1836,22 @@
 
 
 (defn finger-key-prism [distance-above narrow-percent]
-  (let [ks #(silo distance-above narrow-percent key-place key-silo-widenings % %2 (sa-cap 1))]
+  (let [ks #(silo distance-above narrow-percent key-place key-silo-widenings % %2 (sa-cap 1))
                                         ; we do all rows and columns,
                                         ; not knocking out those two
                                         ; keys, because this prism is
                                         ; for cutting out the top edge
                                         ; of the marshmallowy sides.
-    (apply union
-           (for [c columns]
-             (union
-              (apply hull (for [r (take (/ (count rows) 2) rows)] (ks c r)))
-              (apply hull (for [r (drop (/ (count rows) 2) rows)] (ks c r))))))))
+        row-split (/ (count rows) 2)
+        top-rows (take row-split rows)
+        bottom-rows (drop row-split rows)
+        middle-two-rows (take-last 2 (take (inc row-split) rows))
+        p4r (fn [rows] (for [c columns] (apply hull (for [r rows] (ks c r)))))
+        top-prisms (p4r top-rows)
+        middle-prisms (p4r middle-two-rows)
+        bottom-prisms (p4r bottom-rows)]
+    #_(apply union middle-prisms)(union
+     (apply union (map vector top-prisms middle-prisms bottom-prisms)))))
 
 (defn thumb-key-prism [distance-above narrow-percent]
   (let [ts #(silo distance-above narrow-percent thumb-place (fn [c r] [0 0]) % %2 %3)]
@@ -1874,11 +1953,20 @@
 (defn finger-case-bottom-sphere [flatness downness]
   "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
   (let [sph-row-radius (+ flatness row-radius)
-        sph-column-radius (+ flatness column-radius)]
-    (->> (sphere sph-row-radius)
+        sph-column-radius (+ flatness column-radius)
+        key-sphere (->> (sphere sph-row-radius)
                                         ; i don't see why this ratio
                                         ; is scaled by half
-         (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1])
+                        (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1]))
+        left-of (let [big 600] (translate [(- (* 1/2 big)) 0 0] (cube big big big)))
+        left-of-col-4 (key-place 4 2 (translate [(- (* 1/2 mount-width)) 0 0] left-of))
+        most-keys-sphere (intersection key-sphere left-of-col-4)
+        other-keys-sphere (difference (translate [0 -5.8 5.64] key-sphere) left-of-col-4)
+        fractured-key-sphere (union most-keys-sphere other-keys-sphere)]
+                                      
+                                 
+                        
+    (->> fractured-key-sphere
          (color [0 0.7 0.7 0.8])
                                         ; from key-place
          (translate [0 0 sph-row-radius])
@@ -1908,6 +1996,16 @@
          (translate [0 0 row-radius])
          (translate [0 0 (- flatness downness)]))))
 
+(def distance-below-to-intersect (max (+ marshmallowy-sides-downness
+                                         marshmallowy-sides-flatness) 35))
+                                        ; the thumb is set above (+z)
+                                        ; the finger, but its prism
+                                        ; interacts with the
+                                        ; marshmallowy sides of the
+                                        ; finger. so its prism needs
+                                        ; to be taller.
+(def thumb-distance-below (* 1.5 distance-below-to-intersect))
+
 (def case-bottom-shell
   ; note these spheres are down farther than the ones used for the ribbon
   (let [finger-sphere (finger-case-bottom-sphere
@@ -1928,15 +2026,61 @@
                                 (thumb-prism thumb-distance-below 0))]
     (intersection the-shell big-intersection-shape)))
 
-(def distance-below-to-intersect (max (+ marshmallowy-sides-downness
-                                         marshmallowy-sides-flatness) 35))
-                                        ; the thumb is set above (+z)
-                                        ; the finger, but its prism
-                                        ; interacts with the
-                                        ; marshmallowy sides of the
-                                        ; finger. so its prism needs
-                                        ; to be taller.
-(def thumb-distance-below (* 1.5 distance-below-to-intersect))
+(defn key-placed-outline [down out]
+  (let [nby (+ (* 1/2 mount-height) out)
+        sby (- nby)
+        eby (+ (* 1/2 mount-width) out)
+        wby (- eby)
+        n (translate [0 nby (- down)] web-post)
+        s (translate [0 sby (- down)] web-post)
+        e (translate [eby 0 (- down)] web-post)
+        w (translate [wby 0 (- down)] web-post)
+        sw (translate [wby sby (- down)] web-post)
+        se (translate [eby sby (- down)] web-post)
+        ne (translate [eby nby (- down)] web-post)
+        nw (translate [wby nby (- down)] web-post)
+        kp key-place
+        tp thumb-place
+        places [(kp -1 2 sw)
+                (kp -1 2 w)
+                (kp -1 1 w)
+                (kp -1 0 w)
+                (kp -1 0 nw)
+                (kp -1 0 n)
+                (kp 0 0 n)
+                (kp 1 0 n)
+                (kp 2 0 n)
+                (kp 3 0 n)
+                (kp 4 0 n)
+                (kp 5 0 n)
+                (kp 5 0 ne)
+                (kp 5 0 e)
+                (kp 5 1 e)
+                (kp 5 2 e)
+                (kp 5 3 e)
+                (kp 5 4 e)
+                (kp 5 4 se)
+                (kp 5 4 s)
+                (kp 4 4 s)
+                (kp 3 4 s)
+                (kp 2 4 s)
+                (kp 1 4 s)
+                (tp 0 -1 se)
+                (tp 0 -1 s)
+                (tp 1 -1 s)
+                (tp 2 -1 s)
+                (tp 2 -1 sw)
+                (tp 2 -1 w)
+                (tp 2 0 w)
+                (tp 2 1 w)
+                (tp 2 1 nw)
+                (tp 2 1 n)]
+        thisnext (map vector places (concat (rest places) [(first places)]))
+        ribbon (apply union
+                      (for [[this next] thisnext]
+                        (hull this next)))]
+    ribbon))
+
 (defn big-marshmallowy-sides [flatness downness thickness radius]
   (let [outline-thickness 1
         finger-sphere (finger-case-bottom-sphere
@@ -1970,10 +2114,11 @@
                                   thumb-big-intersection-shape)
                     (intersection thumb-thick-shell
                                   thumb-little-intersection-shape))
-        the-outline (union (difference finger-case-outline
-                                       thumb-big-intersection-shape)
-                           (difference thumb-case-outline
-                                       finger-big-intersection-shape))
+        ;; the-outline (union (difference finger-case-outline
+                                       ;; thumb-big-intersection-shape)
+                           ;; (difference thumb-case-outline
+                                       ;; finger-big-intersection-shape))
+        the-outline (key-placed-outline (* 1/2 radius) 0)
         marshmallow-gasket (fn [r] (minkowski
                                     the-outline
                                     (binding [*fn* gasket-sphere-fn]
@@ -2005,10 +2150,15 @@
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
+
+        #_(union
+         (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
+         (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
+        
         #_(union
          (apply union key-blanks-pieces)
          thumb-blanks)
-        #_(union caps thumbcaps)
+        (union caps thumbcaps)
         #_(union
          (thumb-key-prism 30 -5)
          (finger-key-prism 30 -5))
@@ -2016,10 +2166,24 @@
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
         #_(union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
+        #_(big-marshmallowy-sides marshmallowy-sides-flatness
+                                marshmallowy-sides-downness
+                                marshmallowy-sides-thickness
+                                marshmallowy-sides-radius)
         (difference
-         (binding [*fn* 20]
+         (binding [*fn* 12]
            (union
-            case-bottom-shell
+            #_case-bottom-shell
+            (->>
+             (x-pins marshmallowy-sides-radius)
+             (mirror [0 1 0])
+             (translate [0 (- (* 1/2 mount-height)) (- plate-thickness)])
+             (key-place 4 4))
+            (->>
+             (x-holes marshmallowy-sides-radius)
+             (mirror [0 1 0])
+             (translate [0 (- (* 1/2 mount-height)) (- plate-thickness)])
+             (key-place 4 4))
             (big-marshmallowy-sides marshmallowy-sides-flatness
                                     marshmallowy-sides-downness
                                     marshmallowy-sides-thickness
