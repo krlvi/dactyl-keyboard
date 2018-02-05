@@ -118,28 +118,32 @@
     (for [[jp1 jp2 is] (map vector joint-places
                             joint-places-rot1
                             intersection-shapes)]
-      (let [pin-attachment-1 (hull (jp1 (x-pin-hull r))
-                                   (intersection
-                                    gasket-shell
-                                    (jp1 (x-pin-hull-intersect r))))
-            hole-attachment-1 (hull (jp1 (x-hole-hull r))
-                                    (intersection
-                                     gasket-shell
-                                     (jp1 (x-hole-hull-intersect r))))
-            pin-attachment-2 (hull (jp2 (x-pin-hull r))
-                                   (intersection
-                                    gasket-shell
-                                    (jp2 (x-pin-hull-intersect r))))
-            hole-attachment-2 (hull (jp2 (x-pin-hull r))
-                                    (intersection
-                                     gasket-shell
-                                     (jp2 (x-hole-hull-intersect r))))]
+      (let [pin-attachment-1
+            (hull (jp1 (x-pin-hull r))
+                  (intersection
+                   gasket-shell
+                   (jp1 (x-pin-hull-intersect r))))
+            hole-attachment-1
+            (hull (jp1 (x-hole-hull r))
+                  (intersection
+                   gasket-shell
+                   (jp1 (x-hole-hull-intersect r))))
+            pin-attachment-2
+            (hull (jp2 (x-pin-hull r))
+                  (intersection
+                   gasket-shell
+                   (jp2 (x-pin-hull-intersect r))))
+            hole-attachment-2
+            (hull (jp2 (x-hole-hull r))
+                  (intersection
+                   gasket-shell
+                   (jp2 (x-hole-hull-intersect r))))]
         (union (intersection
-                (difference gasket-shell (jp1 (x-gap r)) is))
-               pin-attachment-2
-               (jp2 (x-pins r))
-               hole-attachment-1
-               (jp1 (x-holes r)))))))
+                (difference gasket-shell (jp2 (x-gap r))) is)
+               pin-attachment-1
+               (jp1 (x-pins r))
+               hole-attachment-2
+               (jp2 (x-holes r)))))))
 
 (def gasket-with-joints-pieces
   (pieces-with-x-pins-and-holes
@@ -148,12 +152,16 @@
     (fn [shape] (->> shape
                      (mirror [1 0 0])
                      (mirror [0 1 0])
-                     (translate [0 -15 0])))]
+                     (translate [0 -15 0])))
+    (fn [shape] (->> shape
+                     (rotate (- (/ τ 4)) [0 0 1])
+                     (translate [15 0 0])))]
    [(translate [-20 0 0] (cube 40 80 40))
-    (translate [20 0 0] (cube 40 80 40))]))
+    (translate [20 -40 0] (cube 40 80 40))
+    (translate [20 40 0] (cube 40 80 40))]))
 
 (doseq [[partno part] (map vector (range) gasket-with-joints-pieces)]
   (spit (format "things/minktest-%02d.scad" partno)
         (write-scad part)))
        
-#_(spit "things/minktest.scad" (write-scad (union (x-pins 8) (x-holes 8) (x-hole-hull 8))))
+(spit "things/minktest.scad" (write-scad (union (x-pins 8) (x-holes 8) (x-hole-hull 8))))
