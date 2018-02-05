@@ -1413,6 +1413,8 @@
 (def pin-tolerance 0.5)
 (def pin-length 8)
 (def pin-fn 8)
+; csg food
+(def ε 0.001)
 
 (defn x-pin-places [gasket-shape-radius shape]
   (apply union
@@ -1434,25 +1436,29 @@
          (translate [position 0 0]))))
 
 (defn x-pin-hull [gasket-shape-radius]
-  (let [pin-hull-block-height (* 1/3 pin-length)]
-    (x-half-cylinder gasket-shape-radius
-                     pin-hull-block-height
-                     0)))
+  (let [height (* 1/3 pin-length)]
+    (x-half-cylinder gasket-shape-radius height (- height))))
+
+(defn x-pin-hull-intersect [gasket-shape-radius]
+  (let [height (* 1/3 pin-length)]
+    (x-half-cylinder (* 2 gasket-shape-radius) height (- height))))
 
 (defn x-pins [gasket-shape-radius]
   (let [pin-block-height (* 1/3 pin-length)
         pin-radius (/ gasket-shape-radius 8)
-        pin-block (x-half-cylinder gasket-shape-radius pin-block-height 0)
+        pin-block (x-half-cylinder gasket-shape-radius pin-block-height
+                                   (- pin-block-height))
         pin (binding [*fn* pin-fn]
               (cylinder pin-radius pin-length))
-        pins (x-pin-places gasket-shape-radius pin)]
+        pins (translate [(- pin-block-height) 0 0]
+                        (x-pin-places gasket-shape-radius pin))]
     (union pin-block pins)))
 
 (defn x-holes [gasket-shape-radius]
   (let [hole-block-height (* 2/3 pin-length)
         pin-radius (/ gasket-shape-radius 8)
         hole-block (x-half-cylinder gasket-shape-radius hole-block-height
-                                    (+ (- pin-length hole-block-height)
+                                    (+ 0
                                        pin-tolerance))
         hole (binding [*fn* pin-fn]
                (cylinder (+ pin-radius pin-tolerance)
@@ -1462,12 +1468,54 @@
     (difference hole-block holes)))
 
 (defn x-hole-hull [gasket-shape-radius]
-  (let [hole-hull-block-height (+ (* 1/3 pin-length) pin-tolerance)
-        pin-radius (/ gasket-shape-radius 8)
-        hole-hull-block (x-half-cylinder gasket-shape-radius
-                                         hole-hull-block-height
-                                         (+ pin-length pin-tolerance))]
-    hole-hull-block))
+  (let [height (+ (* 1/3 pin-length) pin-tolerance)]
+    (x-half-cylinder gasket-shape-radius
+                     height
+                     (+ (* 2/3 pin-length) pin-tolerance))))
+
+(defn x-hole-hull-intersect [gasket-shape-radius]
+  (let [height (+ (* 1/3 pin-length) pin-tolerance)]
+    (x-half-cylinder
+     (* 2 gasket-shape-radius)
+     height
+     (+ pin-length pin-tolerance))))
+
+(defn x-gap [gasket-shape-radius]
+  (x-half-cylinder (* 2 gasket-shape-radius)
+                   (+ pin-tolerance (* 2 ε))
+                   (- ε)))
+
+(defn pieces-with-x-pins-and-holes [x-pins-radius
+                                    shape
+                                    joint-places
+                                    intersection-shapes]
+  (let [r x-pins-radius
+        joint-places-rot1 (concat (rest joint-places)
+                                  [(first joint-places)])]
+    (for [[jp1 jp2 is] (map vector joint-places
+                            joint-places-rot1
+                            intersection-shapes)]
+      (let [pin-attachment-1 (hull (jp1 (x-pin-hull r))
+                                   (intersection
+                                    shape
+                                    (jp1 (x-pin-hull-intersect r))))
+            hole-attachment-1 (hull (jp1 (x-hole-hull r))
+                                    (intersection
+                                     shape
+                                     (jp1 (x-hole-hull-intersect r))))
+            pin-attachment-2 (hull (jp2 (x-pin-hull r))
+                                   (intersection
+                                    shape
+                                    (jp2 (x-pin-hull-intersect r))))
+            hole-attachment-2 (hull (jp2 (x-hole-hull r))
+                                    (intersection
+                                     shape
+                                     (jp2 (x-hole-hull-intersect r))))]
+        (union (intersection (difference shape (jp2 (x-gap r))) is)
+               pin-attachment-1
+               (jp1 (x-pins r))
+               hole-attachment-2
+               (jp2 (x-holes r)))))))
                                         
 
                                         ; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
@@ -2123,6 +2171,8 @@
                                     the-outline
                                     (binding [*fn* gasket-sphere-fn]
                                       (sphere r))))
+        ; this -5 sets how far away from the keys the top of the
+        ; marshmallowy sides will be.
         key-prism (union
                    (thumb-key-prism thumb-distance-below -5)
                    (finger-key-prism distance-below-to-intersect -5))
@@ -2147,10 +2197,135 @@
                key-prism)]
     sides))
 
+(def marshmallow-slice-intersects
+  (let [off-top (- (first rows) 1)
+        off-bottom (+ (last rows) 1)
+        off-left (- (first columns) 3)
+        off-right (+ (last columns) 3)
+        top-post (fn [column]
+                   (hull
+                    (->> web-post
+                         (translate [0 50 40])
+                         (key-place column off-top))
+                    (->> web-post
+                         (translate [0 0 -120])
+                         (key-place column off-top))))
+        bottom-post (fn [column]
+                      (hull
+                       (->> web-post
+                            (translate [0 -50 40])
+                            (key-place column off-bottom))
+                       (->> web-post
+                            (translate [0 0 -120])
+                            (key-place column off-bottom))))
+        right-split 4
+        right-slice (hull (top-post right-split) (bottom-post right-split)
+                          (top-post off-right) (bottom-post off-right))
+        post-at (fn [column row]
+                  (hull
+                   (->> web-post
+                        (translate [0 0 70])
+                        (key-place column row))
+                   (->> web-post
+                        (translate [0 0 -70])
+                        (key-place column row))))
+        top-split 1
+        top-slice (hull (top-post right-split)
+                        (post-at right-split top-split)
+                        (post-at off-left top-split)
+                        (post-at off-left off-top))
+        thumb-post (fn [column row]
+                     (hull
+                      (->> web-post
+                           (translate [0 0 70])
+                           (thumb-place column row))
+                      (->> web-post
+                           (translate [0 0 -70])
+                           (thumb-place column row))))
+        off-tleft 5
+        thumb-lsp 0
+        left-slice (hull (post-at off-left top-split)
+                         (thumb-post off-tleft thumb-lsp)
+                         (thumb-post 0 thumb-lsp)
+                         (post-at 0 top-split))
+        off-tbottom -4
+        lower-left-slice (hull (thumb-post 1 thumb-lsp)
+                               (thumb-post off-tleft thumb-lsp)
+                               (thumb-post off-tleft off-tbottom)
+                               (thumb-post 1 off-tbottom))
+        remainder (hull (thumb-post 1 thumb-lsp)
+                         (thumb-post 1 off-tbottom)
+                         (bottom-post right-split)
+                         (post-at right-split top-split))]
+    [(color [1 0 0] right-slice)
+     (color [1 1 0] top-slice)
+     (color [0 1 1] left-slice)
+     (color [1 0 1] lower-left-slice)
+     (color [0 0 1] remainder)]))
+
+; this is related to the -5 above in the big-marshmallowy-sides
+; function. the -5 results in the sa-cap x and y dimensions being
+; multiplied by 105%. if you adjust the above, you need to adjust
+; this, so the glue joints end up in the right place relative to the
+; top edge of the marshmallowy sides.
+(def joint-nudge-out 1.2)
+(def marshmallow-slice-joints
+  (let [right-split 4
+        top-split 1
+        thumb-lsp 0]
+    [(fn [shape] (->> shape
+                      (translate [0 (+ (* 1/2 mount-height)
+                                       joint-nudge-out)
+                                  (- web-thickness)])
+                      (rotate (* τ 1/2) [0 0 1])
+                      (key-place right-split (last rows))))
+     (fn [shape] (->> shape
+                      (translate [0 (+ (* 1/2 mount-height)
+                                       joint-nudge-out)
+                                  (- web-thickness)])
+                      (key-place right-split (first rows))))
+     (fn [shape] (->> shape
+                      (rotate (* τ 1/4) [0 0 1])
+                      (translate [(- (* -1/2 mount-width)
+                                     joint-nudge-out) 0
+                                  (- web-thickness)])
+                      (key-place (first columns) top-split)))
+     (fn [shape] (->> shape
+                      (rotate (* τ 1/4) [0 0 1])
+                      (translate [(- (* -1/2 mount-width)
+                                     joint-nudge-out) 0
+                                  (- web-thickness)])
+                      (thumb-place 2 thumb-lsp)))
+     (fn [shape] (->> shape
+                      (translate [0 (+ (* 1/2 mount-height)
+                                       joint-nudge-out)
+                                  (- web-thickness)])
+                      (rotate (* τ 1/2) [0 0 1])
+                      (thumb-place 1 -1)))]))
+
+(def marshmallowy-sides-with-ports
+  (difference
+   (binding [*fn* 12]
+     (big-marshmallowy-sides marshmallowy-sides-flatness
+                             marshmallowy-sides-downness
+                             marshmallowy-sides-thickness
+                             marshmallowy-sides-radius))
+   adafruit-usb-cutout))
+
+(def marshmallow-slices
+  (pieces-with-x-pins-and-holes (* marshmallowy-sides-radius 3/4)
+                                marshmallowy-sides-with-ports
+                                marshmallow-slice-joints
+                                marshmallow-slice-intersects))
+
+(doseq [[partno part] (map vector (range) marshmallow-slices)]
+  (spit (format "things/marshmallow-slices-%02d.scad" partno)
+        (write-scad (union part))))
+
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
-
+        (apply union marshmallow-slices)
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
@@ -2166,29 +2341,7 @@
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
         #_(union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        #_(big-marshmallowy-sides marshmallowy-sides-flatness
-                                marshmallowy-sides-downness
-                                marshmallowy-sides-thickness
-                                marshmallowy-sides-radius)
-        (difference
-         (binding [*fn* 12]
-           (union
-            #_case-bottom-shell
-            (->>
-             (x-pins marshmallowy-sides-radius)
-             (mirror [0 1 0])
-             (translate [0 (- (* 1/2 mount-height)) (- plate-thickness)])
-             (key-place 4 4))
-            (->>
-             (x-holes marshmallowy-sides-radius)
-             (mirror [0 1 0])
-             (translate [0 (- (* 1/2 mount-height)) (- plate-thickness)])
-             (key-place 4 4))
-            (big-marshmallowy-sides marshmallowy-sides-flatness
-                                    marshmallowy-sides-downness
-                                    marshmallowy-sides-thickness
-                                    marshmallowy-sides-radius)))
-         adafruit-usb-cutout))))
+        )))
 
 #_(spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
