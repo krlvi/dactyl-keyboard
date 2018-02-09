@@ -44,11 +44,12 @@
   (apply union
          (for [pin (range npins)]
            (->> shape
-                (rotate (/ τ 4) [0 1 0])
-                (translate [0 0 (* 2/3 gasket-shape-radius)])
-                (rotate (* (+ 1 pin)
+                (rotate (* τ 3/8) [1 0 0])
+                (rotate (* -1 (+ 1 pin)
                            (/ (/ τ 2) (+ 1 npins))) [-1 0 0])
-                (translate [(* 1/2 pin-length) 0 0])))))
+                (translate [0 0 (* 0.55 gasket-shape-radius)])
+                (rotate (* (+ 1 pin)
+                           (/ (/ τ 2) (+ 1 npins))) [-1 0 0])))))
 
 (defn x-half-cylinder [gasket-shape-radius height position]
   (let [bigger (+ 2 (* 2 gasket-shape-radius))
@@ -69,40 +70,52 @@
 
 (defn x-pins [gasket-shape-radius]
   (let [pin-block-height (* 1/3 pin-length)
-        pin-radius (/ gasket-shape-radius 8)
+        tooth-size (* 0.4 gasket-shape-radius)
         pin-block (x-half-cylinder gasket-shape-radius pin-block-height
                                    (- pin-block-height))
-        pin (binding [*fn* pin-fn]
-              (cylinder pin-radius pin-length))
-        pins (translate [(- pin-block-height) 0 0]
-                        (x-pin-places gasket-shape-radius pin))]
+        pin (difference
+             (->> (cube tooth-size tooth-size tooth-size)
+                  (rotate (* τ 1/8) [0 1 0])
+                  (rotate (* τ 1/8) [1 0 0])
+                  (translate [0 0 0]))
+             (->> (cube gasket-shape-radius gasket-shape-radius
+                        gasket-shape-radius)
+                  (translate [(* -1/2 gasket-shape-radius) 0 0])))
+        pins (x-pin-places gasket-shape-radius pin)]
     (union pin-block pins)))
 
 (defn x-holes [gasket-shape-radius]
-  (let [hole-block-height (* 2/3 pin-length)
+  (let [hole-block-height (* 1/2 pin-length)
         pin-radius (/ gasket-shape-radius 8)
         hole-block (x-half-cylinder gasket-shape-radius hole-block-height
                                     (+ 0
                                        pin-tolerance))
-        hole (binding [*fn* pin-fn]
-               (cylinder (+ pin-radius pin-tolerance)
-                         (+ pin-length (* 2 pin-tolerance))))
-        holes (translate [pin-tolerance 0 0]
-                         (x-pin-places gasket-shape-radius hole))]
+        hole-tooth-size (+ (* 0.4 gasket-shape-radius) (* 2 pin-tolerance))
+        hole (difference
+             (->> (cube hole-tooth-size hole-tooth-size hole-tooth-size)
+                  (rotate (* τ 1/8) [0 1 0])
+                  (rotate (* τ 1/8) [1 0 0])
+                  (translate [0 0 0]))
+             (->> (cube gasket-shape-radius gasket-shape-radius
+                        gasket-shape-radius)
+                  (translate [(* -1/2 gasket-shape-radius) 0 0])))
+        holes (->> (x-pin-places gasket-shape-radius hole)
+                   (translate [pin-tolerance 0 0])
+                   (translate [(- ε) 0 0]))]
     (difference hole-block holes)))
 
 (defn x-hole-hull [gasket-shape-radius]
   (let [height (+ (* 1/3 pin-length) pin-tolerance)]
     (x-half-cylinder gasket-shape-radius
                      height
-                     (+ (* 2/3 pin-length) pin-tolerance))))
+                     (+ (* 1/2 pin-length) pin-tolerance))))
 
 (defn x-hole-hull-intersect [gasket-shape-radius]
   (let [height (+ (* 1/3 pin-length) pin-tolerance)]
     (x-half-cylinder
      (* 2 gasket-shape-radius)
      height
-     (+ pin-length pin-tolerance))))
+     (+ (* 1/2 pin-length) pin-tolerance))))
 
 (defn x-gap [gasket-shape-radius]
   (x-half-cylinder (* 2 gasket-shape-radius)
@@ -164,4 +177,4 @@
   (spit (format "things/minktest-%02d.scad" partno)
         (write-scad part)))
        
-(spit "things/minktest.scad" (write-scad (union (x-pins 8) (x-holes 8) (x-hole-hull 8))))
+(spit "things/minktest.scad" (write-scad (x-holes 8)#_(union (x-pins 8) (x-holes 8) (x-hole-hull 8))))
