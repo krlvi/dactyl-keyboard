@@ -27,12 +27,12 @@
              (difference (funky-shape 0) (funky-shape 0.01))
              (cube 400 400 0.2)))
 
-(def outer-gasket-radius 14)
+(def outer-gasket-radius 15)
 (def gasket-shell-radius (- outer-gasket-radius 1))
 
 (defn gasket-shape [radius]
   (let [diameter (* 2 radius)]
-    (binding [*fn* 20] (sphere radius))))
+    (binding [*fn* 16] (sphere radius))))
 
 (def gasket (minkowski ribbon (gasket-shape outer-gasket-radius)))
 
@@ -59,6 +59,17 @@
                 (rotate (* (+ 1 pin)
                            (/ (/ τ 2) (+ 1 npins))) [-1 0 0])))))
 
+(defn x-pin [tooth-size]
+  (let [big 400]
+  (difference
+   (->> (cube tooth-size tooth-size tooth-size)
+        (rotate (* τ 1/8) [0 1 0])
+        (rotate (* τ 1/8) [1 0 0])
+        (rotate (* τ 1/8) [1 0 0])
+        (translate [0 0 0]))
+   (->> (cube big big big)
+        (translate [(* -1/2 big) 0 0])))))
+
 (defn x-half-cylinder [gasket-shape-radius height position]
   (let [r (+ gasket-shape-radius pin-tolerance)
         bigger (+ 2 (* 2 gasket-shape-radius))
@@ -82,48 +93,55 @@
         pin-block-height interface-thickness
         pin-block (x-half-cylinder gasket-shape-radius pin-block-height
                                    (- pin-block-height))
-        pin (difference
-             (->> (cube tooth-size tooth-size tooth-size)
-                  (rotate (* τ 1/8) [0 1 0])
-                  (rotate (* τ 1/8) [1 0 0])
-                  (rotate (* τ 1/8) [1 0 0])
-                  (translate [0 0 0]))
-             (->> (cube gasket-shape-radius gasket-shape-radius
-                        gasket-shape-radius)
-                  (translate [(* -1/2 gasket-shape-radius) 0 0])))
+        pin (x-pin tooth-size)
         pins (x-pin-places gasket-shape-radius pin)]
     (union pin-block pins)))
 
 (defn x-holes [gasket-shape-radius]
-  (let [hole-block-height (+ pin-length (* pin-tolerance √2))
-        hole-block (x-half-cylinder gasket-shape-radius hole-block-height
-                                    (+ 0
-                                       pin-tolerance))
+  (let [
         hole-tooth-size (+ (/ (* 2 pin-length) √2) (* 2 pin-tolerance))
-        hole (difference
-             (->> (cube hole-tooth-size hole-tooth-size hole-tooth-size)
-                  (rotate (* τ 1/8) [0 1 0])
-                  (rotate (* τ 1/8) [1 0 0])
-                  (rotate (* τ 1/8) [1 0 0])
-                  (translate [0 0 0]))
-             (->> (cube gasket-shape-radius gasket-shape-radius
-                        gasket-shape-radius)
-                  (translate [(* -1/2 gasket-shape-radius) 0 0])))
-        holes (->> (x-pin-places gasket-shape-radius hole)
-                   (translate [pin-tolerance 0 0])
-                   (translate [(- ε) 0 0]))]
-    (difference hole-block holes)))
+        back-tooth-size (+ (/ (* 2 pin-length) √2) (* 2 pin-tolerance) (* 2 interface-thickness))
+        hole (x-pin hole-tooth-size)
+        back-of-hole (x-pin back-tooth-size)
+        hole-depth (+ pin-length (* pin-tolerance √2))
+        block-starts-at pin-tolerance #_(+ (- holes-end-at interface-thickness)
+                           pin-tolerance)
+        placed (fn [shape] (->> (x-pin-places gasket-shape-radius shape)
+                                (translate [block-starts-at 0 0])
+                                (translate [(- ε) 0 0])))
+        holes (placed hole)
+        backs (placed back-of-hole)
+        bounds (x-half-cylinder gasket-shape-radius
+                                (+ interface-thickness
+                                   hole-depth)
+                                block-starts-at)
+        hole-block
+        (difference
+(intersection
+         (union
+         (x-half-cylinder gasket-shape-radius interface-thickness
+                          block-starts-at #_(+ (- holes-end-at interface-thickness)
+                             pin-tolerance))
+         backs) bounds) holes)]
+    hole-block #_(difference hole-block holes)))
 
-(defn x-hole-hull [gasket-shape-radius]
-  (x-half-cylinder gasket-shape-radius
-                     interface-thickness
-                     (+ pin-tolerance pin-length (* pin-tolerance √2))))
+(defn connect-to-hole [gasket-shape-radius place shape]
+  (let [
+        section (x-half-cylinder gasket-shape-radius
+                                 interface-thickness
+                                 pin-tolerance)
+        core (x-half-cylinder (* 0.99 gasket-shape-radius)
+                              (* 2 interface-thickness)
+                              (* -1/2 interface-thickness))
+        intersect (x-half-cylinder
+                   (* 2 gasket-shape-radius)
+                   interface-thickness
+                   pin-tolerance)]
+    (difference
+     (hull (place section)
+           (intersection shape (place intersect)))
+     (place core))))
 
-(defn x-hole-hull-intersect [gasket-shape-radius]
-  (x-half-cylinder
-     (* 2 gasket-shape-radius)
-     interface-thickness
-     (+ pin-tolerance pin-length (* pin-tolerance √2))))
 
 (defn x-gap [gasket-shape-radius]
   (x-half-cylinder (* 2 gasket-shape-radius)
@@ -145,20 +163,14 @@
                    gasket-shell
                    (jp1 (x-pin-hull-intersect r))))
             hole-attachment-1
-            (hull (jp1 (x-hole-hull r))
-                  (intersection
-                   gasket-shell
-                   (jp1 (x-hole-hull-intersect r))))
+            (connect-to-hole x-pins-radius jp1 gasket-shell)
             pin-attachment-2
             (hull (jp2 (x-pin-hull r))
                   (intersection
                    gasket-shell
                    (jp2 (x-pin-hull-intersect r))))
             hole-attachment-2
-            (hull (jp2 (x-hole-hull r))
-                  (intersection
-                   gasket-shell
-                   (jp2 (x-hole-hull-intersect r))))]
+            (connect-to-hole x-pins-radius jp2 gasket-shell)]
         (union (intersection
                 (difference gasket-shell (jp2 (x-gap r))) is)
                pin-attachment-1
