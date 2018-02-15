@@ -22,7 +22,7 @@
         fsd (* funky-shape-depth shrink-factor)
         fsh (* funky-shape-height shrink-factor)]
   (cube fsw fsd fsh)))
-  
+
 (def ribbon (intersection
              (difference (funky-shape 0) (funky-shape 0.01))
              (cube 400 400 0.2)))
@@ -150,7 +150,8 @@
 
 (defn pieces-with-x-pins-and-holes [x-pins-radius
                                     joint-places
-                                    intersection-shapes]
+                                    intersection-shapes
+                                    thing-to-be-split]
   (let [r x-pins-radius
         joint-places-rot1 (concat (rest joint-places)
                                   [(first joint-places)])]
@@ -160,19 +161,19 @@
       (let [pin-attachment-1
             (hull (jp1 (x-pin-hull r))
                   (intersection
-                   gasket-shell
+                   thing-to-be-split
                    (jp1 (x-pin-hull-intersect r))))
             hole-attachment-1
-            (connect-to-hole x-pins-radius jp1 gasket-shell)
+            (connect-to-hole x-pins-radius jp1 thing-to-be-split)
             pin-attachment-2
             (hull (jp2 (x-pin-hull r))
                   (intersection
-                   gasket-shell
+                   thing-to-be-split
                    (jp2 (x-pin-hull-intersect r))))
             hole-attachment-2
-            (connect-to-hole x-pins-radius jp2 gasket-shell)]
+            (connect-to-hole x-pins-radius jp2 thing-to-be-split)]
         (union (intersection
-                (difference gasket-shell (jp2 (x-gap r))) is)
+                (difference thing-to-be-split (jp2 (x-gap r))) is)
                pin-attachment-1
                (jp1 (x-pins r))
                hole-attachment-2
@@ -191,12 +192,13 @@
                      (translate [(* 1/2 funky-shape-width) 0 0])))]
    [(translate [-20 0 0] (cube 40 80 40))
     (translate [20 -40 0] (cube 40 80 40))
-    (translate [20 40 0] (cube 40 80 40))]))
+    (translate [20 40 0] (cube 40 80 40))]
+   gasket-shell))
 
 (doseq [[partno part] (map vector (range) gasket-with-joints-pieces)]
   (spit (format "things/minktest-%02d.scad" partno)
         (write-scad part)))
-       
+
 (spit "things/minktest.scad"
       (write-scad
        (union
