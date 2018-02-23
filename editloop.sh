@@ -1,5 +1,25 @@
 #!/bin/sh
 
+default_file="src/dactyl_keyboard/dactyl.clj"
+default_obn=dactyl-blank-all
+
+if [ "$1" = "--help" ]; then
+    cat >&2 <<EOF
+Usage 1: sh editloop.sh [--no-fstl]
+Usage 2: sh editloop.sh [--no-fstl] file.clj output-basename 
+
+Watches a Clojure file, loading it in a Clojure repl whenever it changes.
+This emits an scad file, which editloop then renders into an stl, then
+converts to binary. Then it kills fstl and reruns it on the new binary
+stl. 
+
+Default file is $default_file
+Default output basename is $default_obn 
+
+EOF
+    exit 1
+    fi
+
 USE_FSTL=1
 if [ "$1" = "--no-fstl" ]; then
 	USE_FSTL=0
@@ -9,13 +29,13 @@ if [ -n "$1" ]; then
     SOURCE="$1"
     shift
 else
-    SOURCE="src/dactyl_keyboard/dactyl.clj"
+    SOURCE="$default_file"
 fi
 if [ -n "$1" ]; then
     OBN="$1"
     shift
 else
-    OBN=dactyl-blank-all
+    OBN="$default_obn"
 fi
 OD=things
 SCAD="${OD}/${OBN}.scad"
