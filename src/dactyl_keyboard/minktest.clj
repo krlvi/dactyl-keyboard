@@ -43,10 +43,10 @@
      (difference gasket little-gasket)
      (funky-shape 0))))
 
-(def pin-tolerance 0.01)
-(def pin-length 3)
-(def pin-side-length (/ (* 2 pin-length) √2))
-(def interface-thickness 1)
+(def pin-tolerance 0.2)
+(def pin-length 7)
+(def pin-fn 6) ; hexagonal cones
+(def interface-thickness 1.3)
 
 (defn x-half-cylinder-common [gasket-shape-radius height position nudge]
   (let [r (match [gasket-shape-radius]
@@ -67,26 +67,25 @@
   (x-half-cylinder-common gasket-shape-radius height position 0))
 
 (defn x-pins-places [radius shape]
-  (let [spacing (* 1.3 pin-length) ; should not depend on params: we use
+  (let [spacing (* 1.0 pin-length) ; should not depend on params: we use
                                         ; different tooth sizes and
                                         ; radii but need same places
-        npins (+ (/ radius spacing) 3)]
+        npins (+ (/ radius spacing) 3)
+        polygonal-flat-diameter-ratio (Math/sin (/ τ pin-fn))]
     (apply union
-           (for [x 
-                 (range -1 (- npins 1)) y
-                  (range (- npins) npins)]
+           (for [x (range -1 (- npins 1))
+                 y (range (- npins) npins)]
              (->> shape
-                  (rotate (* τ 3/8) [1 0 0])
-                  (translate [0 (* x spacing) (* y spacing)])
-                  (translate [0 (if (= 0 (mod y 2)) (* 1/2 spacing) 0) 0]))))))
+                  (rotate (* τ 1/4) [0 1 0])
+                  (translate [0
+                              (* x spacing polygonal-flat-diameter-ratio)
+                              (* y 3/4 spacing)])
+                  (translate [0 (* (mod y 2) 1/2 pin-length) 0])
+                  (translate [0 0 (* y -1/12 spacing)]))))))
 
 (defn x-pin [length]
-  (let [side (/ (* 2 length) √2)] 
-    (->> (cube side side side)
-         (rotate (* τ 1/8) [0 1 0])
-         (rotate (* τ 1/8) [1 0 0])
-         (rotate (* τ 1/8) [1 0 0])
-         (translate [0 0 0]))))
+  (with-fn pin-fn
+    (cylinder [length 0] length)))
 
 (defn x-hollow-pins [gasket-shape-radius
                      pin-r-factor back-r-factor
