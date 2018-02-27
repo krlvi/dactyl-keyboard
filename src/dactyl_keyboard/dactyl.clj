@@ -1574,9 +1574,22 @@
                       (rotate (/ π 2) [1 0 0])
                       (translate [(/ adafruit-usb-screws-center 2)
                                   0 0]))
-        screw-hole-2 (mirror [-1 0 0] screw-hole-1)
-        all (union overmold-hole screw-hole-1 screw-hole-2)]
-    (->> all
+        screw-hole-2 (mirror [-1 0 0] screw-hole-1)]
+    (union overmold-hole screw-hole-1 screw-hole-2)))
+
+(def adafruit-usb-plate
+  (let [thickness 3
+        r (* 4 (* 1/2 adafruit-usb-screws-diameter))
+        screw-plate-1 (->>
+                       (cylinder r thickness)
+                       (rotate (* 1/4 τ) [1 0 0])
+                       (translate
+                        [(* 1/2 adafruit-usb-screws-diameter) 0 0]))
+        screw-plate-2 (mirror [-1 0 0] screw-plate-1)]
+    (minkowski screw-plate-1 screw-plate-2)))
+
+(defn usb-cutout-place [shape]
+    (->> shape
          (translate [0 (/ mount-height 2) 0])
          (translate [0 marshmallowy-sides-radius
                      (- marshmallowy-sides-radius)])
@@ -2332,11 +2345,13 @@
 (def mallowy-sides-with-right-ports
   (difference
    (binding [*fn* 12]
-     (big-marshmallowy-sides marshmallowy-sides-flatness
-                             marshmallowy-sides-downness
-                             marshmallowy-sides-thickness
-                             marshmallowy-sides-radius))
-   adafruit-usb-cutout))
+     (union
+      (big-marshmallowy-sides marshmallowy-sides-flatness
+                              marshmallowy-sides-downness
+                              marshmallowy-sides-thickness
+                              marshmallowy-sides-radius)
+      (usb-cutout-place adafruit-usb-plate)))
+   (usb-cutout-place adafruit-usb-cutout)))
 
 (def mallow-slices-right
   (pieces-with-x-pins-and-holes (* marshmallowy-sides-radius 3/4)
