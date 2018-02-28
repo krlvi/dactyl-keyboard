@@ -42,6 +42,11 @@
          (rotate tenting-angle [0 1 0])
          (translate [0 0 13]))))
 
+
+(defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
+(defn retent [shape] (rotate tenting-angle [0 1 0] shape))
+
+
 (defn case-place [column row shape]
   (let [row-placed-shape (->> shape
                               (translate [0 0 (- row-radius)])

@@ -3,7 +3,12 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
             [dactyl-keyboard.util :refer :all]
-            [unicode-math.core :refer :all]))
+            [unicode-math.core :refer :all]
+            [dactyl-keyboard.switch-hole :refer [mount-height]]
+            [dactyl-keyboard.marshmallowy-sides
+             :refer [marshmallowy-sides-radius
+                     marshmallowy-sides-downness]]
+            [dactyl-keyboard.placement :refer [key-place]]))
 
                                         ; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
                                         ; Micro USB Cables and
@@ -51,3 +56,12 @@
                         [(* 1/2 adafruit-usb-screws-diameter) 0 0]))
         screw-plate-2 (mirror [-1 0 0] screw-plate-1)]
     (minkowski screw-plate-1 screw-plate-2)))
+
+(defn usb-cutout-place [shape]
+    (->> shape
+         (translate [0 (/ mount-height 2) 0])
+         (translate [0 marshmallowy-sides-radius
+                     (- marshmallowy-sides-radius)])
+         (translate [0 0 (- marshmallowy-sides-downness)])
+         #_(translate [0 0 -5]) ; for radius 12
+         (key-place 2 0)))

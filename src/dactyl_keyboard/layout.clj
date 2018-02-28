@@ -37,6 +37,23 @@
                   [1 3] [0 3]])
 (def around-edge-rot1 (concat (rest around-edge) (list (first around-edge))))
 
+                                        ; the around-edge vector is a
+                                        ; list of the key places
+                                        ; around the edge in
+                                        ; order. this is a description
+                                        ; of whether a given key place
+                                        ; is around the edge.
+(defn around-edge-p [row column]
+  (and
+   (finger-has-key-place-p row column)
+   (or (= column (first columns))
+       (= column (last columns))
+       (= row (first rows))
+       (= row (last rows))
+       (not (finger-has-key-place-p row (inc column)))
+       (not (finger-has-key-place-p (inc row) column))
+       (not (finger-has-key-place-p (inc row) (dec column))))))
+
 
 (defn thumb-glue-joint-left-of-p [row column]
   (cond
