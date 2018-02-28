@@ -1,6 +1,7 @@
 (ns dactyl-keyboard.util
   (:refer-clojure :exclude [use import])
-  (:require [scad-clj.model :refer :all]))
+  (:require [unicode-math.core :refer :all]
+            [scad-clj.model :refer :all]))
 
 (defn triangle-hulls [& shapes]
   (apply union
@@ -14,3 +15,12 @@
 
 (defn bottom-hull [p]
   (hull p (bottom 1 p)))
+
+; https://tauday.com
+(def ^:const τ (* π 2))
+
+; csg food
+(def ^:const ε 0.001)
+
+(def ^:const √2 (Math/sqrt 2))
+

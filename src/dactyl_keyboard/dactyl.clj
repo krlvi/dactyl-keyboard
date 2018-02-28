@@ -4,10 +4,8 @@
             [scad-clj.model :refer :all]
             [dactyl-keyboard.util :refer :all]
             [unicode-math.core :refer :all]
-            [clojure.core.match :refer [match]]))
-
-; https://tauday.com
-(def τ (* π 2))
+            [dactyl-keyboard.half-circle-connectors :refer :all]
+            [dactyl-keyboard.adafruit-usb :refer :all]))
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -1406,188 +1404,6 @@
          (translate [0 0 (- teensy-offset-height)])
          (key-place 1/2 3/2))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Half-round glue joint for marshmallowy sides ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def ε 0.001) ; csg food
-(def √2 (Math/sqrt 2))
-
-(def pin-tolerance 0.01)
-(def pin-length 3)
-(def pin-side-length (/ (* 2 pin-length) √2))
-(def interface-thickness 1)
-
-(defn x-half-cylinder-common [gasket-shape-radius height position nudge]
-  (let [r (match [gasket-shape-radius]
-                 [[gsr1 gsr2]] [(+ gsr1 pin-tolerance) gsr2]
-                 [gsr] (+ gsr pin-tolerance))
-        bigger (+ 2 (* 2 (if (vector? gasket-shape-radius)
-                           (first gasket-shape-radius)
-                           gasket-shape-radius)))
-        half (translate [0 (+ (* 1/2 bigger) nudge) 0]
-                        (cube bigger bigger bigger))]
-    (->> (intersection half (cylinder r height))
-         (rotate (/ τ 4) [0 1 0])
-         (translate [(* 1/2 height) 0 0])
-         (translate [position 0 0]))))
-(defn x-half-cylinder-for-diff [gasket-shape-radius height position]
-  (x-half-cylinder-common gasket-shape-radius height position (- ε)))
-(defn x-half-cylinder [gasket-shape-radius height position]
-  (x-half-cylinder-common gasket-shape-radius height position 0))
-
-(defn x-pins-places [radius shape]
-  (let [spacing (* 1.3 pin-length) ; should not depend on params: we use
-                                        ; different tooth sizes and
-                                        ; radii but need same places
-        npins (+ (/ radius spacing) 3)]
-    (apply union
-           (for [x 
-                 (range -1 (- npins 1)) y
-                  (range (- npins) npins)]
-             (->> shape
-                  (rotate (* τ 3/8) [1 0 0])
-                  (translate [0 (* x spacing) (* y spacing)])
-                  (translate [0 (if (= 0 (mod y 2)) (* 1/2 spacing) 0) 0]))))))
-
-(defn x-pin [length]
-  (let [side (/ (* 2 length) √2)] 
-    (->> (cube side side side)
-         (rotate (* τ 1/8) [0 1 0])
-         (rotate (* τ 1/8) [1 0 0])
-         (rotate (* τ 1/8) [1 0 0])
-         (translate [0 0 0]))))
-
-(defn x-hollow-pins [gasket-shape-radius
-                     pin-r-factor back-r-factor
-                     pin-length back-length
-                     shape]
-  (let [r gasket-shape-radius
-        long (* 1.5 r)
-        pin-r (* pin-r-factor r)
-        back-r (* back-r-factor r)
-        pin-crop (x-half-cylinder [pin-r 0] pin-r 0)
-        back-crop (x-half-cylinder [back-r 0] (+ back-r (* 2 ε)) (- ε))
-        back-remove (x-half-cylinder-for-diff back-r (+ long ε) (* -1/2 long))
-        pins-front (intersection
-                    (x-pins-places gasket-shape-radius (x-pin pin-length))
-                    pin-crop)
-        pins-back (intersection
-                   (x-pins-places gasket-shape-radius (x-pin back-length))
-                   back-crop)
-        inside-slice (cube (* 2 pin-length) ε (* 2 gasket-shape-radius))]
-    (union
-     (difference shape back-remove)
-     (difference pins-front pins-back inside-slice))))
-
-(defn x-pins [gasket-shape-radius]
-  (let [pin-block-height interface-thickness
-        pin-block (x-half-cylinder gasket-shape-radius pin-block-height
-                                   (- pin-block-height))]
-    (x-hollow-pins gasket-shape-radius 0.85 0.8
-                   pin-length
-                   (- pin-length interface-thickness)
-                   pin-block)))
-
-(defn x-holes [gasket-shape-radius]
-  (let [hole-block-height interface-thickness
-        hole-block (x-half-cylinder gasket-shape-radius hole-block-height 0)]
-    (translate [pin-tolerance 0 0]
-               (x-hollow-pins gasket-shape-radius 0.9 0.85
-                              (+ pin-length interface-thickness)
-                              pin-length
-                              hole-block))))
-                   
-(defn connect-common [gasket-shape-radius place shape x-offset]
-  (let [
-        section (x-half-cylinder gasket-shape-radius
-                                 interface-thickness
-                                 x-offset)
-        core (x-half-cylinder-for-diff
-              (* 0.99 gasket-shape-radius)
-              (* 2 interface-thickness)
-              (+ (* -1/2 interface-thickness)
-                 x-offset))
-        intersect (x-half-cylinder
-                   (* 2 gasket-shape-radius)
-                   interface-thickness
-                   x-offset)]
-    (difference
-     (hull (place section)
-           (intersection shape (place intersect)))
-     (place core))))
-(defn connect-to-hole [gasket-shape-radius place shape]
-  (connect-common gasket-shape-radius place shape pin-tolerance))
-(defn connect-to-pin [gasket-shape-radius place shape]
-  (connect-common gasket-shape-radius place shape (- interface-thickness)))
-
-(defn x-gap [gasket-shape-radius]
-  (x-half-cylinder (* 2 gasket-shape-radius)
-                   pin-tolerance
-                   (- ε)))
-
-(defn pieces-with-x-pins-and-holes [x-pins-radius
-                                    joint-places
-                                    intersection-shapes
-                                    thing-to-be-split]
-  (let [r x-pins-radius
-        joint-places-rot1 (concat (rest joint-places)
-                                  [(first joint-places)])]
-    (for [[jp1 jp2 is] (map vector joint-places
-                            joint-places-rot1
-                            intersection-shapes)]
-      (union (intersection
-              (difference thing-to-be-split (jp2 (x-gap r)))
-              is)
-             (connect-to-pin x-pins-radius jp1 thing-to-be-split)
-             (jp1 (x-pins r))
-             (connect-to-hole x-pins-radius jp2 thing-to-be-split)
-             (jp2 (x-holes r))))))
-
-                                        ; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
-                                        ; Micro USB Cables and
-                                        ; Connectors Specification
-                                        ; 1.01 Figure 4-5, Page 18.
-                                        ; An overmold is the plastic
-                                        ; that goes around the metal
-                                        ; and wires of a usb
-                                        ; connector. The standard
-                                        ; overmold size is very
-                                        ; chunky, and every actual
-                                        ; cable should be smaller.
-(def micro-b-overmold-width 11)
-(def micro-b-overmold-height 9)
-
-                                        ; Adafruit Panel Mount Extension USB Cable - Micro B Male to Micro B Female [ADA3258]
-                                        ; "4-40 screws... 18mm apart"
-                                        ; 4-40 -> 0.112" major diameter
-(def adafruit-usb-screws-diameter 2.5)
-(def adafruit-usb-screws-center 18)
-
-(def adafruit-usb-cutout
-  (let [overmold-hole (cube micro-b-overmold-width
-                            marshmallowy-sides-radius
-                            micro-b-overmold-height)
-        screw-hole-1 (->>
-                      (cylinder (/ adafruit-usb-screws-diameter 2)
-                                marshmallowy-sides-radius)
-                      (rotate (/ π 2) [1 0 0])
-                      (translate [(/ adafruit-usb-screws-center 2)
-                                  0 0]))
-        screw-hole-2 (mirror [-1 0 0] screw-hole-1)]
-    (union overmold-hole screw-hole-1 screw-hole-2)))
-
-(def adafruit-usb-plate
-  (let [thickness 3
-        r (* 4 (* 1/2 adafruit-usb-screws-diameter))
-        screw-plate-1 (->>
-                       (cylinder r thickness)
-                       (rotate (* 1/4 τ) [1 0 0])
-                       (translate
-                        [(* 1/2 adafruit-usb-screws-diameter) 0 0]))
-        screw-plate-2 (mirror [-1 0 0] screw-plate-1)]
-    (minkowski screw-plate-1 screw-plate-2)))
-
 (defn usb-cutout-place [shape]
     (->> shape
          (translate [0 (/ mount-height 2) 0])
@@ -1595,7 +1411,7 @@
                      (- marshmallowy-sides-radius)])
          (translate [0 0 (- marshmallowy-sides-downness)])
          #_(translate [0 0 -5]) ; for radius 12
-         (key-place 2 0))))
+         (key-place 2 0)))
 
                                         ; https://www.mouser.com/ds/2/18/61835-1003706.pdf
 (def rj11-face-width 11.18)
