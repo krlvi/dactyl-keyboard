@@ -3,225 +3,20 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
             [dactyl-keyboard.util :refer :all]
+            [dactyl-keyboard.switch-hole :refer :all]
+            [dactyl-keyboard.keycaps :refer :all]
+            [dactyl-keyboard.placement :refer :all]
+            [dactyl-keyboard.frame-glue-joint :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
             [dactyl-keyboard.adafruit-usb :refer :all]))
 
-;;;;;;;;;;;;;;;;;
-;; Switch Hole ;;
-;;;;;;;;;;;;;;;;;
 
-(def keyswitch-height 14.4) ;; Was 14.1, then 14.25
-(def keyswitch-width 14.4)
-
-(def sa-profile-key-height 12.7)
-
-(def plate-thickness 4)
-(def mount-width (+ keyswitch-width 3))
-(def mount-height (+ keyswitch-height 3))
-
-
-
-(def alps-width 15.6)
-(def alps-notch-width 15.5)
-(def alps-notch-height 1)
-(def alps-height 13)
-
-(def cherry-bezel-width 1.5)
-(def cherry-single-plate
-  (let [top-wall (->> (cube (+ keyswitch-width (* 2 cherry-bezel-width)) cherry-bezel-width plate-thickness)
-                      (translate [0
-                                  (+ (/ cherry-bezel-width 2) (/ keyswitch-height 2))
-                                  (/ plate-thickness 2)]))
-        left-wall (->> (cube 1.5 (+ keyswitch-height (* 2 cherry-bezel-width)) plate-thickness)
-                       (translate [(+ (/ cherry-bezel-width 2) (/ keyswitch-width 2))
-                                   0
-                                   (/ plate-thickness 2)]))
-        side-nub (->> (binding [*fn* 30] (cylinder 1 2.75))
-                      (rotate (/ π 2) [1 0 0])
-                      (translate [(+ (/ keyswitch-width 2)) 0 1])
-                      (hull (->> (cube cherry-bezel-width 2.75 plate-thickness)
-                                 (translate [(+ (/ cherry-bezel-width 2) (/ keyswitch-width 2))
-                                             0
-                                             (/ plate-thickness 2)]))))
-        plate-half (union top-wall left-wall (with-fn 100 side-nub))]
-    (union plate-half
-           (->> plate-half
-                (mirror [1 0 0])
-                (mirror [0 1 0])))))
-
-(def cherry-blank-single-plate
-  (->>
-    (cube (+ keyswitch-width (* 2 cherry-bezel-width))
-          (+ keyswitch-height (* 2 cherry-bezel-width))
-          plate-thickness)
-    (translate [0 0 (/ plate-thickness 2)])))
-
-(def alps-single-plate
-  (let [top-wall (->> (cube (+ keyswitch-width 3) 2.2 plate-thickness)
-                      (translate [0
-                                  (+ (/ 2.2 2) (/ alps-height 2))
-                                  (/ plate-thickness 2)]))
-        left-wall (union (->> (cube 1.5 (+ keyswitch-height 3) plate-thickness)
-                              (translate [(+ (/ 1.5 2) (/ 15.6 2))
-                                          0
-                                          (/ plate-thickness 2)]))
-                         (->> (cube 1.5 (+ keyswitch-height 3) 1.0)
-                              (translate [(+ (/ 1.5 2) (/ alps-notch-width 2))
-                                          0
-                                          (- plate-thickness
-                                             (/ alps-notch-height 2))]))
-                         )
-        plate-half (union top-wall left-wall)]
-    (union plate-half
-           (->> plate-half
-                (mirror [1 0 0])
-                (mirror [0 1 0])))))
-
-(def chosen-single-plate cherry-single-plate)
-(def chosen-blank-single-plate cherry-blank-single-plate)
-
-; Paddles that stick out below, so the fingers and thumb can be
-; printed separately then glued together.
-
-(def glue-joint-height (* 2 plate-thickness))
-(def glue-joint-wall-thickness 1.2) ; how much plastic for the paddle
-(def glue-joint-glue-thickness 0.1) ; how much thickness to leave for glue
-
-(def glue-joint-lug
-  (cube (/ glue-joint-wall-thickness 2)
-        (/ mount-height 4)
-        (/ glue-joint-height 4)))
-
-(def glue-joint-not-lug
-  (let [tolerance (* 2 glue-joint-glue-thickness)]
-    (cube (+ (/ glue-joint-wall-thickness 2) tolerance)
-          (+ (/ mount-height 4) tolerance)
-          (+ (/ glue-joint-height 4) tolerance))))
-
-(defn glue-joint-l-places [shape]
-  (union
-   (translate [(- 0 (/ glue-joint-wall-thickness 2))
-               (- 0 (/ mount-height 4))
-               (- 0 (/ glue-joint-height 4))]
-              shape)
-   (translate [(- 0 (/ glue-joint-wall-thickness 2))
-               (/ mount-height 4)
-               (/ glue-joint-height 4)]
-              shape)))
-
-(defn glue-joint-r-places [shape]
-  (union
-   (translate [(/ glue-joint-wall-thickness 2)
-               (- 0 (/ mount-height 4))
-               (- 0 (/ glue-joint-height 4))]
-              shape)
-   (translate [(/ glue-joint-wall-thickness 2)
-               (/ mount-height 4)
-               (/ glue-joint-height 4)]
-              shape)))
-
-                                        ; glue-joint-r-shape is at the
-                                        ; far left of a key space, and
-                                        ; goes on the right side of a
-                                        ; glue joint
-(def glue-joint-r-shape
-  (difference
-         (cube glue-joint-wall-thickness
-               mount-height
-               glue-joint-height)
-         (glue-joint-r-places glue-joint-not-lug)))
-
-                                        ; glue-joint-l-shape is at the
-                                        ; far right of a key space,
-                                        ; and goes on the left side of
-                                        ; a glue joint
-(def glue-joint-l-shape
-  (union
-         (cube glue-joint-wall-thickness
-               mount-height
-               glue-joint-height)
-         (glue-joint-l-places glue-joint-lug)))
-
-(def glue-joint-tb-shape (cube mount-width
-                                glue-joint-wall-thickness
-                                glue-joint-height))
-
-  (def glue-joint-center-left
-    (->> glue-joint-l-shape
-         (translate [(/ glue-joint-glue-thickness 2)
-                     0
-                     (- plate-thickness (/ glue-joint-height 2))])))
-  (def glue-joint-center-right
-    (->> glue-joint-r-shape
-         (translate [(- 0 glue-joint-wall-thickness (/ glue-joint-glue-thickness 2))
-                     0
-                     (- plate-thickness (/ glue-joint-height 2))])))
-
-
-
-;;;;;;;;;;;;;;;;
-;; SA Keycaps ;;
-;;;;;;;;;;;;;;;;
-
-(def sa-length 18.25)
-(def sa-double-length 37.5)
-(def sa-cap {1 (let [bl2 (/ 18.5 2)
-                     m (/ 17 2)
-                     key-cap (hull (->> (polygon [[bl2 bl2] [bl2 (- bl2)] [(- bl2) (- bl2)] [(- bl2) bl2]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 0.05]))
-                                   (->> (polygon [[m m] [m (- m)] [(- m) (- m)] [(- m) m]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 6]))
-                                   (->> (polygon [[6 6] [6 -6] [-6 -6] [-6 6]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 12])))]
-                 (->> key-cap
-                      (translate [0 0 (+ 5 plate-thickness)])
-                      (color [220/255 163/255 163/255 1])))
-             2 (let [bl2 (/ sa-double-length 2)
-                     bw2 (/ 18.25 2)
-                     key-cap (hull (->> (polygon [[bw2 bl2] [bw2 (- bl2)] [(- bw2) (- bl2)] [(- bw2) bl2]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 0.05]))
-                                   (->> (polygon [[6 16] [6 -16] [-6 -16] [-6 16]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 12])))]
-                 (->> key-cap
-                      (translate [0 0 (+ 5 plate-thickness)])
-                      (color [127/255 159/255 127/255 1])))
-             1.5 (let [bl2 (/ 18.25 2)
-                       bw2 (/ 28 2)
-                       key-cap (hull (->> (polygon [[bw2 bl2] [bw2 (- bl2)] [(- bw2) (- bl2)] [(- bw2) bl2]])
-                                          (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                          (translate [0 0 0.05]))
-                                     (->> (polygon [[11 6] [-11 6] [-11 -6] [11 -6]])
-                                          (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                          (translate [0 0 12])))]
-                   (->> key-cap
-                        (translate [0 0 (+ 5 plate-thickness)])
-                        (color [240/255 223/255 175/255 1])))})
-
-;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Placement Functions ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; we split the keyholes into pieces for smaller print volume and quicker printing
 (def columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)])
 (def columns   (apply concat columns-pieces))
 (def rows (range 0 5))
-(def tenting-angle (/ π 12))
-
-(def α (/ π 12))
-(def β (/ π 36))
-(def cap-top-height (+ plate-thickness sa-profile-key-height))
-(def row-radius (+ (/ (/ (+ mount-height 1/2) 2)
-                      (Math/sin (/ α 2)))
-                   cap-top-height))
-(def column-radius (+ (/ (/ (+ mount-width 2.0) 2)
-                         (Math/sin (/ β 2)))
-                      cap-top-height))
 
                                         ; this defines the keys
                                         ; missing from the finger part
@@ -255,40 +50,6 @@
     true false))
 
 
-(defn key-place [column row shape]
-  (let [row-placed-shape (->> shape
-                              (translate [0 0 (- row-radius)])
-                              (rotate (* α (- 2 row)) [1 0 0])
-                              (translate [0 0 row-radius]))
-        column-offset (cond
-                        (and (>= column 2) (< column 3)) [0 2.82 -3.0] ;;was moved -4.5
-                        (>= column 4) [0 -5.8 5.64]
-                        :else [0 0 0])
-        column-angle (* β (- 2 column))
-        placed-shape (->> row-placed-shape
-                          (translate [0 0 (- column-radius)])
-                          (rotate column-angle [0 1 0])
-                          (translate [0 0 column-radius])
-                          (translate column-offset))]
-    (->> placed-shape
-         (rotate tenting-angle [0 1 0])
-         (translate [0 0 13]))))
-
-(defn case-place [column row shape]
-  (let [row-placed-shape (->> shape
-                              (translate [0 0 (- row-radius)])
-                              (rotate (* α (- 2 row)) [1 0 0])
-                              (translate [0 0 row-radius]))
-        column-offset [0 -4.35 5.64]
-        column-angle (* β (- 2 column))
-        placed-shape (->> row-placed-shape
-                          (translate [0 0 (- column-radius)])
-                          (rotate column-angle [0 1 0])
-                          (translate [0 0 column-radius])
-                          (translate column-offset))]
-    (->> placed-shape
-         (rotate tenting-angle [0 1 0])
-         (translate [0 0 13]))))
 
 (defn key-shapes-for-columns [shape columns]
   (apply union
