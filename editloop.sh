@@ -65,12 +65,12 @@ datef () {
     date +%H:%M:%S "$@"
 }
 
-while inotifywait -e close_write $SOURCE; do
+while inotifywait -r -e close_write $(dirname $SOURCE); do
     echo
     echo
-    echo "$(datef): !!!!!!!!!!!!!!!!!!!!!!!!! $SOURCE modified; rebuilding"
+    echo "$(datef): !!!!!!!!!!!!!!!!!!!!!!!!! something modified; rebuilding $SOURCE"
     echo
-    echo "(load-file \"$SOURCE\")" | step make-scad lein repl :connect 127.0.0.1:18237
+    echo "(load-file \"$SOURCE\")" | step make-scad lein repl
     echo "\$\? was $?"
     if [ "$USE_FSTL" -eq 1 ]; then
         step render-stl openscad -o "$ASTL" --render "$SCAD"
