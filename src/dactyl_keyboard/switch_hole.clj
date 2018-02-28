@@ -13,8 +13,12 @@
 (def keyswitch-width 14.4)
 
 (def sa-profile-key-height 12.7)
+(def sa-length 18.25)
+(def sa-double-length 37.5)
 
 (def plate-thickness 4)
+(def web-thickness 3.5)
+
 (def mount-width (+ keyswitch-width 3))
 (def mount-height (+ keyswitch-height 3))
 
@@ -78,3 +82,28 @@
 
 (def chosen-single-plate cherry-single-plate)
 (def chosen-blank-single-plate cherry-blank-single-plate)
+
+
+
+                                        ; thumb plates
+
+(def double-plates
+  (let [plate-height (/ (- sa-double-length mount-height) 2)
+        top-plate (->> (cube mount-width plate-height web-thickness)
+                       (translate [0 (/ (+ plate-height mount-height) 2)
+                                   (- plate-thickness (/ web-thickness 2))]))
+        stabilizer-cutout (union (->> (cube 14.2 3.5 web-thickness)
+                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2))])
+                                      (color [1 0 0 1/2]))
+                                 (->> (cube 16 3.5 web-thickness)
+                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2) 1.4)])
+                                      (color [1 0 0 1/2])))
+        top-plate (difference top-plate stabilizer-cutout)]
+    (union top-plate (mirror [0 1 0] top-plate))))
+
+(def double-plates-blank
+  (let [plate-height (/ (- sa-double-length mount-height) 2)
+        top-plate (->> (cube mount-width plate-height web-thickness)
+                       (translate [0 (/ (+ plate-height mount-height) 2)
+                                   (- plate-thickness (/ web-thickness 2))]))]
+    (union top-plate (mirror [0 1 0] top-plate))))

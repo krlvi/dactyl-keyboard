@@ -1,4 +1,4 @@
-(ns dactyl-keyboard.dactyl
+(ns dactyl-keyboard.placement
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
@@ -57,3 +57,47 @@
     (->> placed-shape
          (rotate tenting-angle [0 1 0])
          (translate [0 0 13]))))
+
+
+
+(defn thumb-place [column row shape]
+  (let [
+                                        ; these are the same as above;
+                                        ; commenting out. we will use
+                                        ; row-radius and column-radius
+                                        ; in thumb-case-bottom-sphere
+
+        ;; α (/ π 12)
+        ;; row-radius (+ (/ (/ (+ mount-height 1) 2)
+                         ;; (Math/sin (/ α 2)))
+                      ;; cap-top-height)
+        ;; β (/ π 36)
+        ;; column-radius (+ (/ (/ (+ mount-width 2) 2)
+                            ;; (Math/sin (/ β 2)))
+                         ;; cap-top-height)
+        #_(+ (/ (/ (+ pillar-width 5) 2)
+                            (Math/sin (/ β 2)))
+                         cap-top-height)]
+    (->> shape
+         (translate [0 0 (- row-radius)])
+         (rotate (* α row) [1 0 0])
+         (translate [0 0 row-radius])
+         (translate [0 0 (- column-radius)])
+         (rotate (* column β) [0 1 0])
+         (translate [0 0 column-radius])
+         (translate [mount-width 0 0])
+         (rotate (* π (- 1/4 3/16)) [0 0 1])
+         ; perhaps this should be tenting-angle, but look at the
+         ; axis. that will change what the translation after it
+         ; needs to be when you change tenting-angle.
+         (rotate (/ π 12) [1 1 0])
+         (translate [-53 -45 40]))))
+
+(defn thumb-untent [shape]
+  (->> shape
+       (translate [53 45 -40])
+       (rotate (- (/ π 12)) [1 1 0])))
+(defn thumb-retent [shape]
+  (->> shape
+       (rotate (/ π 12) [1 1 0])
+       (translate [-53 -45 40])))
