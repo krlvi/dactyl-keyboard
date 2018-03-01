@@ -15,8 +15,8 @@
 (def √2 (Math/sqrt 2))
 
 (def funky-shape-width 20)
-(def funky-shape-depth 15)
-(def funky-shape-height 30) ; must > twice outer-gasket-radius
+(def funky-shape-depth 12)
+(def funky-shape-height 42) ; must > twice outer-gasket-radius
 (defn funky-shape [shrink]
   (let [shrink-factor (/ (- 100 shrink) 100)
         fsw (* funky-shape-width shrink-factor)
@@ -28,12 +28,13 @@
              (difference (funky-shape 0) (funky-shape 0.01))
              (cube 400 400 0.2)))
 
-(def outer-gasket-radius 15)
-(def gasket-shell-radius (- outer-gasket-radius 2))
+(def gasket-thickness 1)
+(def outer-gasket-radius 20)
+(def gasket-shell-radius (- outer-gasket-radius gasket-thickness))
 
 (defn gasket-shape [radius]
   (let [diameter (* 2 radius)]
-    (binding [*fn* 16] (sphere radius))))
+    (binding [*fn* 40] (sphere radius))))
 
 (def gasket (minkowski ribbon (gasket-shape outer-gasket-radius)))
 
@@ -46,7 +47,7 @@
 (def pin-tolerance 0.2)
 (def pin-length 7)
 (def pin-fn 6) ; hexagonal cones
-(def interface-thickness 1.3)
+(def interface-thickness 1.8)
 
 (defn x-half-cylinder-common [gasket-shape-radius height position nudge]
   (let [r (match [gasket-shape-radius]
@@ -197,4 +198,4 @@
       (write-scad
        (union
         (x-pins 20)
-        (x-holes 20))))
+        (translate [5 0 0] (x-holes 20)))))
