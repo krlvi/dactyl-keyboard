@@ -48,14 +48,15 @@
 
 (def adafruit-usb-plate
   (let [thickness adafruit-usb-plate-thickness
-        r (* 4 (* 1/2 adafruit-usb-screws-diameter))
+        r (* 1/2 (* 3/2 micro-b-overmold-height))
         screw-plate-1 (->>
                        (cylinder r thickness)
                        (rotate (* 1/4 τ) [1 0 0])
                        (translate
-                        [(* 1/2 adafruit-usb-screws-diameter) 0 0]))
-        screw-plate-2 (mirror [-1 0 0] screw-plate-1)]
-    (minkowski screw-plate-1 screw-plate-2)))
+                        [(* 1/2  adafruit-usb-screws-center) 0 0]))
+        screw-plate-2 (mirror [-1 0 0] screw-plate-1)
+        joiner (cube adafruit-usb-screws-center thickness (* 2 r))]
+    (union screw-plate-1 screw-plate-2 joiner)))
 
 (defn usb-cutout-place [shape]
     (->> shape
