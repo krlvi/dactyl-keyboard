@@ -6,8 +6,8 @@
             [unicode-math.core :refer :all]
             [clojure.core.match :refer [match]]))
 
-(def ^:const pin-tolerance 0.2)
-(def ^:const pin-length 7)
+(def ^:const pin-tolerance 0.3)
+(def ^:const pin-length 9)
 (def ^:const pin-fn 6) ; hexagonal cones
 (def ^:const interface-thickness 1.3)
 
@@ -78,7 +78,7 @@
                                    (- pin-block-height))]
     (x-hollow-pins gasket-shape-radius 0.85 0.8
                    pin-length
-                   (- pin-length interface-thickness)
+                   (- pin-length (* √2 interface-thickness))
                    pin-block)))
 
 (defn x-holes [gasket-shape-radius]

@@ -200,7 +200,7 @@
                                         ; successive pairs of key
                                         ; frusta, and hull them
                                         ; together.
-         (for [[[column1 row1] [column2 row2]]
+         (for [[[m1 column1 row1] [m2 column2 row2]]
                (map vector around-edge around-edge-rot1)]
            (hull (key-frustum distance-below narrow-percent column1 row1)
                  (key-frustum distance-below narrow-percent column2 row2)))))
@@ -316,6 +316,8 @@
                                 (thumb-prism thumb-distance-below 0))]
     (intersection the-shell big-intersection-shape)))
 
+
+
 (defn key-placed-outline [down out]
   (let [nby (+ (* 1/2 mount-height) out)
         sby (- nby)
@@ -331,45 +333,26 @@
         nw (translate [wby nby (- down)] web-post)
         kp key-place
         tp thumb-place
-        places [(kp -1 2 sw)
-                (kp -1 2 w)
-                (kp -1 1 w)
-                (kp -1 0 w)
-                (kp -1 0 nw)
-                (kp -1 0 n)
-                (kp 0 0 n)
-                (kp 1 0 n)
-                (kp 2 0 n)
-                (kp 3 0 n)
-                (kp 4 0 n)
-                (kp 5 0 n)
-                (kp 5 0 ne)
-                (kp 5 0 e)
-                (kp 5 1 e)
-                (kp 5 2 e)
-                (kp 5 3 e)
-                (kp 5 4 e)
-                (kp 5 4 se)
-                (kp 5 4 s)
-                (kp 4 4 s)
-                (kp 3 4 s)
-                (kp 2 4 s)
-                (kp 1 4 s)
-                (tp 0 -1 se)
-                (tp 0 -1 s)
-                (tp 1 -1 s)
-                (tp 2 -1 s)
-                (tp 2 -1 sw)
-                (tp 2 -1 w)
-                (tp 2 0 w)
-                (tp 2 1 w)
-                (tp 2 1 nw)
-                (tp 2 1 n)]
+        places (apply concat
+                (for [[m c r] around-edge]
+                  (cond
+                    (= m :nw-corner) [(kp c r w) (kp c r nw) (kp c r n)]
+                    (= m :n-edge)    [(kp c r n)]
+                    (= m :ne-corner) [(kp c r n) (kp c r ne) (kp c r e)]
+                    (= m :e-edge)    [(kp c r e)]
+                    (= m :se-corner) [(kp c r e) (kp c r se) (kp c r s)]
+                    (= m :s-edge)    [(kp c r s)]
+                    (= m :sw-corner) [(kp c r s) (kp c r sw) (kp c r w)]
+                    (= m :w-edge)    [(kp c r w)]
+                    (= m :sw-inside-corner) [(kp c r sw)]
+                    (= m :se-inside-corner) [(kp c r se)]
+                    (= m :nw-inside-corner) [(kp c r nw)]
+                    (= m :ne-inside-corner) [(kp c r ne)])))
         thisnext (map vector places (concat (rest places) [(first places)]))
         ribbon (apply union
                       (for [[this next] thisnext]
                         (hull this next)))]
-    ribbon))
+        ribbon))
 
 (defn big-marshmallowy-sides [flatness downness thickness radius]
   (let [outline-thickness 1

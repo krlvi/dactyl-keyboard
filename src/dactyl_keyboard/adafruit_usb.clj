@@ -30,7 +30,7 @@
 (def adafruit-usb-screws-diameter 2.5)
 (def adafruit-usb-screws-center 18)
 
-(def adafruit-usb-plate-thickness 3)
+(def adafruit-usb-plate-thickness 4)
 (def adafruit-usb-cutout-depth 15)
 
 (def adafruit-usb-cutout

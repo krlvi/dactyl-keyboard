@@ -247,16 +247,17 @@
               caps
               thumbcaps)))
 
-
+(def mallowy-sides-right
+  (big-marshmallowy-sides marshmallowy-sides-flatness
+                          marshmallowy-sides-downness
+                          marshmallowy-sides-thickness
+                          marshmallowy-sides-radius))
 
 (def mallowy-sides-with-right-ports
   (difference
    (binding [*fn* 12]
      (union
-      (big-marshmallowy-sides marshmallowy-sides-flatness
-                              marshmallowy-sides-downness
-                              marshmallowy-sides-thickness
-                              marshmallowy-sides-radius)
+      mallowy-sides-right
       (usb-cutout-place adafruit-usb-plate)))
    (usb-cutout-place adafruit-usb-cutout)))
 
@@ -273,7 +274,7 @@
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
-        (apply union mallow-slices-right)
+        mallowy-sides-right
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))

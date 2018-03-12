@@ -8,19 +8,42 @@
             [dactyl-keyboard.placement :refer [key-place thumb-place]]
             [unicode-math.core :refer :all]))
 
+(def layouts
+  {:y-and-b
 ; we split the keyholes into pieces for smaller print volume and quicker printing
-(def columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)])
-(def columns   (apply concat columns-pieces))
-(def rows (range 0 5))
+   {:columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)]
+    :rows (range 0 5)
+    :finger-knockouts [[0 4] [-1 4]]
+    :around-edge [[-1 3] [-1 2] [-1 1] [-1 0]
+                  [0 0] [1 0] [2 0] [3 0] [4 0] [5 0]
+                  [5 1] [5 2] [5 3] [5 4]
+                  [4 4] [3 4] [2 4] [1 4]
+                  [1 3] [0 3]]
+    :thumb-glue-joint-left-of [[-1 3] [1 4]]}
+
+   :mini
+   {:columns-pieces [(range 2 4)]
+    :rows (range 0 2)
+    :finger-knockouts []
+    :around-edge [[:sw-corner 2 2] [:w-edge 2 1] [:nw-corner 2 0]
+                  [:n-edge 3 0] [:ne-corner 4 0]
+                  [:e-edge 4 1] [:se-corner 4 2]
+                  [:s-edge 3 2]]}})
+
+
+(def chosen-layout (layouts :mini))
+
+
+(def columns-pieces (chosen-layout :columns-pieces))
+(def columns (apply concat columns-pieces))
+(def rows (chosen-layout :rows))
 
                                         ; this defines the keys
                                         ; missing from the finger part
                                         ; that make room for the thumb
 (defn finger-has-key-place-p [row column]
-  (cond
-    (and (= column 0) (= row 4)) false
-    (and (= column -1) (= row 4)) false
-    true true))
+  (or (for [[c r] (chosen-layout :finger-knockouts)]
+        (and (= c column) (= r row)))))
 
                                         ; coordinates of keys around
                                         ; the edge of the finger
@@ -29,13 +52,11 @@
                                         ;               *.....*
                                         ; start here -> ^**...*
                                         ;               xx****<
+(def around-edge (chosen-layout :around-edge))
 
-(def around-edge [[-1 3] [-1 2] [-1 1] [-1 0]
-                  [0 0] [1 0] [2 0] [3 0] [4 0] [5 0]
-                  [5 1] [5 2] [5 3] [5 4]
-                  [4 4] [3 4] [2 4] [1 4]
-                  [1 3] [0 3]])
-(def around-edge-rot1 (concat (rest around-edge) (list (first around-edge))))
+
+(defn rot1 [s] (concat (rest s) (list (first s))))
+(def around-edge-rot1 (rot1 around-edge))
 
                                         ; the around-edge vector is a
                                         ; list of the key places
@@ -50,17 +71,15 @@
        (= column (last columns))
        (= row (first rows))
        (= row (last rows))
+       ; this may not be general to any possible set of knockouts
        (not (finger-has-key-place-p row (inc column)))
        (not (finger-has-key-place-p (inc row) column))
        (not (finger-has-key-place-p (inc row) (dec column))))))
 
 
 (defn thumb-glue-joint-left-of-p [row column]
-  (cond
-    (and (= column -1) (= row 3)) true
-    (and (= column 1) (= row 4)) true
-    true false))
-
+  (or (for [[c r] (chosen-layout :thumb-glue-joint-left-of)]
+        (and (= c column) (= row r)))))
 
 
 (defn key-shapes-for-columns [shape columns]

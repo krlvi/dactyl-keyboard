@@ -6,9 +6,9 @@
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]))
 
-(def funky-shape-width 20)
-(def funky-shape-depth 15)
-(def funky-shape-height 30) ; must > twice outer-gasket-radius
+(def funky-shape-width 30)
+(def funky-shape-depth 20)
+(def funky-shape-height 54) ; must > twice outer-gasket-radius
 (defn funky-shape [shrink]
   (let [shrink-factor (/ (- 100 shrink) 100)
         fsw (* funky-shape-width shrink-factor)
@@ -20,12 +20,13 @@
              (difference (funky-shape 0) (funky-shape 0.01))
              (cube 400 400 0.2)))
 
-(def outer-gasket-radius 15)
-(def gasket-shell-radius (- outer-gasket-radius 2))
+(def gasket-shell-thickness 1)
+(def outer-gasket-radius 20)
+(def gasket-shell-radius (- outer-gasket-radius gasket-shell-thickness))
 
 (defn gasket-shape [radius]
   (let [diameter (* 2 radius)]
-    (binding [*fn* 16] (sphere radius))))
+    (binding [*fn* 24] (sphere radius))))
 
 (def gasket (minkowski ribbon (gasket-shape outer-gasket-radius)))
 
