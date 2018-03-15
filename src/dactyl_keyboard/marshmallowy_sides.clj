@@ -105,34 +105,7 @@
          extrude
          (place column row))))
 
-(defn key-silo-widenings [col row]
-  (let [bottom (fn [col]
-                 (cond
-                   (<= col (first columns)) [0 0]
-                   (< col 2) [1 0]
-                   (< col 3) [1 1]
-                   (< col (last columns)) [0 1]
-                   :else [0 0]))
-        top (fn [col]
-              (cond
-                (<= col (first columns)) [0 1]
-                (< col 2) [0 1]
-                (< col 3) [0 0]
-                (< col (last columns)) [1 0]
-                :else [1 0]))
-        linear (fn [col row]
-                 (let [[bl br] (bottom col)
-                       [tl tr] (top col)
-                       row-amount (/ (- row (first rows)) (- (last rows) (first rows)))
-                       left-widening (+ (* bl row-amount) (* tl (- 1 row-amount)))
-                       right-widening (+ (* br row-amount) (* tr (- 1 row-amount)))]
-                   [left-widening right-widening]))
-        step (fn [col row]
-               ; row numbers go up as you move from the top toward the thumb
-               (if (some #{row} (drop (/ (count rows) 2) rows))
-                 (bottom col)
-                 (top col)))]
-    (step col row)))
+
 
 
 (defn finger-key-prism [distance-above narrow-percent]
@@ -142,7 +115,7 @@
                                         ; keys, because this prism is
                                         ; for cutting out the top edge
                                         ; of the marshmallowy sides.
-        row-split (/ (count rows) 2)
+        row-split (quot (count rows) 2)
         top-rows (take row-split rows)
         bottom-rows (drop row-split rows)
         middle-two-rows (take-last 2 (take (inc row-split) rows))
@@ -387,11 +360,11 @@
                                   thumb-big-intersection-shape)
                     (intersection thumb-thick-shell
                                   thumb-little-intersection-shape))
-        ;; the-outline (union (difference finger-case-outline
-                                       ;; thumb-big-intersection-shape)
-                           ;; (difference thumb-case-outline
-                                       ;; finger-big-intersection-shape))
-        the-outline (key-placed-outline (* 1/2 radius) 0)
+        the-outline (union (difference finger-case-outline
+                                       thumb-big-intersection-shape)
+                           (difference thumb-case-outline
+                                       finger-big-intersection-shape))
+        ;; the-outline (key-placed-outline (* 1/2 radius) 0)
         marshmallow-gasket (fn [r] (minkowski
                                     the-outline
                                     (binding [*fn* gasket-sphere-fn]
