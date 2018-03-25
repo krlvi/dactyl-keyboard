@@ -65,7 +65,7 @@ datef () {
     date +%H:%M:%S "$@"
 }
 
-while inotifywait -r -e close_write $(dirname $SOURCE) --exclude '.*#.*' --exclude '.*~' --exclude '.*\.swp'; do
+while inotifywait -r -e close_write $(dirname $SOURCE) --exclude '.*#.*' --exclude '#.*#' --exclude '.*~' --exclude '.*\.swp'; do
     echo
     echo
     echo "$(datef): !!!!!!!!!!!!!!!!!!!!!!!!! something modified; rebuilding $SOURCE"
