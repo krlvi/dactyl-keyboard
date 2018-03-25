@@ -247,12 +247,6 @@
               caps
               thumbcaps)))
 
-(def mallowy-sides-right
-  (big-marshmallowy-sides marshmallowy-sides-flatness
-                          marshmallowy-sides-downness
-                          marshmallowy-sides-thickness
-                          marshmallowy-sides-radius))
-
 (def mallowy-sides-with-right-ports
   (difference
    (binding [*fn* 12]
@@ -274,7 +268,7 @@
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
-        mallowy-sides-right
+        ;; mallowy-sides-right
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
@@ -282,13 +276,14 @@
         #_(union
          (apply union key-blanks-pieces)
          thumb-blanks)
-        (union caps thumbcaps)
+        #_(union caps thumbcaps)
         #_(union
          (thumb-key-prism 30 -5)
          (finger-key-prism 30 -5))
         #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
-        #_(union dactyl-top-right-thumb
+        (sides-connector-ew 1 mallowy-sides-right key-place 1 2 3)
+        (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
 

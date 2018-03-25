@@ -27,11 +27,13 @@
    {:columns-pieces [(range -1 2)]
     :rows (range 2 5)
     :finger-knockouts [[0 4] [-1 4]]
-    :around-edge [[:sw-corner -1 3] [:nw-corner -1 2]
-                  [:n-edge 0 2] [:ne-corner 1 2]
-                  [:e-edge 1 3] [:se-corner 1 4]
-                  [:sw-corner 1 4] [:sw-inside-corner 1 3]
-                  [:s-edge 0 3]]
+    :around-edge [#_[:sw :k -1 3] [:nw :k -1 2]
+                  [:n :k 0 2] [:ne :k 1 2]
+                  [:e :k 1 3] [:se :k 1 4]
+                  [:se-in :k 0 4] [:se :t 0 -1]
+                  [:s :t 1 -1] [:sw :t 2 -1]
+                  [:w :t 2 0] [:nw :t 2 1]
+                  [:n :t 1 1]]
     :silo-widenings (fn [cs rs c r] [0 0])}})
 
 

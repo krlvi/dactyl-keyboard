@@ -173,7 +173,7 @@
                                         ; successive pairs of key
                                         ; frusta, and hull them
                                         ; together.
-         (for [[[m1 column1 row1] [m2 column2 row2]]
+         (for [[[grav1 place1 column1 row1] [grav2 place2 column2 row2]]
                (map vector around-edge around-edge-rot1)]
            (hull (key-frustum distance-below narrow-percent column1 row1)
                  (key-frustum distance-below narrow-percent column2 row2)))))
@@ -304,23 +304,24 @@
         se (translate [eby sby (- down)] web-post)
         ne (translate [eby nby (- down)] web-post)
         nw (translate [wby nby (- down)] web-post)
-        kp key-place
-        tp thumb-place
-        places (apply concat
-                (for [[m c r] around-edge]
-                  (cond
-                    (= m :nw-corner) [(kp c r w) (kp c r nw) (kp c r n)]
-                    (= m :n-edge)    [(kp c r n)]
-                    (= m :ne-corner) [(kp c r n) (kp c r ne) (kp c r e)]
-                    (= m :e-edge)    [(kp c r e)]
-                    (= m :se-corner) [(kp c r e) (kp c r se) (kp c r s)]
-                    (= m :s-edge)    [(kp c r s)]
-                    (= m :sw-corner) [(kp c r s) (kp c r sw) (kp c r w)]
-                    (= m :w-edge)    [(kp c r w)]
-                    (= m :sw-inside-corner) [(kp c r sw)]
-                    (= m :se-inside-corner) [(kp c r se)]
-                    (= m :nw-inside-corner) [(kp c r nw)]
-                    (= m :ne-inside-corner) [(kp c r ne)])))
+        places {:k key-place :t thumb-place}
+        places
+        (apply concat
+               (for [[g p c r] around-edge]
+                 (let [pf (places p)]
+                   (cond
+                     (= g :nw) [(pf c r w) (pf c r nw) (pf c r n)]
+                     (= g :n)    [(pf c r n)]
+                     (= g :ne) [(pf c r n) (pf c r ne) (pf c r e)]
+                     (= g :e)    [(pf c r e)]
+                     (= g :se) [(pf c r e) (pf c r se) (pf c r s)]
+                     (= g :s)    [(pf c r s)]
+                     (= g :sw) [(pf c r s) (pf c r sw) (pf c r w)]
+                     (= g :w)    [(pf c r w)]
+                     (= g :sw-in) [(pf c r sw)]
+                     (= g :se-in) [(pf c r se)]
+                     (= g :nw-in) [(pf c r nw)]
+                     (= g :ne-in) [(pf c r ne)]))))
         thisnext (map vector places (concat (rest places) [(first places)]))
         ribbon (apply union
                       (for [[this next] thisnext]
@@ -350,21 +351,21 @@
         (thumb-prism thumb-distance-below -5)
         thumb-little-intersection-shape
         (thumb-prism thumb-distance-below -3)
-        finger-case-outline
-        (difference (intersection finger-shell
-                                  finger-big-intersection-shape)
-                    (intersection finger-thick-shell
-                                  finger-little-intersection-shape))
-        thumb-case-outline
-        (difference (intersection thumb-shell
-                                  thumb-big-intersection-shape)
-                    (intersection thumb-thick-shell
-                                  thumb-little-intersection-shape))
-        the-outline (union (difference finger-case-outline
-                                       thumb-big-intersection-shape)
-                           (difference thumb-case-outline
-                                       finger-big-intersection-shape))
-        ;; the-outline (key-placed-outline (* 1/2 radius) 0)
+        ;; finger-case-outline
+        ;; (difference (intersection finger-shell
+                                  ;; finger-big-intersection-shape)
+                    ;; (intersection finger-thick-shell
+                                  ;; finger-little-intersection-shape))
+        ;; thumb-case-outline
+        ;; (difference (intersection thumb-shell
+                                  ;; thumb-big-intersection-shape)
+                    ;; (intersection thumb-thick-shell
+                                  ;; thumb-little-intersection-shape))
+        ;; the-outline (union (difference finger-case-outline
+                                       ;; thumb-big-intersection-shape)
+                           ;; (difference thumb-case-outline
+                                       ;; finger-big-intersection-shape))
+        the-outline (key-placed-outline (* 1/2 radius) 0)
         marshmallow-gasket (fn [r] (minkowski
                                     the-outline
                                     (binding [*fn* gasket-sphere-fn]
@@ -377,7 +378,7 @@
         sides (difference
                (difference (marshmallow-gasket radius)
                            (marshmallow-gasket (- radius thickness)))
-               finger-big-intersection-shape
+               #_finger-big-intersection-shape
                thumb-big-intersection-shape
                                         ; the key at 0,4 is not part
                                         ; of the keyboard, but is
@@ -393,5 +394,10 @@
                (hull (key-frustum 30 0 0 4)
                      (key-frustum 30 0 1 3))
                key-prism)]
-    sides))
+    (union the-outline sides)))
 
+(def mallowy-sides-right
+  (big-marshmallowy-sides marshmallowy-sides-flatness
+                          marshmallowy-sides-downness
+                          marshmallowy-sides-thickness
+                          marshmallowy-sides-radius))
