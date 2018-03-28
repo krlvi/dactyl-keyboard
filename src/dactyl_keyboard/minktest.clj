@@ -60,3 +60,9 @@
        (union
         (x-pins 20)
         (x-holes 20))))
+
+(spit "things/minktest-xu.scad"
+      (write-scad
+       (union
+        (xu-pins 20)
+        (xu-holes 20))))
