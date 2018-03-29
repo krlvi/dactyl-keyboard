@@ -8,6 +8,7 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
+            [dactyl-keyboard.sides-connectors :refer :all]
             [dactyl-keyboard.frame-glue-joint :refer :all]
             [dactyl-keyboard.marshmallowy-sides :refer :all]
             [dactyl-keyboard.marshmallowy-sides-pieces :refer :all]
@@ -282,7 +283,7 @@
          (finger-key-prism 30 -5))
         #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
-        (sides-connector-ew 1 mallowy-sides-right key-place 1 2 3)
+        (sides-connector-frame-ew 1 mallowy-sides-right key-place 1 2 3)
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
