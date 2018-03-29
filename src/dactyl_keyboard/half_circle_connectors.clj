@@ -9,7 +9,7 @@
 (def ^:const pin-tolerance 0.3)
 (def ^:const pin-length 9)
 (def ^:const pin-fn 6) ; hexagonal cones
-(def ^:const interface-thickness 1.3)
+(def ^:const interface-thickness 2)
 
 (defn half-cylinder-common-common [cube-translate-vector nudge gasket-shape-radius height position]
   (let [r (match [gasket-shape-radius]
@@ -99,16 +99,24 @@
                              xu-half-cylinder-for-diff
                              xu-inside-slice))
 
-(defn pins-common [half-cylinder hollow-pins gasket-shape-radius]
-  (let [pin-block-height interface-thickness
-        pin-block (half-cylinder gasket-shape-radius pin-block-height
-                                 (- pin-block-height))]
+(defn pin-block-common-common [thickness half-cylinder gasket-shape-radius]
+  (half-cylinder gasket-shape-radius interface-thickness (- interface-thickness)))
+(def pin-block-common (partial pin-block-common-common interface-thickness))
+(def pin-block-for-hull-common (partial pin-block-common-common ε))
+
+(def x-pin-block (partial pin-block-common x-half-cylinder))
+(def xu-pin-block (partial pin-block-common xu-half-cylinder))
+(def x-pin-block-for-hull (partial pin-block-for-hull-common x-half-cylinder))
+(def xu-pin-block-for-hull (partial pin-block-for-hull-common xu-half-cylinder))
+
+(defn pins-common [pin-block hollow-pins gasket-shape-radius]
+  (let [pin-block (pin-block gasket-shape-radius)]
     (hollow-pins gasket-shape-radius 0.85 0.8
                  pin-length
                  (- pin-length (* √2 interface-thickness))
                  pin-block)))
-(def x-pins (partial pins-common x-half-cylinder x-hollow-pins))
-(def xu-pins (partial pins-common xu-half-cylinder xu-hollow-pins))
+(def x-pins (partial pins-common x-pin-block x-hollow-pins))
+(def xu-pins (partial pins-common xu-pin-block xu-hollow-pins))
 
 (defn holes-common [half-cylinder hollow-pins gasket-shape-radius]
   (let [hole-block-height interface-thickness
@@ -133,15 +141,15 @@
                              half-cylinder-for-diff
                              gasket-shape-radius place shape]
   (let [
-        section (x-half-cylinder gasket-shape-radius
+        section (half-cylinder gasket-shape-radius
                                  interface-thickness
                                  x-offset)
-        core (x-half-cylinder-for-diff
+        core (half-cylinder-for-diff
               (* 0.99 gasket-shape-radius)
               (* 2 interface-thickness)
               (+ (* -1/2 interface-thickness)
                  x-offset))
-        intersect (x-half-cylinder
+        intersect (half-cylinder
                    (* 2 gasket-shape-radius)
                    interface-thickness
                    x-offset)]
