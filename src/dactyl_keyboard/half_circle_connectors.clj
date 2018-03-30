@@ -62,6 +62,22 @@
   (with-fn pin-fn
     (cylinder [length 0] length)))
 
+
+(defn solid-pins-common [pins-places
+                          half-cylinder
+                          gasket-shape-radius
+                          pin-r-factor]
+  (let [r gasket-shape-radius
+        long (* 1.5 r)
+        pin-r (* pin-r-factor r)
+        pin-crop (half-cylinder [pin-r 0] pin-r 0)
+        pins-front (intersection
+                    (pins-places gasket-shape-radius (x-pin pin-length))
+                    pin-crop)]
+    pins-front))
+(def xu-solid-pins (partial solid-pins-common xu-pins-places
+                            xu-half-cylinder))
+
 (defn hollow-pins-common [pins-places
                           half-cylinder
                           half-cylinder-for-diff

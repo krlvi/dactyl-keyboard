@@ -27,6 +27,9 @@
 (def web-post-br (translate [(- (/ mount-width 2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
 (def web-post-b  (translate [0 (+ (/ mount-height -2) post-adj) 0] web-post))
 
+(def web-post-l  (translate [(+ (/ mount-width -2) post-adj) 0 0] web-post))
+(def web-post-r  (translate [(- (/ mount-width 2) post-adj) 0 0] web-post))
+
 (defn row-connector [row column]
   (triangle-hulls
      (key-place (inc column) row web-post-tl)
