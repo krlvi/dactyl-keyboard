@@ -83,6 +83,7 @@
                (difference hole-block
                            (translate [(- ε) (- ε) 0]
                                       (x-solid-pin-cone gasket-shape-radius 0.85))))))
+(defn x-solid-holes-for-hull [gasket-shape-radius] (x-half-cylinder gasket-shape-radius ε (- pin-length interface-thickness)))
 
 (defn x-hollow-holes [gasket-shape-radius]
   (let [hole-block (x-half-cylinder gasket-shape-radius

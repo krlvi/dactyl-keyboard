@@ -14,6 +14,9 @@
 
 (def ^:const sides-connector-radius 8)
 
+
+(def xu (partial rotate (* -1/4 τ) [1 0 0]))
+
 (defn sides-connector-frame-common [move-outward
                                     turn-outward
                                     move-middle-between-keys
@@ -63,7 +66,7 @@
         pins
         (intersection
          connector-pin-space
-         (move-connector (xu-solid-pins sides-connector-radius 0.85)))]
+         (move-connector (xu (x-solid-pins sides-connector-radius))))]
     (union connector-block pins)))
 
 (defn sides-connector-frame-x [out-x-direction place column row1 row2]
@@ -130,18 +133,14 @@
                (translate [0 0 (- plate-thickness)])
                move-middle-between-keys))
         sides-hull-space (move-connector
-                          (xu-half-cylinder
+                          (xu (x-half-cylinder
                            [sides-connector-radius (* 3 sides-connector-radius)]
                            (* 4 sides-connector-radius)
-                           0))
+                           0)))
         to-holes (hull (intersection sides-hull-space sides-shape)
-                       (move-connector (xu-half-cylinder sides-connector-radius ε (+ pin-tolerance pin-length))))
+                       (move-connector (xu (x-solid-holes-for-hull sides-connector-radius))))
         ]
-    (union
-    to-holes
- (intersection sides-hull-space sides-shape)
-     (move-connector (xu-half-cylinder sides-connector-radius ε interface-thickness)))
-    #_(union to-holes (move-connector (xu-holes sides-connector-radius)))))
+    (union to-holes (move-connector (xu (x-solid-holes sides-connector-radius))))))
 
 (defn sides-connector-sides-x [out-x-direction place column row1 row2 shape]
   "place is a placement function. connector will be between row1 and row2 at column.
@@ -160,5 +159,31 @@
    web-post-b
    web-post-t
    shape))
-(def sides-connector-sides-e 
+
+(def sides-connector-sides-e
   (partial sides-connector-sides-x 1))
+(def sides-connector-sides-w
+  (partial sides-connector-sides-x -1))
+
+(defn sides-connector-sides-y [out-y-direction place column1 column2 row shape]
+  "place is a placement function. connector will be between column1 and column2 at row.
+   out-y-direction is either 1 or -1, depending on whether column is on the north or
+   south side of the board."
+  ; a-ward is -x (left in key row space); b-ward is +x (right)
+  (sides-connector-sides-common
+   #(translate [0 (* out-y-direction %) 0] %2)
+   (if (= out-y-direction -1)
+     #(rotate (* 3/4 τ) [0 0 1] %)
+     #(rotate (* 1/4 τ) [0 0 1] %))
+   #(place (/ (+ column1 column2) 2) row %)
+   #(place column2 row %)
+   #(place column1 row %)
+   (* 1/2 mount-height)
+   web-post-l
+   web-post-r
+   shape))
+
+(def sides-connector-sides-n
+  (partial sides-connector-sides-y 1))
+(def sides-connector-sides-s
+  (partial sides-connector-sides-y -1))

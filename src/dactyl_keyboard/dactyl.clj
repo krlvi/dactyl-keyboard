@@ -269,7 +269,7 @@
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
-        ;; mallowy-sides-right
+        mallowy-sides-right
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
@@ -288,6 +288,9 @@
         (sides-connector-frame-n key-place -1 0 2)
         (sides-connector-frame-s thumb-place 1 0 -1)
         (sides-connector-sides-e key-place 1 2 3 mallowy-sides-right)
+        (sides-connector-sides-w key-place -1 2 3 mallowy-sides-right)
+        (sides-connector-sides-n key-place -1 0 2 mallowy-sides-right)
+        (sides-connector-sides-s thumb-place 1 0 -1 mallowy-sides-right)
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
