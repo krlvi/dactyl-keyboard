@@ -58,8 +58,8 @@
 (spit "things/minktest.scad"
       (write-scad
        (union
-        (x-pins 20)
-        (x-holes 20))))
+        (x-hollow-pins 20)
+        (x-hollow-holes 20))))
 
 (spit "things/minktest-xu.scad"
       (write-scad

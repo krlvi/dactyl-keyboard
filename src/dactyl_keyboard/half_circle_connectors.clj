@@ -80,43 +80,6 @@
 (def x-solid-pin-cone (partial solid-pin-cone-common x-pins-places
                                x-half-cylinder))
 
-(defn hollow-pins-common [pins-places
-                          half-cylinder
-                          half-cylinder-for-diff
-                          inside-slice
-                          gasket-shape-radius
-                          pin-r-factor back-r-factor
-                          pin-length back-length
-                          shape]
-  (let [r gasket-shape-radius
-        long (* 1.5 r)
-        pin-r (* pin-r-factor r)
-        back-r (* back-r-factor r)
-        pin-crop (half-cylinder [pin-r 0] pin-r 0)
-        back-crop (half-cylinder [back-r 0] (+ back-r (* 2 ε)) (- ε))
-        back-remove (half-cylinder-for-diff back-r (+ long ε) (* -1/2 long))
-        pins-front (intersection
-                    (pins-places gasket-shape-radius (x-pin pin-length))
-                    pin-crop)
-        pins-back (intersection
-                   (pins-places gasket-shape-radius (x-pin back-length))
-                   back-crop)]
-    (union
-     (difference shape back-remove)
-     (difference pins-front pins-back (inside-slice pin-length gasket-shape-radius)))))
-(defn x-inside-slice [pin-length gasket-shape-radius]
-  (cube (* 2 pin-length) ε (* 2 gasket-shape-radius)))
-(defn xu-inside-slice [pin-length gasket-shape-radius]
-  (cube (* 2 pin-length) (* 2 gasket-shape-radius) ε))
-(def x-hollow-pins (partial hollow-pins-common
-                            x-pins-places x-half-cylinder
-                            x-half-cylinder-for-diff
-                            x-inside-slice))
-(def xu-hollow-pins (partial hollow-pins-common
-                             xu-pins-places xu-half-cylinder
-                             xu-half-cylinder-for-diff
-                             xu-inside-slice))
-
 (defn pin-block-common-common [thickness half-cylinder gasket-shape-radius]
   (half-cylinder gasket-shape-radius interface-thickness (- interface-thickness)))
 (def pin-block-common (partial pin-block-common-common interface-thickness))
@@ -127,34 +90,41 @@
 (def x-pin-block-for-hull (partial pin-block-for-hull-common x-half-cylinder))
 (def xu-pin-block-for-hull (partial pin-block-for-hull-common xu-half-cylinder))
 
-(defn pins-common [pin-block hollow-pins gasket-shape-radius]
+(defn pins-common [pin-block solid-pin-cone gasket-shape-radius]
   (let [pin-block (pin-block gasket-shape-radius)]
-    (hollow-pins gasket-shape-radius 0.85 0.8
-                 pin-length
-                 (- pin-length (* √2 interface-thickness))
-                 pin-block)))
-(def x-pins (partial pins-common x-pin-block x-hollow-pins))
-(def xu-pins (partial pins-common xu-pin-block xu-hollow-pins))
+    (union pin-block
+           (solid-pin-cone gasket-shape-radius 0.85))))
+(def x-pins (partial pins-common x-pin-block x-solid-pin-cone))
+(def xu-pins (partial pins-common xu-pin-block xu-solid-pin-cone))
 
-(defn holes-common [half-cylinder hollow-pins gasket-shape-radius]
-  (let [hole-block-height interface-thickness
+(defn hollow-pins-common [pins-common pin-block solid-pin-cone gasket-shape-radius]
+  (difference (pins-common pin-block solid-pin-cone gasket-shape-radius)
+              (translate [(- 0 ε interface-thickness) (- ε) 0]
+                         (solid-pin-cone gasket-shape-radius 0.85))))
+(def x-hollow-pins (partial hollow-pins-common pins-common x-pin-block x-solid-pin-cone))
+(def xu-hollow-pins (partial hollow-pins-common pins-common xu-pin-block xu-solid-pin-cone))
+
+(defn holes-common [half-cylinder solid-pin-cone gasket-shape-radius]
+  (let [hole-block-height (- pin-length interface-thickness)
         hole-block (half-cylinder gasket-shape-radius hole-block-height 0)]
     (translate [pin-tolerance 0 0]
-               (hollow-pins gasket-shape-radius 0.9 0.85
-                            (+ pin-length (* √2 interface-thickness))
-                            pin-length
-                            hole-block))))
-(def x-holes (partial holes-common x-half-cylinder x-hollow-pins))
-(def xu-holes (partial holes-common xu-half-cylinder xu-hollow-pins))
+               (difference hole-block
+                           (translate [(- ε) (- ε) 0]
+                                      (solid-pin-cone gasket-shape-radius 0.85))))))
+(def x-holes (partial holes-common x-half-cylinder x-solid-pin-cone))
+(def xu-holes (partial holes-common xu-half-cylinder xu-solid-pin-cone))
 
-(defn solid-holes-common [half-cylinder hollow-pins gasket-shape-radius]
-  (let [hole-block-height (+ interface-thickness pin-length interface-thickness)
-        hole-block (half-cylinder gasket-shape-radius hole-block-height 0)]
+(defn hollow-holes-common [half-cylinder solid-pin-cone gasket-shape-radius]
+  (let [hole-block (half-cylinder gasket-shape-radius interface-thickness 0)]
     (translate [pin-tolerance 0 0]
-               (hollow-pins gasket-shape-radius 0.9 0.85
-                            (+ pin-length (* √2 interface-thickness))
-                            pin-length
-                            hole-block))))
+               (difference
+                (union hole-block
+                       (translate [interface-thickness 0 0]
+                                  (solid-pin-cone gasket-shape-radius 0.85)))
+                (translate [(- ε) (- ε) 0]
+                           (solid-pin-cone gasket-shape-radius 0.85))))))
+(def x-hollow-holes (partial hollow-holes-common x-half-cylinder x-solid-pin-cone))
+(def xu-hollow-holes (partial hollow-holes-common xu-half-cylinder xu-solid-pin-cone))
 
 (defn gap-common [half-cylinder gasket-shape-radius]
   (half-cylinder (* 2 gasket-shape-radius)
