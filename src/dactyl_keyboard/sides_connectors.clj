@@ -35,9 +35,11 @@
           (hull
            (->> web-post-b-ward
                 (move-outward outward-amount)
+                (translate [0 0 (* -2/3 web-thickness)])
                 move-key-a)
            (->> web-post-a-ward
                 (move-outward outward-amount)
+                (translate [0 0 (* -2/3 web-thickness)])
                 move-key-b)
            (->> web-post-b-ward
                 (move-outward outward-amount)
@@ -107,3 +109,56 @@
   (partial sides-connector-frame-y 1))
 (def sides-connector-frame-s 
   (partial sides-connector-frame-y -1))
+
+
+
+(defn sides-connector-sides-common [move-outward
+                                    turn-outward
+                                    move-middle-between-keys
+                                    move-key-a
+                                    move-key-b
+                                    to-edge-distance
+                                    web-post-b-ward
+                                    web-post-a-ward
+                                    sides-shape]
+  (let [
+        move-connector
+        (fn [shape]
+          (->> shape
+               turn-outward
+               (move-outward to-edge-distance)
+               (translate [0 0 (- plate-thickness)])
+               move-middle-between-keys))
+        sides-hull-space (move-connector
+                          (xu-half-cylinder
+                           [sides-connector-radius (* 3 sides-connector-radius)]
+                           (* 4 sides-connector-radius)
+                           0))
+        to-holes (hull (intersection sides-hull-space sides-shape)
+                       (move-connector (xu-half-cylinder sides-connector-radius ε (+ pin-tolerance pin-length))))
+        ]
+    (union
+    to-holes
+ (intersection sides-hull-space sides-shape)
+     (move-connector (xu-half-cylinder sides-connector-radius ε interface-thickness)))
+    #_(union to-holes (move-connector (xu-holes sides-connector-radius)))))
+
+(defn sides-connector-sides-x [out-x-direction place column row1 row2 shape]
+  "place is a placement function. connector will be between row1 and row2 at column.
+   out-x-direction is either 1 or -1, depending on whether column is on the east or
+   west side of the board."
+  ; a-ward is +y (upward in key row space); b-ward is -y (downward)
+  (sides-connector-sides-common
+   #(translate [(* out-x-direction %) 0 0] %2)
+   (if (= out-x-direction -1)
+     #(rotate (* 1/2 τ) [0 0 1] %)
+     #(rotate 0 [0 0 1] %))
+   #(place column (/ (+ row1 row2) 2) %)
+   #(place column row1 %)
+   #(place column row2 %)
+   (* 1/2 mount-width)
+   web-post-b
+   web-post-t
+   shape))
+(def sides-connector-sides-e 
+  (partial sides-connector-sides-x 1))

@@ -283,10 +283,11 @@
          (finger-key-prism 30 -5))
         #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
-        (sides-connector-frame-x 1 key-place 1 2 3)
+        (sides-connector-frame-e key-place 1 2 3)
         (sides-connector-frame-w key-place -1 2 3)
         (sides-connector-frame-n key-place -1 0 2)
-        (sides-connector-frame-s thumb-place 2 1 -1)
+        (sides-connector-frame-s thumb-place 1 0 -1)
+        (sides-connector-sides-e key-place 1 2 3 mallowy-sides-right)
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
