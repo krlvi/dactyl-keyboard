@@ -15,11 +15,12 @@
    {:columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)]
     :rows (range 0 5)
     :finger-knockouts [[0 4] [-1 4]]
-    :around-edge [[-1 3] [-1 2] [-1 1] [-1 0]
-                  [0 0] [1 0] [2 0] [3 0] [4 0] [5 0]
-                  [5 1] [5 2] [5 3] [5 4]
-                  [4 4] [3 4] [2 4] [1 4]
-                  [1 3] [0 3]]
+    :around-edge [#_[:sw :k -1 3] [:w :k -1 2] [:w :k -1 1] [:nw :k -1 0]
+                  [:n :k 0 0] [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
+                  [:e :k 5 1] [:e :k 5 2] [:e :k 5 3] [:se :k 5 4]
+                  [:s :k 4 4] [:s :k 3 4] [:s :k 2 4] [:sw :k 1 4]
+                  [:se :t 0 -1] [:s :t 1 -1] [:sw :t 2 -1]
+                  [:w :t 2 0] [:nw :t 2 1] [:n :t 1 1]]
     :thumb-glue-joint-left-of [[-1 3] [1 4]]
     :silo-widenings y-and-b-key-silo-widenings}
 
@@ -34,10 +35,15 @@
                   [:s :t 1 -1] [:sw :t 2 -1]
                   [:w :t 2 0] [:nw :t 2 1]
                   [:n :t 1 1]]
-    :silo-widenings (fn [cs rs c r] [0 0])}})
+    :thumb-glue-joint-left-of [[-1 3] [1 4]]
+    :silo-widenings (fn [cs rs c r]
+                      (cond
+                        (= c (first cs)) [0 0.25]
+                        (= c (last cs)) [0.25 0]
+                        :else [0 0]))}})
 
 
-(def chosen-layout (layouts :mini))
+(def chosen-layout (layouts :y-and-b))
 
 
 (def columns-pieces (chosen-layout :columns-pieces))

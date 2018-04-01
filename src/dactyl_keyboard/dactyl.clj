@@ -284,11 +284,11 @@
         #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
         (sides-connector-frame-e key-place 1 2 3)
-        (sides-connector-frame-w key-place -1 2 3)
+        (sides-connector-frame-w thumb-place 2 1 0)
         (sides-connector-frame-n key-place -1 0 2)
         (sides-connector-frame-s thumb-place 1 0 -1)
         (sides-connector-sides-e key-place 1 2 3 mallowy-sides-right)
-        (sides-connector-sides-w key-place -1 2 3 mallowy-sides-right)
+        (sides-connector-sides-w thumb-place 2 1 0 mallowy-sides-right)
         (sides-connector-sides-n key-place -1 0 2 mallowy-sides-right)
         (sides-connector-sides-s thumb-place 1 0 -1 mallowy-sides-right)
         (union dactyl-top-right-thumb

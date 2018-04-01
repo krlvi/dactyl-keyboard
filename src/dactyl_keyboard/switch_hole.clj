@@ -9,6 +9,8 @@
 ;; Switch Hole ;;
 ;;;;;;;;;;;;;;;;;
 
+; you may wish to change chosen-single-plate below
+
 (def keyswitch-height 14.4) ;; Was 14.1, then 14.25
 (def keyswitch-width 14.4)
 
@@ -30,7 +32,7 @@
 (def alps-height 13)
 
 (def cherry-bezel-width 1.5)
-(def cherry-single-plate
+(defn cherry-kailh-single-plate-common [nubs]
   (let [top-wall (->> (cube (+ keyswitch-width (* 2 cherry-bezel-width)) cherry-bezel-width plate-thickness)
                       (translate [0
                                   (+ (/ cherry-bezel-width 2) (/ keyswitch-height 2))
@@ -46,11 +48,15 @@
                                  (translate [(+ (/ cherry-bezel-width 2) (/ keyswitch-width 2))
                                              0
                                              (/ plate-thickness 2)]))))
-        plate-half (union top-wall left-wall (with-fn 100 side-nub))]
+                                        ; thanks to FSund - see
+                                        ; https://github.com/adereth/dactyl-keyboard/issues/56#issuecomment-376463735
+        plate-half (union top-wall left-wall (if nubs (with-fn 100 side-nub)))]
     (union plate-half
            (->> plate-half
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
+(def cherry-single-plate (cherry-kailh-single-plate-common true))
+(def kailh-single-plate  (cherry-kailh-single-plate-common false))
 
 (def cherry-blank-single-plate
   (->>
@@ -80,7 +86,7 @@
                 (mirror [1 0 0])
                 (mirror [0 1 0])))))
 
-(def chosen-single-plate cherry-single-plate)
+(def chosen-single-plate kailh-single-plate)
 (def chosen-blank-single-plate cherry-blank-single-plate)
 
 
