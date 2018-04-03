@@ -266,6 +266,14 @@
   (spit (format "things/marshmallow-right-%02d.scad" partno)
         (write-scad (union part))))
 
+(spit "things/splits.scad"
+      (write-scad
+       (union
+        (union dactyl-top-right-thumb
+               (apply union (dactyl-top-right-pieces key-holes-pieces)))
+        marshmallow-slice-intersects
+        )))
+
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union

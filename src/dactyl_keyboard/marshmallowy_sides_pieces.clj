@@ -10,71 +10,71 @@
             [dactyl-keyboard.connectors :refer :all]
             [unicode-math.core :refer :all]))
 
-(def marshmallow-slice-intersects
+(defn intersects-from-notation [notation]
+  "Create intersect shapes to split the marshmallowy sides from the layout's :sides-partitions vector. This vector is of the form [ [[:place x y] ...] ...]. Each :place is :at-k, :at-t, :D-of-k, or :D-of-t, where D is one of the eight compass directions n, s, e, w, nw, sw, ne, se. You are essentially drawing polygons in the 2-D space of the keyboard; at-k or at-t places a vertex at a key-place or thumb-place, respectively; the compass directions place a vertex outside the keyboard in that direction. Some directions, e.g. :ne-of-t, are unimplemented (northeast of the thumb is toward the inside of the keyboard). The polygons you describe are sort of extruded into 3-D, such that they enclose parts of the keyboard's edge. The sides are then split by taking the intersection of the entire sides shape with each successive intersect. Therefore the intersects must add up to enclose the entire marshmallowy-sides shape."
   (let [off-top (- (first rows) 1)
         off-bottom (+ (last rows) 1)
         off-left (- (first columns) 3)
         off-right (+ (last columns) 3)
-        top-post (fn [column]
-                   (hull
-                    (->> web-post
-                         (translate [0 50 40])
-                         (key-place column off-top))
-                    (->> web-post
-                         (translate [0 0 -120])
-                         (key-place column off-top))))
-        bottom-post (fn [column]
-                      (hull
-                       (->> web-post
-                            (translate [0 -50 40])
-                            (key-place column off-bottom))
-                       (->> web-post
-                            (translate [0 0 -120])
-                            (key-place column off-bottom))))
-        right-split 4
-        right-slice (hull (top-post right-split) (bottom-post right-split)
-                          (top-post off-right) (bottom-post off-right))
-        post-at (fn [column row]
-                  (hull
-                   (->> web-post
-                        (translate [0 0 70])
-                        (key-place column row))
-                   (->> web-post
-                        (translate [0 0 -70])
-                        (key-place column row))))
-        top-split 1
-        top-slice (hull (top-post right-split)
-                        (post-at right-split top-split)
-                        (post-at off-left top-split)
-                        (post-at off-left off-top))
-        thumb-post (fn [column row]
-                     (hull
-                      (->> web-post
-                           (translate [0 0 70])
-                           (thumb-place column row))
-                      (->> web-post
-                           (translate [0 0 -70])
-                           (thumb-place column row))))
         off-tleft 5
-        thumb-lsp 0
-        left-slice (hull (post-at off-left top-split)
-                         (thumb-post off-tleft thumb-lsp)
-                         (thumb-post 0 thumb-lsp)
-                         (post-at 0 top-split))
         off-tbottom -4
-        lower-left-slice (hull (thumb-post 1 thumb-lsp)
-                               (thumb-post off-tleft thumb-lsp)
-                               (thumb-post off-tleft off-tbottom)
-                               (thumb-post 1 off-tbottom))
-        remainder (hull (thumb-post 1 thumb-lsp)
-                         (thumb-post 1 off-tbottom)
-                         (bottom-post right-split)
-                         (post-at right-split top-split))]
-    [(color [1 0 0] right-slice)
-     (color [1 1 0] top-slice)
-     (color [0 1 1] left-slice)
-     (color [1 0 1] lower-left-slice)
-     (color [0 0 1] remainder)]))
+        at-k (fn [column row]
+               (hull
+                (->> web-post
+                     (translate [0 0 70])
+                     (key-place column row))
+                (->> web-post
+                     (translate [0 0 -70])
+                     (key-place column row))))
+        at-t (fn [column row]
+               (hull
+                (->> web-post
+                     (translate [0 0 70])
+                     (thumb-place column row))
+                (->> web-post
+                     (translate [0 0 -70])
+                     (thumb-place column row))))
+        n-of-k (fn [column row]
+                 (hull
+                  (->> web-post
+                       (translate [0 50 40])
+                       (key-place column off-top))
+                  (->> web-post
+                       (translate [0 0 -120])
+                       (key-place column off-top))))
+        s-of-k (fn [column row]
+                 (hull
+                  (->> web-post
+                       (translate [0 -50 40])
+                       (key-place column off-bottom))
+                  (->> web-post
+                       (translate [0 0 -120])
+                       (key-place column off-bottom))))
+        funs {:at-k at-k
+              :n-of-k n-of-k
+              :s-of-k s-of-k
+              :e-of-k (fn [column row] (at-k off-right row))
+              :w-of-k (fn [column row] (at-k off-left row))
+              :ne-of-k (fn [column row] (n-of-k off-right row))
+              :nw-of-k (fn [column row] (n-of-k off-left row))
+              :se-of-k (fn [column row] (s-of-k off-right row))
+              :sw-of-k (fn [column row] (s-of-k off-left row))
+              :at-t at-t
+              :n-of-t at-t ; unused; incorrectness better than crashing
+              :s-of-t (fn [column row] (at-t column off-tbottom))
+              :e-of-t at-t ; unused
+              :w-of-t (fn [column row] (at-t off-tleft row))
+              :nw-of-t at-t ; unused
+              :ne-of-t at-t ; unused
+              :sw-of-t (fn [column row] (at-t off-tleft off-tbottom))
+              :se-of-t at-t ;unused
+              }]
+    (for [shape notation]
+      (apply hull (for [post shape]
+                    (apply (funs (first post)) (rest post)))))))
+
+
+(def marshmallow-slice-intersects (intersects-from-notation sides-partitions))
 
 ; this is related to the -5 above in the big-marshmallowy-sides
 ; function. the -5 results in the sa-cap x and y dimensions being
