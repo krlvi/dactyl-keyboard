@@ -237,9 +237,12 @@
 ;; (spit "things/alps-holes.scad"
       ;; (write-scad (union connectors key-holes)))
 
-(doseq [[partno part] (map vector (range) (dactyl-top-right-pieces key-holes-pieces))]
+(doseq [[partno part1 part2]
+        (map vector (range)
+             (dactyl-top-right-pieces key-holes-pieces)
+             (sides-connectors-frame-from-notation sides-frame-joints))]
   (spit (format "things/dactyl-top-right-%02d.scad" partno)
-        (write-scad part)))
+        (write-scad (union part1 part2))))
 
 (spit "things/dactyl-top-right-all.scad"
       (write-scad

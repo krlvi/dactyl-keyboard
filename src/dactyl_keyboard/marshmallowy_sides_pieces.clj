@@ -112,4 +112,4 @@
                    (reify-column col) (reify-row row)
                    ((gravities grav) shape))))))
 
-(def marshmallow-slice-joints (slice-joints-from-notation sides-joints))
+(def marshmallow-slice-joints (slice-joints-from-notation sides-slice-joints))

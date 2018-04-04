@@ -187,3 +187,33 @@
   (partial sides-connector-sides-y 1))
 (def sides-connector-sides-s
   (partial sides-connector-sides-y -1))
+
+
+(defn sides-connectors-frame-from-notation [notation]
+  (let [gravities {:n sides-connector-frame-n
+                   :s sides-connector-frame-s
+                   :e sides-connector-frame-e
+                   :w sides-connector-frame-w}
+        places {:k key-place :t thumb-place}]
+    (for [cols columns-pieces]
+                                        ; notation is split into
+                                        ; multiple vectors by sides
+                                        ; piece, but we are emitting
+                                        ; these by frame piece
+      (apply union
+             (for [[grav place one two three] (apply concat notation)]
+               #_((gravities grav) (places place) one two three)
+               (do
+                 (print (format "scffn : columns %s; params %s\n"
+                                (str cols) (str [grav place one two three])))
+                 (cond (and
+                        (= place :k)
+                        (some (partial = grav) [:e :w]) ; one is the constant column
+                        (some (partial = one) cols))
+                       ((gravities grav) (places place) one two three)
+                       (and
+                        (= place :k)
+                        (some (partial = grav) [:n :s]) ; one and two are the columns
+                        (some (partial = one) cols)
+                        (some (partial = two) cols))
+                       ((gravities grav) (places place) one two three))))))))
