@@ -82,36 +82,34 @@
 ; this, so the glue joints end up in the right place relative to the
 ; top edge of the marshmallowy sides.
 (def joint-nudge-out 1.2)
-(def marshmallow-slice-joints
-  (let [right-split 4
-        top-split 1
-        thumb-lsp 0]
-    [(fn [shape] (->> shape
+
+(defn slice-joints-from-notation [notation]
+  (let [south (fn [shape] (->> shape
+                               (translate [0 (+ (* 1/2 mount-height)
+                                                joint-nudge-out)
+                                           (- web-thickness)])
+                               (rotate (* τ 1/2) [0 0 1])))
+        north (fn [shape] (->> shape
                       (translate [0 (+ (* 1/2 mount-height)
                                        joint-nudge-out)
-                                  (- web-thickness)])
-                      (rotate (* τ 1/2) [0 0 1])
-                      (key-place right-split (last rows))))
-     (fn [shape] (->> shape
-                      (translate [0 (+ (* 1/2 mount-height)
-                                       joint-nudge-out)
-                                  (- web-thickness)])
-                      (key-place right-split (first rows))))
-     (fn [shape] (->> shape
+                                  (- web-thickness)])))
+        west (fn [shape] (->> shape
                       (rotate (* τ 1/4) [0 0 1])
                       (translate [(- (* -1/2 mount-width)
                                      joint-nudge-out) 0
-                                  (- web-thickness)])
-                      (key-place (first columns) top-split)))
-     (fn [shape] (->> shape
-                      (rotate (* τ 1/4) [0 0 1])
-                      (translate [(- (* -1/2 mount-width)
-                                     joint-nudge-out) 0
-                                  (- web-thickness)])
-                      (thumb-place 2 thumb-lsp)))
-     (fn [shape] (->> shape
-                      (translate [0 (+ (* 1/2 mount-height)
-                                       joint-nudge-out)
-                                  (- web-thickness)])
-                      (rotate (* τ 1/2) [0 0 1])
-                      (thumb-place 1 -1)))]))
+                                  (- web-thickness)])))
+        east (fn [shape] shape) ; unimplemented
+        gravities {:n north :s south :e east :w west}
+        places {:k key-place :t thumb-place}
+        reify-column (fn [c] (cond (= c :first) (first columns)
+                                   (= c :last) (last columns)
+                                   :else c))
+        reify-row (fn [r] (cond (= r :first) (first rows)
+                                (= r :last) (last rows)
+                                :else r))]
+    (for [[grav place col row] notation]
+      (fn [shape] ((places place)
+                   (reify-column col) (reify-row row)
+                   ((gravities grav) shape))))))
+
+(def marshmallow-slice-joints (slice-joints-from-notation sides-joints))

@@ -26,6 +26,8 @@
                        [[:w-of-k -1 1] [:w-of-t 2 0] [:at-t 0 0] [:at-k 0 1]]
                        [[:at-t 1 0] [:w-of-t 2 0] [:sw-of-t 2 -1] [:s-of-t 1 -1]]
                        [[:at-t 1 0] [:s-of-t 2 0] [:s-of-k 4 1] [:at-k 4 1]]]
+    :sides-joints [[:s :k 4 :last] [:n :k 4 :first] [:w :k :first 1]
+                   [:w :t 2 0] [:s :t 1 -1]]
     :thumb-glue-joint-left-of [[-1 3] [1 4]]
     :silo-widenings y-and-b-key-silo-widenings}
 
@@ -55,6 +57,7 @@
 (def columns (apply concat columns-pieces))
 (def rows (chosen-layout :rows))
 (def sides-partitions (chosen-layout :sides-partitions))
+(def sides-joints (chosen-layout :sides-joints))
 (defn key-silo-widenings [c r]
   ((chosen-layout :silo-widenings) columns rows c r))
 

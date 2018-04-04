@@ -274,6 +274,14 @@
         marshmallow-slice-intersects
         )))
 
+(spit "things/joins.scad"
+      (write-scad
+       (union
+        (union dactyl-top-right-thumb
+               (apply union (dactyl-top-right-pieces key-holes-pieces)))
+        (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) marshmallow-slice-joints))))
+
+
 (spit "things/dactyl-blank-all.scad"
       (write-scad
        (union
@@ -281,7 +289,7 @@
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
-        
+
         #_(union
          (apply union key-blanks-pieces)
          thumb-blanks)
