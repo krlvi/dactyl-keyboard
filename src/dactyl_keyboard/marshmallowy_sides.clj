@@ -174,7 +174,8 @@
                                         ; frusta, and hull them
                                         ; together.
          (for [[[grav1 place1 column1 row1] [grav2 place2 column2 row2]]
-               (map vector around-edge around-edge-rot1)]
+               (map vector around-edge around-edge-rot1)
+               :when (and (= place1 :k) (= place2 :k))]
            (hull (key-frustum distance-below narrow-percent column1 row1)
                  (key-frustum distance-below narrow-percent column2 row2)))))
                                         ; hull from the edge
@@ -378,7 +379,7 @@
         sides (difference
                (difference (marshmallow-gasket radius)
                            (marshmallow-gasket (- radius thickness)))
-               #_finger-big-intersection-shape
+               finger-big-intersection-shape
                thumb-big-intersection-shape
                                         ; the key at 0,4 is not part
                                         ; of the keyboard, but is
