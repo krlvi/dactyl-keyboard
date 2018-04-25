@@ -297,14 +297,15 @@
         sby (- nby)
         eby (+ (* 1/2 mount-width) out)
         wby (- eby)
-        n (translate [0 nby (- down)] web-post)
-        s (translate [0 sby (- down)] web-post)
-        e (translate [eby 0 (- down)] web-post)
-        w (translate [wby 0 (- down)] web-post)
-        sw (translate [wby sby (- down)] web-post)
-        se (translate [eby sby (- down)] web-post)
-        ne (translate [eby nby (- down)] web-post)
-        nw (translate [wby nby (- down)] web-post)
+        shape (scale [1 1 0.1] web-post)
+        n (translate [0 nby (- down)] shape)
+        s (translate [0 sby (- down)] shape)
+        e (translate [eby 0 (- down)] shape)
+        w (translate [wby 0 (- down)] shape)
+        sw (translate [wby sby (- down)] shape)
+        se (translate [eby sby (- down)] shape)
+        ne (translate [eby nby (- down)] shape)
+        nw (translate [wby nby (- down)] shape)
         places {:k key-place :t thumb-place}
         places
         (apply concat
@@ -395,7 +396,7 @@
                (hull (key-frustum 30 0 0 4)
                      (key-frustum 30 0 1 3))
                key-prism)]
-    (union the-outline sides)))
+    (union sides)))
 
 (def mallowy-sides-right
   (big-marshmallowy-sides marshmallowy-sides-flatness
