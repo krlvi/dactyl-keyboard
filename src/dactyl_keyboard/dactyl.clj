@@ -202,7 +202,7 @@
                               key-pieces
                               connectors-inside-fingerpieces
                               left-glue-joints-for-fingerpieces
-                              (repeat teensy-support))]
+                              #_(repeat teensy-support))]
     (for [pieces-of-this-piece pieces-of-pieces]
       (apply union pieces-of-this-piece))))
 
@@ -265,9 +265,11 @@
                                 marshmallow-slice-intersects
                                 mallowy-sides-with-right-ports))
 
-(doseq [[partno part] (map vector (range) mallow-slices-right)]
+(doseq [[partno part1 part2] (map vector (range)
+                           mallow-slices-right
+                           (sides-connectors-sides-from-notation sides-frame-joints mallow-slices-right))]
   (spit (format "things/marshmallow-right-%02d.scad" partno)
-        (write-scad (union part))))
+        (write-scad (union part1 part2))))
 
 (spit "things/splits.scad"
       (write-scad
@@ -284,9 +286,9 @@
                (apply union (dactyl-top-right-pieces key-holes-pieces)))
         (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) marshmallow-slice-joints))))
 
-
 (spit "things/dactyl-blank-all.scad"
       (write-scad
+       (use "key-place.scad")
        (union
         mallowy-sides-right
         #_(union

@@ -23,7 +23,7 @@
 (def column-radius (+ (/ (/ (+ mount-width 2.0) 2)
                          (Math/sin (/ β 2)))
                       cap-top-height))
-(defn key-place [column row shape]
+#_(defn key-place [column row shape]
   (let [row-placed-shape (->> shape
                               (translate [0 0 (- row-radius)])
                               (rotate (* α (- 2 row)) [1 0 0])
@@ -41,6 +41,9 @@
     (->> placed-shape
          (rotate tenting-angle [0 1 0])
          (translate [0 0 13]))))
+
+(defn key-place [column row shape]
+  (call-module-with-block "KeyPlace" column row shape))
 
 
 (defn untent [shape] (rotate (- tenting-angle) [0 1 0] shape))
