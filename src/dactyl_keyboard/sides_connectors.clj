@@ -189,12 +189,8 @@
   (partial sides-connector-sides-y -1))
 
 
-(defn sides-connectors-frame-from-notation [notation]
-  (let [gravities {:n sides-connector-frame-n
-                   :s sides-connector-frame-s
-                   :e sides-connector-frame-e
-                   :w sides-connector-frame-w}
-        places {:k key-place :t thumb-place}]
+(defn sides-connectors-from-notation [gravities notation & rest]
+  (let [places {:k key-place :t thumb-place}]
     (for [cols columns-pieces]
                                         ; notation is split into
                                         ; multiple vectors by sides
@@ -210,10 +206,24 @@
                         (= place :k)
                         (some (partial = grav) [:e :w]) ; one is the constant column
                         (some (partial = one) cols))
-                       ((gravities grav) (places place) one two three)
+                       (apply (gravities grav) (places place) one two three rest)
                        (and
                         (= place :k)
                         (some (partial = grav) [:n :s]) ; one and two are the columns
                         (some (partial = one) cols)
                         (some (partial = two) cols))
-                       ((gravities grav) (places place) one two three))))))))
+                       (apply (gravities grav) (places place) one two three rest))))))))
+
+(def sides-connectors-frame-from-notation
+  (partial sides-connectors-from-notation
+           {:n sides-connector-frame-n
+            :s sides-connector-frame-s
+            :e sides-connector-frame-e
+            :w sides-connector-frame-w}))
+
+(def sides-connectors-sides-from-notation
+  (partial sides-connectors-from-notation
+           {:n sides-connector-sides-n
+            :s sides-connector-sides-s
+            :e sides-connector-sides-e
+            :w sides-connector-sides-w}))
