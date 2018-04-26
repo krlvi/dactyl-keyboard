@@ -68,7 +68,7 @@
 
 
 
-(defn thumb-place [column row shape]
+#_(defn thumb-place [column row shape]
   (let [
                                         ; these are the same as above;
                                         ; commenting out. we will use
@@ -100,6 +100,9 @@
          ; needs to be when you change tenting-angle.
          (rotate (/ π 12) [1 1 0])
          (translate [-53 -45 40]))))
+
+(defn thumb-place [column row shape]
+  (call-module-with-block "ThumbPlace" column row shape))
 
 (defn thumb-untent [shape]
   (->> shape
