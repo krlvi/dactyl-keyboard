@@ -14,12 +14,15 @@ mount_width = keyswitch_width + 3;
 mount_height = keyswitch_height + 3;
 sa_profile_key_height = 12.7;
 plate_thickness = 4;
+web_thickness = 3.5;
 // placement
 cap_top_height = plate_thickness + sa_profile_key_height;
 row_radius = cap_top_height + ( ((mount_height + 1/2) / 2) / sin(alp/2) );
 column_radius = cap_top_height + ( ((mount_width + 2.0) / 2) / sin(bet/2) );
 thu_row_radius = cap_top_height + ( ((mount_height + 1/2) / 2) / sin(thu_alp/2) );
 thu_column_radius = cap_top_height + ( ((mount_width + 2.0) / 2) / sin(thu_bet/2) );
+// connectors
+post_size = 0.1;
 
 function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [0, 2.82, -3.0] : (column >= 4) ? [0, -5.8, 5.64] : [0,0,0]);
 
@@ -71,4 +74,15 @@ module ThumbPlace(col, row) {
 	       }
 	  }
      }
+}
+
+
+module WebPost() {
+     translate ([0, 0, (plate_thickness - (web_thickness/2))]) {
+          cube ([post_size, post_size, web_thickness], center=true);
+     }
+}
+
+module Marker(x) {
+     children();
 }

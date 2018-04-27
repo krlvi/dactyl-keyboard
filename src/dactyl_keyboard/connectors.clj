@@ -14,9 +14,10 @@
 
 ; web-thickness defined in switch-hole
 (def post-size 0.1)
-(def web-post (->> (cube post-size post-size web-thickness)
+#_(def web-post (->> (cube post-size post-size web-thickness)
                    (translate [0 0 (+ (/ web-thickness -2)
                                       plate-thickness)])))
+(def web-post (call-module "WebPost"))
 
 (def post-adj (/ post-size 2))
 (def web-post-tr (translate [(- (/ mount-width 2) post-adj) (- (/ mount-height 2) post-adj) 0] web-post))

@@ -297,7 +297,7 @@
         sby (- nby)
         eby (+ (* 1/2 mount-width) out)
         wby (- eby)
-        shape (scale [1 1 0.1] web-post)
+        shape web-post
         n (translate [0 nby (- down)] shape)
         s (translate [0 sby (- down)] shape)
         e (translate [eby 0 (- down)] shape)

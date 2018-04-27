@@ -229,36 +229,47 @@
   (def dactyl-top-right-both-abbreviated
     (intersection (union dactyl-top-right dactyl-top-right-thumb) abbreviation-cylinder)))
 
+(def define-mallowy-sides-with-right-ports
+  (define-module-no-parameters "MallowySidesWithRightPorts" 
+    (difference
+     (binding [*fn* 12]
+       (union
+        mallowy-sides-right
+        (usb-cutout-place adafruit-usb-plate)))
+     (usb-cutout-place adafruit-usb-cutout))))
 
 
-;; (spit "things/switch-hole.scad"
-      ;; (write-scad single-plate))
+(defn write-scad-with-uses [& body]
+  (write-scad (cons (use "key-place.scad") (cons define-mallowy-sides-with-right-ports body))))
 
-;; (spit "things/alps-holes.scad"
-      ;; (write-scad (union connectors key-holes)))
+(defn say-spit [& body]
+  (do
+    (print (format "%s\n" (first body)))
+    (apply spit body)))
+
+;; (say-spit "things/switch-hole.scad"
+      ;; (write-scad-with-uses single-plate))
+
+;; (say-spit "things/alps-holes.scad"
+      ;; (write-scad-with-uses (union connectors key-holes)))
 
 (doseq [[partno part1 part2]
         (map vector (range)
              (dactyl-top-right-pieces key-holes-pieces)
              (sides-connectors-frame-from-notation sides-frame-joints))]
-  (spit (format "things/dactyl-top-right-%02d.scad" partno)
-        (write-scad (union part1 part2))))
+  (say-spit (format "things/dactyl-top-right-%02d.scad" partno)
+        (write-scad-with-uses (union part1 part2))))
 
-(spit "things/dactyl-top-right-all.scad"
-      (write-scad
+(say-spit "things/dactyl-top-right-all.scad"
+      (write-scad-with-uses
        (union dactyl-top-right-thumb
               (apply union (dactyl-top-right-pieces key-holes-pieces))
               caps
               thumbcaps)))
 
 (def mallowy-sides-with-right-ports
-  (difference
-   (binding [*fn* 12]
-     (union
-      mallowy-sides-right
-      (usb-cutout-place adafruit-usb-plate)))
-   (usb-cutout-place adafruit-usb-cutout)))
-
+  (call-module "MallowySidesWithRightPorts"))
+  
 (def mallow-slices-right
   (pieces-with-x-pins-and-holes (* marshmallowy-sides-radius 3/4)
                                 marshmallow-slice-joints
@@ -268,27 +279,26 @@
 (doseq [[partno part1 part2] (map vector (range)
                            mallow-slices-right
                            (sides-connectors-sides-from-notation sides-frame-joints mallow-slices-right))]
-  (spit (format "things/marshmallow-right-%02d.scad" partno)
-        (write-scad (union part1 part2))))
+  (say-spit (format "things/marshmallow-right-%02d.scad" partno)
+        (write-scad-with-uses (union part1 part2))))
 
-(spit "things/splits.scad"
-      (write-scad
+(say-spit "things/splits.scad"
+      (write-scad-with-uses
        (union
         (union dactyl-top-right-thumb
                (apply union (dactyl-top-right-pieces key-holes-pieces)))
         marshmallow-slice-intersects
         )))
 
-(spit "things/joins.scad"
-      (write-scad
+(say-spit "things/joins.scad"
+      (write-scad-with-uses
        (union
         (union dactyl-top-right-thumb
                (apply union (dactyl-top-right-pieces key-holes-pieces)))
         (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) marshmallow-slice-joints))))
 
-(spit "things/dactyl-blank-all.scad"
-      (write-scad
-       (use "key-place.scad")
+(say-spit "things/dactyl-blank-all.scad"
+      (write-scad-with-uses
        (union
         mallowy-sides-right
         #_(union
@@ -304,29 +314,24 @@
          (finger-key-prism 30 -5))
         #_(color [0 1 0 0.7] (finger-prism 30 0))
         #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
-        (sides-connector-frame-e key-place 1 2 3)
-        (sides-connector-frame-w thumb-place 2 1 0)
-        (sides-connector-frame-n key-place -1 0 2)
-        (sides-connector-frame-s thumb-place 1 0 -1)
-        (sides-connector-sides-e key-place 1 2 3 mallowy-sides-right)
-        (sides-connector-sides-w thumb-place 2 1 0 mallowy-sides-right)
-        (sides-connector-sides-n key-place -1 0 2 mallowy-sides-right)
-        (sides-connector-sides-s thumb-place 1 0 -1 mallowy-sides-right)
+        #_(apply union (sides-connectors-frame-from-notation sides-frame-joints))
+        ; pulling in all the sides-connectors-sides results in 104MB of scad code :(
+        #_(apply union (sides-connectors-sides-from-notation sides-frame-joints mallow-slices-right))
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
 
-#_(spit "things/dactyl-bottom-right.scad"
-      (write-scad dactyl-bottom-right))
+#_(say-spit "things/dactyl-bottom-right.scad"
+      (write-scad-with-uses dactyl-bottom-right))
 
-;; (spit "things/dactyl-top-left.scad"
-      ;; (write-scad dactyl-top-left))
+;; (say-spit "things/dactyl-top-left.scad"
+      ;; (write-scad-with-uses dactyl-top-left))
 
-;; (spit "things/dactyl-bottom-left.scad"
-       ;; (write-scad dactyl-bottom-left))
+;; (say-spit "things/dactyl-bottom-left.scad"
+       ;; (write-scad-with-uses dactyl-bottom-left))
 
-;; (spit "things/dactyl-top-left-with-teensy.scad"
-;;       (write-scad (mirror [-1 0 0] dactyl-top-right)))
+;; (say-spit "things/dactyl-top-left-with-teensy.scad"
+;;       (write-scad-with-uses (mirror [-1 0 0] dactyl-top-right)))
 
-;; (spit "things/dactyl-bottom-left-with-teensy.scad"
-;;       (write-scad (mirror [-1 0 0] dactyl-bottom-right)))
+;; (say-spit "things/dactyl-bottom-left-with-teensy.scad"
+;;       (write-scad-with-uses (mirror [-1 0 0] dactyl-bottom-right)))

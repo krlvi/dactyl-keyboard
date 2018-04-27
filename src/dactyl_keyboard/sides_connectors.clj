@@ -212,7 +212,8 @@
                         (some (partial = grav) [:n :s]) ; one and two are the columns
                         (some (partial = one) cols)
                         (some (partial = two) cols))
-                       (apply (gravities grav) (places place) one two three rest))))))))
+                       (apply (gravities grav) (places place) one two three rest)
+                       :else (print (format " -- no call made\n")))))))))
 
 (def sides-connectors-frame-from-notation
   (partial sides-connectors-from-notation
