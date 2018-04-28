@@ -24,7 +24,7 @@
                                          ; sides of the thumb should
                                          ; be
 
-(def gasket-sphere-fn 12) ; detail of sphere minkowski'd around edges.
+(def gasket-sphere-fn 9) ; detail of sphere minkowski'd around edges.
                                         ; normally 20 or so?  severe
                                         ; performance impact. for me,
                                         ; with openscad 2015.03-2,
@@ -292,12 +292,11 @@
 
 
 
-(defn key-placed-outline [down out]
+(defn key-placed-outline [down out shape]
   (let [nby (+ (* 1/2 mount-height) out)
         sby (- nby)
         eby (+ (* 1/2 mount-width) out)
         wby (- eby)
-        shape web-post
         n (translate [0 nby (- down)] shape)
         s (translate [0 sby (- down)] shape)
         e (translate [eby 0 (- down)] shape)
@@ -367,11 +366,8 @@
                                        ;; thumb-big-intersection-shape)
                            ;; (difference thumb-case-outline
                                        ;; finger-big-intersection-shape))
-        the-outline (key-placed-outline (* 1/2 radius) 0)
-        marshmallow-gasket (fn [r] (minkowski
-                                    the-outline
-                                    (binding [*fn* gasket-sphere-fn]
-                                      (sphere r))))
+        the-outline (key-placed-outline (* 1/2 radius) 0 web-post)
+        marshmallow-gasket (fn [r] (key-placed-outline (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r))))
         ; this -5 sets how far away from the keys the top of the
         ; marshmallowy sides will be.
         key-prism (union
