@@ -8,6 +8,7 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
+            [dactyl-keyboard.marshmallowy-sides :refer [marshmallowy-sides-downness]]
             [unicode-math.core :refer :all]))
 
 (defn intersects-from-notation [notation]
@@ -84,20 +85,21 @@
 (def joint-nudge-out 1.2)
 
 (defn slice-joints-from-notation [notation]
-  (let [south (fn [shape] (->> shape
+  (let [z marshmallowy-sides-downness
+        south (fn [shape] (->> shape
                                (translate [0 (+ (* 1/2 mount-height)
                                                 joint-nudge-out)
-                                           (- web-thickness)])
+                                           z])
                                (rotate (* τ 1/2) [0 0 1])))
         north (fn [shape] (->> shape
                       (translate [0 (+ (* 1/2 mount-height)
                                        joint-nudge-out)
-                                  (- web-thickness)])))
+                                  z])))
         west (fn [shape] (->> shape
                       (rotate (* τ 1/4) [0 0 1])
                       (translate [(- (* -1/2 mount-width)
                                      joint-nudge-out) 0
-                                  (- web-thickness)])))
+                                  z])))
         east (fn [shape] shape) ; unimplemented
         gravities {:n north :s south :e east :w west}
         places {:k key-place :t thumb-place}
