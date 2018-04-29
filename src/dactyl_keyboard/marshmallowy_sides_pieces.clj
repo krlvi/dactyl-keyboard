@@ -84,6 +84,14 @@
 ; top edge of the marshmallowy sides.
 (def joint-nudge-out 1.2)
 
+(defn reify-column [c] (cond (= c :first) (first columns)
+                             (= c :last) (last columns)
+                             :else c))
+
+(defn reify-row [r] (cond (= r :first) (first rows)
+                          (= r :last) (last rows)
+                          :else r))
+
 (defn slice-joints-from-notation [notation]
   (let [z marshmallowy-sides-downness
         south (fn [shape] (->> shape
@@ -102,13 +110,7 @@
                                   z])))
         east (fn [shape] shape) ; unimplemented
         gravities {:n north :s south :e east :w west}
-        places {:k key-place :t thumb-place}
-        reify-column (fn [c] (cond (= c :first) (first columns)
-                                   (= c :last) (last columns)
-                                   :else c))
-        reify-row (fn [r] (cond (= r :first) (first rows)
-                                (= r :last) (last rows)
-                                :else r))]
+        places {:k key-place :t thumb-place}]
     (for [[grav place col row] notation]
       (fn [shape] ((places place)
                    (reify-column col) (reify-row row)
