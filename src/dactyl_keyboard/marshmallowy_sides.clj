@@ -303,7 +303,7 @@
                       (concat (drop 1 places) [(first places)])
                       (concat (drop 2 places) [(first places)
                                                (second places)]))]
-             {[(nth two 1) (nth two 2)] [one two three]}))))
+             {[(nth two 2) (nth two 3)] [one two three]}))))
 
 (defn key-placed-outline [notation down out shape closed]
   (let [nby (+ (* 1/2 mount-height) out)
@@ -344,22 +344,22 @@
                         (hull this next)))]
         ribbon))
 
-(defn big-marshmallowy-sides [flatness downness thickness radius]
+(defn big-marshmallowy-sides [flatness downness thickness radius notation closed]
   (let [outline-thickness 1
         finger-big-intersection-shape
         (finger-prism distance-below-to-intersect 0)
         thumb-big-intersection-shape
         (thumb-prism thumb-distance-below -5)
-        the-outline (key-placed-outline around-edge (* 1/2 radius) 0 web-post true)
-        marshmallow-gasket (fn [r] (key-placed-outline around-edge (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) true))
+        marshmallow-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) closed))
         ; this -5 sets how far away from the keys the top of the
         ; marshmallowy sides will be.
         key-prism (union
                    (thumb-key-prism thumb-distance-below -5)
                    (finger-key-prism distance-below-to-intersect -5))
+        tube (difference (marshmallow-gasket radius)
+                         (marshmallow-gasket (- radius thickness)))
         sides (difference
-               (difference (marshmallow-gasket radius)
-                           (marshmallow-gasket (- radius thickness)))
+               tube
                finger-big-intersection-shape
                thumb-big-intersection-shape
                                         ; the key at 0,4 is not part
@@ -382,4 +382,5 @@
   (big-marshmallowy-sides marshmallowy-sides-flatness
                           marshmallowy-sides-downness
                           marshmallowy-sides-thickness
-                          marshmallowy-sides-radius))
+                          marshmallowy-sides-radius
+                          around-edge true))

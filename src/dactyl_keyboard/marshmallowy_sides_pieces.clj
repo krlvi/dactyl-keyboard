@@ -8,7 +8,7 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
-            [dactyl-keyboard.marshmallowy-sides :refer [marshmallowy-sides-downness]]
+            [dactyl-keyboard.marshmallowy-sides :refer :all]
             [unicode-math.core :refer :all]))
 
 (defn intersects-from-notation [notation]
@@ -117,3 +117,15 @@
                    ((gravities grav) shape))))))
 
 (def marshmallow-slice-joints (slice-joints-from-notation sides-slice-joints))
+
+(defn marshmallow-sides-regions-for [notation]
+  (for [[grav place col row] notation]
+    (big-marshmallowy-sides marshmallowy-sides-flatness
+                            marshmallowy-sides-downness
+                            marshmallowy-sides-thickness
+                            marshmallowy-sides-radius
+                            (around-edge-region [(reify-column col)
+                                                 (reify-row row)])
+                            false)))
+
+(def marshmallow-sides-regions (marshmallow-sides-regions-for sides-slice-joints))
