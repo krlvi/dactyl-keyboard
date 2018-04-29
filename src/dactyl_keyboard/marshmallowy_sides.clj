@@ -291,8 +291,21 @@
     (intersection the-shell big-intersection-shape)))
 
 
+(def around-edge-region
+                                        ; from [col row] to the items
+                                        ; before, at the place, and
+                                        ; after in around-edge
+  (let [places around-edge]
+    (apply merge
+           (for [[one two three]
+                 (map vector
+                      places
+                      (concat (drop 1 places) [(first places)])
+                      (concat (drop 2 places) [(first places)
+                                               (second places)]))]
+             {[(nth two 1) (nth two 2)] [one two three]}))))
 
-(defn key-placed-outline [down out shape]
+(defn key-placed-outline [notation down out shape closed]
   (let [nby (+ (* 1/2 mount-height) out)
         sby (- nby)
         eby (+ (* 1/2 mount-width) out)
@@ -308,7 +321,7 @@
         places {:k key-place :t thumb-place}
         places
         (apply concat
-               (for [[g p c r] around-edge]
+               (for [[g p c r] notation]
                  (let [pf (places p)]
                    (cond
                      (= g :nw) [(pf c r w) (pf c r nw) (pf c r n)]
@@ -323,7 +336,9 @@
                      (= g :se-in) [(pf c r se)]
                      (= g :nw-in) [(pf c r nw)]
                      (= g :ne-in) [(pf c r ne)]))))
-        thisnext (map vector places (concat (rest places) [(first places)]))
+        thisnext (if closed
+                   (map vector places (concat (rest places) [(first places)]))
+                   (map vector places (rest places)))
         ribbon (apply union
                       (for [[this next] thisnext]
                         (hull this next)))]
@@ -366,8 +381,8 @@
                                        ;; thumb-big-intersection-shape)
                            ;; (difference thumb-case-outline
                                        ;; finger-big-intersection-shape))
-        the-outline (key-placed-outline (* 1/2 radius) 0 web-post)
-        marshmallow-gasket (fn [r] (key-placed-outline (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r))))
+        the-outline (key-placed-outline around-edge (* 1/2 radius) 0 web-post true)
+        marshmallow-gasket (fn [r] (key-placed-outline around-edge (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) true))
         ; this -5 sets how far away from the keys the top of the
         ; marshmallowy sides will be.
         key-prism (union
