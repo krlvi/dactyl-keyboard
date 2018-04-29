@@ -346,41 +346,10 @@
 
 (defn big-marshmallowy-sides [flatness downness thickness radius]
   (let [outline-thickness 1
-        finger-sphere (finger-case-bottom-sphere
-                       marshmallowy-sides-flatness
-                       marshmallowy-sides-downness)
-        thumb-sphere (thumb-case-bottom-sphere
-                      marshmallowy-sides-flatness
-                      (- marshmallowy-sides-downness
-                         thumb-sides-above-finger-sides))
-        finger-shell (difference finger-sphere (translate [0 0 thickness] finger-sphere))
-        finger-thick-shell (difference (translate [0 0 (- thickness)] finger-sphere)
-                                       (translate [0 0 (* 2 thickness)] finger-sphere))
-        thumb-shell (difference thumb-sphere (translate [0 0 thickness] thumb-sphere))
-        thumb-thick-shell (difference (translate [0 0 (- thickness)] thumb-sphere)
-                                      (translate [0 0 (* 2 thickness)] thumb-sphere))
         finger-big-intersection-shape
         (finger-prism distance-below-to-intersect 0)
-        finger-little-intersection-shape
-        (finger-prism distance-below-to-intersect 2)
         thumb-big-intersection-shape
         (thumb-prism thumb-distance-below -5)
-        thumb-little-intersection-shape
-        (thumb-prism thumb-distance-below -3)
-        ;; finger-case-outline
-        ;; (difference (intersection finger-shell
-                                  ;; finger-big-intersection-shape)
-                    ;; (intersection finger-thick-shell
-                                  ;; finger-little-intersection-shape))
-        ;; thumb-case-outline
-        ;; (difference (intersection thumb-shell
-                                  ;; thumb-big-intersection-shape)
-                    ;; (intersection thumb-thick-shell
-                                  ;; thumb-little-intersection-shape))
-        ;; the-outline (union (difference finger-case-outline
-                                       ;; thumb-big-intersection-shape)
-                           ;; (difference thumb-case-outline
-                                       ;; finger-big-intersection-shape))
         the-outline (key-placed-outline around-edge (* 1/2 radius) 0 web-post true)
         marshmallow-gasket (fn [r] (key-placed-outline around-edge (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) true))
         ; this -5 sets how far away from the keys the top of the
