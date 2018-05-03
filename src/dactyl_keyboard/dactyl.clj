@@ -271,10 +271,11 @@
   (call-module "MallowySidesWithRightPorts"))
   
 (def mallow-slices-right
-  (pieces-with-x-pins-and-holes (* marshmallowy-sides-radius 3/4)
+  (pieces-with-x-pins-and-holes-faster (* marshmallowy-sides-radius 3/4)
                                 marshmallow-slice-joints
                                 marshmallow-slice-intersects
-                                mallowy-sides-with-right-ports))
+                                mallowy-sides-with-right-ports
+                                marshmallow-sides-regions))
 
 (doseq [[partno part1 part2] (map vector (range)
                            mallow-slices-right
@@ -300,7 +301,8 @@
 (say-spit "things/dactyl-blank-all.scad"
       (write-scad-with-uses
        (union
-        mallowy-sides-right
+        #_mallowy-sides-right
+        mallow-slices-right
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))

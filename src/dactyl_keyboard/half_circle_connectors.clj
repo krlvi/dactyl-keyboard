@@ -139,3 +139,26 @@
              (x-connect-to-hole x-pins-radius jp2 thing-to-be-split)
              (jp2 (x-hollow-holes r))))))
 
+(defn pieces-with-x-pins-and-holes-faster [x-pins-radius
+                                           joint-places
+                                           intersection-shapes
+                                           thing-to-be-split
+                                           approximations]
+  "This attaches the pins and holes to a succession of objects that
+  locally approximate a larger or more complicated object, to avoid
+  using the larger object as many times and slowing down OpenSCAD."
+  (let [r x-pins-radius
+        joint-places-rot1 (concat (rest joint-places)
+                                  [(first joint-places)])]
+    (for [[jp1 jp2 is appx] (map vector joint-places
+                                 joint-places-rot1
+                                 intersection-shapes
+                                 approximations)]
+      (union (intersection
+              (difference thing-to-be-split (jp2 (x-gap r)))
+              is)
+             (x-connect-to-pin x-pins-radius jp1 appx)
+             (jp1 (x-hollow-pins r))
+             (x-connect-to-hole x-pins-radius jp2 appx)
+             (jp2 (x-hollow-holes r))))))
+

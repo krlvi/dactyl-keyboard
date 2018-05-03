@@ -112,15 +112,12 @@
 
 (defn marshmallow-sides-regions-for [notation]
   (for [[grav place col row] notation]
-    (union
-     (({:k key-place :t thumb-place} place) (reify-column col) (reify-row row) (cube 10 10 100))
-     (big-marshmallowy-sides marshmallowy-sides-flatness
-                             marshmallowy-sides-downness
-                             marshmallowy-sides-thickness
-                             marshmallowy-sides-radius
-                             (around-edge-region [place
-                                                  (reify-column col)
-                                                  (reify-row row)])
-                             false))))
+    (marshmallowy-partial-sides marshmallowy-sides-flatness
+                                marshmallowy-sides-downness
+                                marshmallowy-sides-thickness
+                                marshmallowy-sides-radius
+                                (around-edge-region [place
+                                                     (reify-column col)
+                                                     (reify-row row)]))))
 
 (def marshmallow-sides-regions (marshmallow-sides-regions-for sides-slice-joints))

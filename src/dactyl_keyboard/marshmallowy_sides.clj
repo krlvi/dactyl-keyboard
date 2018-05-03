@@ -72,19 +72,19 @@
                    (translate [0 0 distance-above]))]
     (hull above below)))
 
-(defn frustum [distance-below narrow-percent place untent retent column row shape]
+(defn frustum [distance-below narrow-percent placer shape]
           (->> shape
                (scale [(/ (- 100 narrow-percent) 100)
                        (/ (- 100 narrow-percent) 100)
                        1])
                (pyramid distance-below)
-               (place column row)))
+               placer))
 (defn key-frustum [distance-below narrow-percent column row]
   (frustum distance-below narrow-percent
-           key-place untent retent column row chosen-blank-single-plate))
+           (partial key-place column row) chosen-blank-single-plate))
 (defn thumb-frustum [distance-below narrow-percent column row shape]
   (frustum distance-below narrow-percent
-           thumb-place thumb-untent thumb-retent column row shape))
+           (partial thumb-place column row) shape))
 (defn silo [distance-above narrow-percent place widenings column row shape]
                                         ; see key-place
   (let [distance-below 6
@@ -321,6 +321,40 @@
                         (hull this next)))]
     ribbon))
 
+(defn marshmallowy-partial-sides [flatness downness thickness radius notation]
+  "Produce only part of the marshmallowy sides. This is used to
+  construct connectors between pieces of the sides, because
+  intersecting the entire sides object with a thin cube to get a
+  little rind of side to hull with something requires talking about
+  the entire sides object multiple times, which is too slow. This
+  function gets the top edge of the sides quite wrong, particularly
+  where columns are staggered inward, but is fit for its original
+  purpose."
+  (let [outline-thickness 1
+        bottom-remove
+        (apply hull-pairs (for [n notation]
+                       (frustum distance-below-to-intersect 0
+                                (key-place-fn n) chosen-blank-single-plate)))
+        top-remove
+        (apply hull-pairs (for [n notation]
+                       (let [[g p c r] n
+                             place ({:k key-place :t thumb-place} p)
+                             widenings ({:k key-silo-widenings
+                                         :t thumb-silo-widenings} p)]
+        ; this -5 sets how far away from the keys the top of the
+        ; marshmallowy sides will be.
+                             (silo distance-below-to-intersect -5
+                                   place widenings c r
+                                   chosen-blank-single-plate))))
+        marshmallow-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) false))
+        tube (difference (marshmallow-gasket radius)
+                         (marshmallow-gasket (- radius thickness)))
+        sides (difference
+               tube
+               bottom-remove
+               top-remove)]
+    (union sides)))
+
 (defn big-marshmallowy-sides [flatness downness thickness radius notation closed]
   (let [outline-thickness 1
         finger-big-intersection-shape
@@ -353,7 +387,7 @@
                (hull (key-frustum 30 0 0 4)
                      (key-frustum 30 0 1 3))
                key-prism)]
-    (union finger-big-intersection-shape thumb-big-intersection-shape)))
+    (union sides)))
 
 (def mallowy-sides-right
   (big-marshmallowy-sides marshmallowy-sides-flatness

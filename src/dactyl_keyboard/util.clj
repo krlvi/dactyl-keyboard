@@ -8,6 +8,11 @@
          (map (partial apply hull)
               (partition 3 1 shapes))))
 
+(defn hull-pairs [& shapes]
+  (apply union
+         (for [[this next] (map vector shapes (drop 1 shapes))]
+           (hull this next))))
+
 (defn bottom [height p]
   (->> (project p)
        (extrude-linear {:height height :twist 0 :convexity 0})
