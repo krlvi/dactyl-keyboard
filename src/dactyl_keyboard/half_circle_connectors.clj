@@ -98,8 +98,8 @@
 
 (defn x-gap [gasket-shape-radius]
   (x-half-cylinder (* 2 gasket-shape-radius)
-                   pin-tolerance
-                   (- ε)))
+                   (* 2 pin-tolerance)
+                   (- 0 pin-tolerance ε)))
 
 (defn x-connect-common [x-offset gasket-shape-radius place shape]
   (let [section (x-half-cylinder gasket-shape-radius
@@ -149,16 +149,19 @@
   using the larger object as many times and slowing down OpenSCAD."
   (let [r x-pins-radius
         joint-places-rot1 (concat (rest joint-places)
-                                  [(first joint-places)])]
-    (for [[jp1 jp2 is appx] (map vector joint-places
+                                  [(first joint-places)])
+        approximations-rot1 (concat (drop 1 approximations)
+                                    (take 1 approximations))]
+    (for [[jp1 jp2 is appx1 appx2] (map vector joint-places
                                  joint-places-rot1
                                  intersection-shapes
-                                 approximations)]
+                                 approximations
+                                 approximations-rot1)]
       (union (intersection
               (difference thing-to-be-split (jp2 (x-gap r)))
               is)
-             (x-connect-to-pin x-pins-radius jp1 appx)
+             (x-connect-to-pin x-pins-radius jp1 appx1)
              (jp1 (x-hollow-pins r))
-             (x-connect-to-hole x-pins-radius jp2 appx)
+             (x-connect-to-hole x-pins-radius jp2 appx2)
              (jp2 (x-hollow-holes r))))))
 
