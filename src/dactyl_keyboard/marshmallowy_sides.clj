@@ -305,46 +305,6 @@
                       (concat (drop 2 places) (take 2 places)))]
              {(apply vector (drop 1 here)) [before here after]}))))
 
-(defn key-place-fn [notation1]
-  "Turn a piece of notation like [:sw :k 3 2] into a function that
-  places a shape in the center of the indicated place on the
-  keyboard."
-  (let [[grav-kw place-kw col row] notation1
-        c (reify-column col)
-        r (reify-row row)
-        place ({:k key-place, :t thumb-place} place-kw)
-        there (partial place c r)]
-    there))
-
-(defn sides-place-fns [down out notation1]
-  "Turn a piece of notation like [:sw :k 3 2] into some functions that
-  place a shape below the outside edge of the indicated place on the
-  keyboard. Outside is indicated by the direction ('gravity'); down
-  and out are how far downward and outward to go. At outside corners
-  we return three such placer functions."
-  (let [nby (+ (* 1/2 mount-height) out)
-        sby (- nby)
-        eby (+ (* 1/2 mount-width) out)
-        wby (- eby)
-        n [0 nby (- down)]
-        s [0 sby (- down)]
-        e [eby 0 (- down)]
-        w [wby 0 (- down)]
-        sw [wby sby (- down)]
-        se [eby sby (- down)]
-        ne [eby nby (- down)]
-        nw [wby nby (- down)]
-        there (key-place-fn notation1)
-        place-vs
-        {:nw [w nw n], :n [n], :ne [n ne e], :e [e],
-         :se [e se s], :s [s], :sw [s sw w], :w [w],
-         :sw-in [sw], :se-in [se], :nw-in [nw], :ne-in [ne]}
-        [grav-kw place-kw col row] notation1
-        ]
-    (map #(fn [shape] (there (translate % shape)))
-         (place-vs grav-kw))))
-
-
 (defn key-placed-outline [notation down out shape closed]
   "Place copies of shape around the edge of the keyboard as given by
   notation, hulling them together pairwise. If closed, the last is
