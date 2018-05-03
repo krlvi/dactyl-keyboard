@@ -84,14 +84,6 @@
 ; top edge of the marshmallowy sides.
 (def joint-nudge-out 1.2)
 
-(defn reify-column [c] (cond (= c :first) (first columns)
-                             (= c :last) (last columns)
-                             :else c))
-
-(defn reify-row [r] (cond (= r :first) (first rows)
-                          (= r :last) (last rows)
-                          :else r))
-
 (defn slice-joints-from-notation [notation]
   (let [z marshmallowy-sides-downness
         south (fn [shape] (->> shape
@@ -120,12 +112,15 @@
 
 (defn marshmallow-sides-regions-for [notation]
   (for [[grav place col row] notation]
-    (big-marshmallowy-sides marshmallowy-sides-flatness
-                            marshmallowy-sides-downness
-                            marshmallowy-sides-thickness
-                            marshmallowy-sides-radius
-                            (around-edge-region [(reify-column col)
-                                                 (reify-row row)])
-                            false)))
+    (union
+     (({:k key-place :t thumb-place} place) (reify-column col) (reify-row row) (cube 10 10 100))
+     (big-marshmallowy-sides marshmallowy-sides-flatness
+                             marshmallowy-sides-downness
+                             marshmallowy-sides-thickness
+                             marshmallowy-sides-radius
+                             (around-edge-region [place
+                                                  (reify-column col)
+                                                  (reify-row row)])
+                             false))))
 
 (def marshmallow-sides-regions (marshmallow-sides-regions-for sides-slice-joints))

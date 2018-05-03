@@ -157,3 +157,11 @@
    (thumb-place 1 -1/2 (sa-cap 2))
    #_(thumb-place 1 1 (sa-cap 1))
    (thumb-1x-column (sa-cap 1))))
+
+(defn reify-column [c] (cond (= c :first) (first columns)
+                             (= c :last) (last columns)
+                             :else c))
+
+(defn reify-row [r] (cond (= r :first) (first rows)
+                          (= r :last) (last rows)
+                          :else r))

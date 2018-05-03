@@ -77,10 +77,8 @@
                (scale [(/ (- 100 narrow-percent) 100)
                        (/ (- 100 narrow-percent) 100)
                        1])
-               (place column row)
-               untent
                (pyramid distance-below)
-               retent))
+               (place column row)))
 (defn key-frustum [distance-below narrow-percent column row]
   (frustum distance-below narrow-percent
            key-place untent retent column row chosen-blank-single-plate))
@@ -126,8 +124,10 @@
     #_(apply union middle-prisms)(union
      (apply union (map vector top-prisms middle-prisms bottom-prisms)))))
 
+(defn thumb-silo-widenings [c r] [0 0])
+
 (defn thumb-key-prism [distance-above narrow-percent]
-  (let [ts #(silo distance-above narrow-percent thumb-place (fn [c r] [0 0]) % %2 %3)]
+  (let [ts #(silo distance-above narrow-percent thumb-place thumb-silo-widenings % %2 %3)]
     (union (hull (ts 2 1 (sa-cap 1))
                  (ts 2 0 (sa-cap 1)))
            (hull (ts 2 0 (sa-cap 1))
@@ -292,57 +292,74 @@
 
 
 (def around-edge-region
-                                        ; from [col row] to the items
-                                        ; before, at the place, and
-                                        ; after in around-edge
+                                        ; a hashmap from a place [col
+                                        ; row] to the items before, at
+                                        ; the place, and after in
+                                        ; around-edge
   (let [places around-edge]
     (apply merge
-           (for [[one two three]
+           (for [[before here after]
                  (map vector
                       places
-                      (concat (drop 1 places) [(first places)])
-                      (concat (drop 2 places) [(first places)
-                                               (second places)]))]
-             {[(nth two 2) (nth two 3)] [one two three]}))))
+                      (concat (drop 1 places) (take 1 places))
+                      (concat (drop 2 places) (take 2 places)))]
+             {(apply vector (drop 1 here)) [before here after]}))))
 
-(defn key-placed-outline [notation down out shape closed]
+(defn key-place-fn [notation1]
+  "Turn a piece of notation like [:sw :k 3 2] into a function that
+  places a shape in the center of the indicated place on the
+  keyboard."
+  (let [[grav-kw place-kw col row] notation1
+        c (reify-column col)
+        r (reify-row row)
+        place ({:k key-place, :t thumb-place} place-kw)
+        there (partial place c r)]
+    there))
+
+(defn sides-place-fns [down out notation1]
+  "Turn a piece of notation like [:sw :k 3 2] into some functions that
+  place a shape below the outside edge of the indicated place on the
+  keyboard. Outside is indicated by the direction ('gravity'); down
+  and out are how far downward and outward to go. At outside corners
+  we return three such placer functions."
   (let [nby (+ (* 1/2 mount-height) out)
         sby (- nby)
         eby (+ (* 1/2 mount-width) out)
         wby (- eby)
-        n (translate [0 nby (- down)] shape)
-        s (translate [0 sby (- down)] shape)
-        e (translate [eby 0 (- down)] shape)
-        w (translate [wby 0 (- down)] shape)
-        sw (translate [wby sby (- down)] shape)
-        se (translate [eby sby (- down)] shape)
-        ne (translate [eby nby (- down)] shape)
-        nw (translate [wby nby (- down)] shape)
-        places {:k key-place :t thumb-place}
-        places
-        (apply concat
-               (for [[g p c r] notation]
-                 (let [pf (places p)]
-                   (cond
-                     (= g :nw) [(pf c r w) (pf c r nw) (pf c r n)]
-                     (= g :n)    [(pf c r n)]
-                     (= g :ne) [(pf c r n) (pf c r ne) (pf c r e)]
-                     (= g :e)    [(pf c r e)]
-                     (= g :se) [(pf c r e) (pf c r se) (pf c r s)]
-                     (= g :s)    [(pf c r s)]
-                     (= g :sw) [(pf c r s) (pf c r sw) (pf c r w)]
-                     (= g :w)    [(pf c r w)]
-                     (= g :sw-in) [(pf c r sw)]
-                     (= g :se-in) [(pf c r se)]
-                     (= g :nw-in) [(pf c r nw)]
-                     (= g :ne-in) [(pf c r ne)]))))
+        n [0 nby (- down)]
+        s [0 sby (- down)]
+        e [eby 0 (- down)]
+        w [wby 0 (- down)]
+        sw [wby sby (- down)]
+        se [eby sby (- down)]
+        ne [eby nby (- down)]
+        nw [wby nby (- down)]
+        there (key-place-fn notation1)
+        place-vs
+        {:nw [w nw n], :n [n], :ne [n ne e], :e [e],
+         :se [e se s], :s [s], :sw [s sw w], :w [w],
+         :sw-in [sw], :se-in [se], :nw-in [nw], :ne-in [ne]}
+        [grav-kw place-kw col row] notation1
+        ]
+    (map #(fn [shape] (there (translate % shape)))
+         (place-vs grav-kw))))
+
+
+(defn key-placed-outline [notation down out shape closed]
+  "Place copies of shape around the edge of the keyboard as given by
+  notation, hulling them together pairwise. If closed, the last is
+  hulled to the first. Down and out are how far downward (parallel to
+  the axis of key depression) and outward from the edge to place the
+  shapes."
+  (let [placers (mapcat (partial sides-place-fns down out) notation)
+        dots (map #(% shape) placers)
         thisnext (if closed
-                   (map vector places (concat (rest places) [(first places)]))
-                   (map vector places (rest places)))
+                   (map vector dots (concat (drop 1 dots) (take 1 dots)))
+                   (map vector dots (drop 1 dots)))
         ribbon (apply union
                       (for [[this next] thisnext]
                         (hull this next)))]
-        ribbon))
+    ribbon))
 
 (defn big-marshmallowy-sides [flatness downness thickness radius notation closed]
   (let [outline-thickness 1
@@ -376,7 +393,7 @@
                (hull (key-frustum 30 0 0 4)
                      (key-frustum 30 0 1 3))
                key-prism)]
-    (union sides)))
+    (union finger-big-intersection-shape thumb-big-intersection-shape)))
 
 (def mallowy-sides-right
   (big-marshmallowy-sides marshmallowy-sides-flatness
