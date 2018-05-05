@@ -189,8 +189,12 @@
   (partial sides-connector-sides-y -1))
 
 
-(defn sides-connectors-from-notation [gravities notation & rest]
-  (let [places {:k key-place :t thumb-place}]
+(defn sides-connectors-frame-from-notation [notation & rest]
+  (let [gravities {:n sides-connector-frame-n
+                   :s sides-connector-frame-s
+                   :e sides-connector-frame-e
+                   :w sides-connector-frame-w}
+        places {:k key-place :t thumb-place}]
     (for [cols columns-pieces]
                                         ; notation is split into
                                         ; multiple vectors by sides
@@ -199,32 +203,38 @@
       (apply union
              (for [[grav place one two three] (apply concat notation)]
                #_((gravities grav) (places place) one two three)
+               (cond (and
+                      (= place :k)
+                      (some (partial = grav) [:e :w]) ; one is the constant column
+                      (some (partial = one) cols))
+                     (do
+                       (print (format "scffn : columns %s; params %s\n"
+                                      (str cols) (str [grav place one two three])))
+                       (apply (gravities grav) (places place) one two three rest))
+                     (and
+                      (= place :k)
+                      (some (partial = grav) [:n :s]) ; one and two are the columns
+                      (some (partial = one) cols)
+                      (some (partial = two) cols))
+                     (do
+                       (print (format "scffn : columns %s; params %s\n"
+                                      (str cols) (str [grav place one two three])))
+                       (apply (gravities grav) (places place) one two three rest))))))))
+
+
+(defn sides-connectors-sides-from-notation [notation & rest]
+  (let [gravities {:n sides-connector-sides-n
+                   :s sides-connector-sides-s
+                   :e sides-connector-sides-e
+                   :w sides-connector-sides-w}
+        places {:k key-place :t thumb-place}]
+                                        ; notation is split into
+                                        ; multiple vectors by sides
+                                        ; piece
+    (for [[pieceno piece] (map vector (range) notation)]
+      (apply union
+             (for [[grav place one two three] piece]
                (do
-                 (print (format "scffn : columns %s; params %s\n"
-                                (str cols) (str [grav place one two three])))
-                 (cond (and
-                        (= place :k)
-                        (some (partial = grav) [:e :w]) ; one is the constant column
-                        (some (partial = one) cols))
-                       (apply (gravities grav) (places place) one two three rest)
-                       (and
-                        (= place :k)
-                        (some (partial = grav) [:n :s]) ; one and two are the columns
-                        (some (partial = one) cols)
-                        (some (partial = two) cols))
-                       (apply (gravities grav) (places place) one two three rest)
-                       :else (print (format " -- no call made\n")))))))))
-
-(def sides-connectors-frame-from-notation
-  (partial sides-connectors-from-notation
-           {:n sides-connector-frame-n
-            :s sides-connector-frame-s
-            :e sides-connector-frame-e
-            :w sides-connector-frame-w}))
-
-(def sides-connectors-sides-from-notation
-  (partial sides-connectors-from-notation
-           {:n sides-connector-sides-n
-            :s sides-connector-sides-s
-            :e sides-connector-sides-e
-            :w sides-connector-sides-w}))
+                 (print (format "scsfn : piece %d; params %s\n"
+                                pieceno (str [grav place one two three])))
+                 (apply (gravities grav) (places place) one two three rest)))))))
