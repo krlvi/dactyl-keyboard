@@ -222,7 +222,7 @@
                        (apply (gravities grav) (places place) one two three rest))))))))
 
 
-(defn sides-connectors-sides-from-notation [notation & rest]
+(defn sides-connectors-sides-from-notation [notation shape]
   (let [gravities {:n sides-connector-sides-n
                    :s sides-connector-sides-s
                    :e sides-connector-sides-e
@@ -237,4 +237,18 @@
                (do
                  (print (format "scsfn : piece %d; params %s\n"
                                 pieceno (str [grav place one two three])))
-                 (apply (gravities grav) (places place) one two three rest)))))))
+                 (let [pertinent-shell-notation
+                       (cond (some (partial = grav) [:e :w])
+                             ; two and three are the rows
+                             [[grav place one two] [grav place one three]]
+                             (some (partial = grav) [:n :s])
+                                        ; one and two are the columns
+                             [[grav place one three] [grav place two three]])
+                       pertinent-shell (marshmallowy-partial-sides
+                                        marshmallowy-sides-flatness
+                                        marshmallowy-sides-downness
+                                        marshmallowy-sides-thickness
+                                        marshmallowy-sides-radius
+                                        pertinent-shell-notation)]
+                   ((gravities grav) (places place) one two three
+                    pertinent-shell))))))))
