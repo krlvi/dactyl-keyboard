@@ -15,6 +15,7 @@ The Dactyl is a parameterized, split-hand, concave, columnar, ergonomic keyboard
 * [Install the Clojure runtime](https://clojure.org)
 * [Install the Leiningen project manager](http://leiningen.org/)
 * [Install OpenSCAD](http://www.openscad.org/)
+* Make a directory called `checkouts` in the same directory as this README. `cd` into it and `git clone https://github.com/jaredjennings/scad-clj`. I've got some hacks that haven't made it upstream yet.
 
 **Generating the design**
 * Run `lein repl`
