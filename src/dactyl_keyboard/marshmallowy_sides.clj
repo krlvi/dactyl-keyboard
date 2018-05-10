@@ -85,10 +85,11 @@
 (defn thumb-frustum [distance-below narrow-percent column row shape]
   (frustum distance-below narrow-percent
            (partial thumb-place column row) shape))
-(defn silo [distance-above narrow-percent place widenings column row shape]
+
+
+(defn silo [distance-below distance-above narrow-percent place widenings column row shape]
                                         ; see key-place
-  (let [distance-below 6
-        lower #(translate [0 0 (- distance-below)] %)
+  (let [lower #(translate [0 0 (- distance-below)] %)
         shrink #(scale [(/ (- 100 narrow-percent) 100)
                         (/ (- 100 narrow-percent) 100)
                         1] %)
@@ -105,9 +106,8 @@
 
 
 
-
-(defn finger-key-prism [distance-above narrow-percent]
-  (let [ks #(silo distance-above narrow-percent key-place key-silo-widenings % %2 (sa-cap 1))
+(defn finger-key-prism [distance-below distance-above narrow-percent]
+  (let [ks #(silo distance-below distance-above narrow-percent key-place key-silo-widenings % %2 (sa-cap 1))
                                         ; we do all rows and columns,
                                         ; not knocking out those two
                                         ; keys, because this prism is
@@ -126,8 +126,8 @@
 
 (defn thumb-silo-widenings [c r] [0 0])
 
-(defn thumb-key-prism [distance-above narrow-percent]
-  (let [ts #(silo distance-above narrow-percent thumb-place thumb-silo-widenings % %2 %3)]
+(defn thumb-key-prism [distance-below distance-above narrow-percent]
+  (let [ts #(silo distance-below distance-above narrow-percent thumb-place thumb-silo-widenings % %2 %3)]
     (union (hull (ts 2 1 (sa-cap 1))
                  (ts 2 0 (sa-cap 1)))
            (hull (ts 2 0 (sa-cap 1))
@@ -224,73 +224,6 @@
                  (prism distance-below narrow-percent))))
 
 
-(defn finger-case-bottom-sphere [flatness downness]
-  "flatness ill-understood; 0-120 seems valid. downness is how far down the thing is from the top case."
-  (let [sph-row-radius (+ flatness row-radius)
-        sph-column-radius (+ flatness column-radius)
-        key-sphere (->> (sphere sph-row-radius)
-                                        ; i don't see why this ratio
-                                        ; is scaled by half
-                        (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1]))
-        left-of (let [big 600] (translate [(- (* 1/2 big)) 0 0] (cube big big big)))
-        left-of-col-4 (key-place 4 2 (translate [(- (* 1/2 mount-width)) 0 0] left-of))
-        most-keys-sphere (intersection key-sphere left-of-col-4)
-        other-keys-sphere (difference (translate [0 -5.8 5.64] key-sphere) left-of-col-4)
-        fractured-key-sphere (union most-keys-sphere other-keys-sphere)]
-                                      
-                                 
-                        
-    (->> fractured-key-sphere
-         (color [0 0.7 0.7 0.8])
-                                        ; from key-place
-         (translate [0 0 sph-row-radius])
-                                        ; tenting is pi over 12; outer
-                                        ; rows raised so rotate a little less
-         (rotate (* (/ π 12) 0.85) [0 1 0])
-         (translate [0 0 (- sph-row-radius)])
-         (translate [0 0 row-radius])
-         (translate [0 0 (- flatness downness)]))))
-
-(defn thumb-case-bottom-sphere [flatness downness]
-  (let [sph-row-radius (+ flatness row-radius)
-        sph-column-radius (+ flatness column-radius)]
-    (->> (sphere sph-row-radius)
-         (scale [(/ (/ sph-column-radius sph-row-radius) 2) 1 1])
-         (color [0.7 0 0.7 0.8])
-                                        ; from thumb-place
-         (translate [mount-width 0 0])
-         (translate [0 0 sph-row-radius])
-         (rotate (* π (- 1/4 3/16)) [0 0 1])
-         ; perhaps this should be tenting-angle, but look at the
-         ; axis. that will change what the translation after it
-         ; needs to be when you change tenting-angle.
-         (rotate (* (/ π 12) 0.9) [1 1 0])
-         (translate [-53 -45 40])
-         (translate [0 0 (- sph-row-radius)])
-         (translate [0 0 row-radius])
-         (translate [0 0 (- flatness downness)]))))
-
-(def case-bottom-shell
-  ; note these spheres are down farther than the ones used for the ribbon
-  (let [finger-sphere (finger-case-bottom-sphere
-                       marshmallowy-sides-flatness
-                       (+ marshmallowy-sides-downness
-                          marshmallowy-sides-radius))
-        thumb-sphere (thumb-case-bottom-sphere
-                      marshmallowy-sides-flatness
-                      (+ marshmallowy-sides-downness
-                         marshmallowy-sides-radius
-                         (- thumb-sides-above-finger-sides)))
-        bottom-spheres (union finger-sphere thumb-sphere)
-        the-shell (difference bottom-spheres
-                              (translate [0 0 marshmallowy-sides-thickness]
-                                         bottom-spheres))
-        big-intersection-shape (union
-                                (finger-prism distance-below-to-intersect 0)
-                                (thumb-prism thumb-distance-below 0))]
-    (intersection the-shell big-intersection-shape)))
-
-
 (def around-edge-region
                                         ; a hashmap from a place [col
                                         ; row] to the items before, at
@@ -363,10 +296,14 @@
         (thumb-prism thumb-distance-below -5)
         marshmallow-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) closed))
         ; this -5 sets how far away from the keys the top of the
-        ; marshmallowy sides will be.
+                                        ; marshmallowy sides will be.
+                                        ; 6 was orig written in silo
+                                        ; definition. from there i
+                                        ; don't kknow where it came
+                                        ; from.
         key-prism (union
-                   (thumb-key-prism thumb-distance-below -5)
-                   (finger-key-prism distance-below-to-intersect -5))
+                   (thumb-key-prism 6 thumb-distance-below -5)
+                   (finger-key-prism 6 distance-below-to-intersect -5))
         tube (difference (marshmallow-gasket radius)
                          (marshmallow-gasket (- radius thickness)))
         sides (difference
@@ -395,3 +332,64 @@
                           marshmallowy-sides-thickness
                           marshmallowy-sides-radius
                           around-edge true))
+
+
+(defn big-marshmallowy-bottom [flatness downness thickness radius]
+  (let [fudged (- downness (* radius 3/10)) #_downness
+        finger-big-intersection-shape
+        (finger-prism distance-below-to-intersect 0)
+        thumb-big-intersection-shape
+        (thumb-prism thumb-distance-below -5)
+        sph1 (with-fn gasket-sphere-fn (sphere radius))
+        sph0 (with-fn gasket-sphere-fn (sphere (- radius thickness)))
+        for-finger (fn [sh] (for [row rows #_(range (- (first rows) 1)
+                                             (+ (last rows) 1))]
+                              (for [col columns #_(range (- (first columns) 1)
+                                               (+ (last columns) 1))]
+                                (if (finger-has-key-place-p row col)
+                                  (key-place col row
+                                             (translate [0 0 fudged] sh))))))
+        for-thumb (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
+                             (for [col [0 1 2] #_[-1 0 1 2 3]]
+                               (thumb-place col row
+                                            (translate [0 0 fudged] sh)))))
+        ; this -5 sets how far away from the keys the top of the
+                                        ; marshmallowy sides will be.
+                                        ; 6 was orig written in silo
+                                        ; definition. from there i
+                                        ; don't kknow where it came
+                                        ; from.
+        kp-down (+ 6 radius)
+        kp-shrink -20
+        extra-finger-silos
+        (fn [& coordss]
+          (apply hull
+                 (for [[column row] coordss]
+                   (silo kp-down distance-below-to-intersect kp-shrink
+                       key-place key-silo-widenings column row (sa-cap 1)))))
+        key-prism (union
+                   (thumb-key-prism kp-down thumb-distance-below kp-shrink)
+                   (finger-key-prism kp-down distance-below-to-intersect kp-shrink)
+                                        ; FUDGE: remove extra bits of top of finger hull grid
+                   (extra-finger-silos [2 4] [2 5])
+                   (extra-finger-silos [3 4] [3 5]))
+        ]
+    (union
+    (intersection
+     (difference
+      (union
+       (hull-a-grid (for-finger sph1))
+       (hull-a-grid (for-thumb sph1)))
+      (union
+       (hull-a-grid (for-finger sph0))
+       (hull-a-grid (for-thumb sph0)))
+      key-prism)
+     (union
+      finger-big-intersection-shape
+      thumb-big-intersection-shape)))))
+
+(def mallowy-bottom-right
+  (render (big-marshmallowy-bottom marshmallowy-sides-flatness
+                                   marshmallowy-sides-downness
+                                   marshmallowy-sides-thickness
+                                   marshmallowy-sides-radius)))

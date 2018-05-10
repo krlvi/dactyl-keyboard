@@ -301,8 +301,9 @@
 (say-spit "things/dactyl-blank-all.scad"
       (write-scad-with-uses
        (union
-        #_mallowy-sides-right
-        mallow-slices-right
+        mallowy-sides-right
+        mallowy-bottom-right
+        #_mallow-slices-right
         #_(union
          (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
          (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
@@ -310,7 +311,7 @@
         #_(union
          (apply union key-blanks-pieces)
          thumb-blanks)
-        #_(union caps thumbcaps)
+        (union caps thumbcaps)
         #_(union
          (thumb-key-prism 30 -5)
          (finger-key-prism 30 -5))
