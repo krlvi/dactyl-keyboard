@@ -276,7 +276,7 @@
                                          :t thumb-silo-widenings} p)]
         ; this -5 sets how far away from the keys the top of the
         ; marshmallowy sides will be.
-                             (silo distance-below-to-intersect -5
+                             (silo distance-below-to-intersect 6 -5
                                    place widenings c r
                                    chosen-blank-single-plate))))
         marshmallow-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) false))
