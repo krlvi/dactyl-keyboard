@@ -23,6 +23,7 @@
 (def column-radius (+ (/ (/ (+ mount-width 2.0) 2)
                          (Math/sin (/ β 2)))
                       cap-top-height))
+
 #_(defn key-place [column row shape]
   (let [row-placed-shape (->> shape
                               (translate [0 0 (- row-radius)])
@@ -40,7 +41,7 @@
                           (translate column-offset))]
     (->> placed-shape
          (rotate tenting-angle [0 1 0])
-         (translate [0 0 13]))))
+         (translate [0 0 45]))))
 
 (defn key-place [column row shape]
   (call-module-with-block "KeyPlace" column row shape))
@@ -64,7 +65,7 @@
                           (translate column-offset))]
     (->> placed-shape
          (rotate tenting-angle [0 1 0])
-         (translate [0 0 13]))))
+         (translate [0 0 45]))))
 
 
 
@@ -99,7 +100,7 @@
          ; axis. that will change what the translation after it
          ; needs to be when you change tenting-angle.
          (rotate (/ π 12) [1 1 0])
-         (translate [-53 -45 40]))))
+         (translate [-53 -45 72]))))
 
 (defn thumb-place [column row shape]
   (call-module-with-block "ThumbPlace" column row shape))
