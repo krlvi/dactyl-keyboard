@@ -11,6 +11,7 @@
             [dactyl-keyboard.sides-connectors :refer :all]
             [dactyl-keyboard.frame-glue-joint :refer :all]
             [dactyl-keyboard.marshmallowy-sides :refer :all]
+            [dactyl-keyboard.marshmallowy-bottom :refer :all]
             [dactyl-keyboard.marshmallowy-sides-pieces :refer :all]
             [dactyl-keyboard.teensy :refer :all]
             [unicode-math.core :refer :all]
