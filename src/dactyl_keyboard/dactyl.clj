@@ -165,35 +165,6 @@
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
 
-#_(def dactyl-bottom-right
-  (difference
-   (union
-    teensy-cover
-    (difference
-     bottom-plate
-     (hull teensy-cover)
-     new-case-fingers
-     new-case-thumb
-     teensy-cover
-     trrs-cutout
-     (->> (cube 1000 1000 10) (translate [0 0 -5]))
-     screw-holes))
-   usb-cutout))
-
-#_(def dactyl-bottom-left
-  (mirror [-1 0 0]
-          (union
-           io-exp-cover
-           (difference
-            bottom-plate
-            (hull io-exp-cover)
-            new-case-fingers
-            new-case-thumb
-            io-exp-cover
-            trrs-cutout
-            (->> (cube 1000 1000 10) (translate [0 0 -5]))
-            screw-holes))))
-
 (defn dactyl-top-right-pieces [key-pieces]
   ; agh i made bad names and now i pay for it
   (let [pieces-of-pieces (map vector
@@ -206,28 +177,9 @@
     (for [pieces-of-this-piece pieces-of-pieces]
       (apply union pieces-of-this-piece))))
 
-#_(def dactyl-top-left
-  (mirror [-1 0 0]
-          (difference
-           (union key-holes
-                  connectors-a
-                  connectors-b
-                  thumb
-                  new-case-fingers new-case-thumb)
-           trrs-hole-just-circle
-           screw-holes)))
-
 (def dactyl-top-right-thumb
   (union thumb
          thumb-to-fingers-glue-joints))
-
-#_(let [abbreviation-cylinder (translate [-30 -40 0] (cylinder 40 140))]
-  (def dactyl-top-right-abbreviated
-    (intersection dactyl-top-right abbreviation-cylinder))
-  (def dactyl-top-right-thumb-abbreviated
-    (intersection dactyl-top-right-thumb abbreviation-cylinder))
-  (def dactyl-top-right-both-abbreviated
-    (intersection (union dactyl-top-right dactyl-top-right-thumb) abbreviation-cylinder)))
 
 (def define-mallowy-sides-with-right-ports
   (define-module-no-parameters "MallowySidesWithRightPorts" 
@@ -247,11 +199,8 @@
     (print (format "%s\n" (first body)))
     (apply spit body)))
 
-;; (say-spit "things/switch-hole.scad"
-      ;; (write-scad-with-uses single-plate))
-
-;; (say-spit "things/alps-holes.scad"
-      ;; (write-scad-with-uses (union connectors key-holes)))
+(say-spit "things/switch-hole.scad"
+      (write-scad-with-uses chosen-single-plate))
 
 (doseq [[partno part1 part2]
         (map vector (range)
@@ -298,43 +247,12 @@
                (apply union (dactyl-top-right-pieces key-holes-pieces)))
         (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) marshmallow-slice-joints))))
 
-(say-spit "things/dactyl-blank-all.scad"
+(say-spit "things/dactyl-photo.scad"
       (write-scad-with-uses
        (union
         mallowy-sides-right
         mallowy-bottom-right
-        #_mallow-slices-right
-        #_(union
-         (finger-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness)
-         (thumb-case-bottom-sphere marshmallowy-sides-flatness marshmallowy-sides-downness))
-
-        #_(union
-         (apply union key-blanks-pieces)
-         thumb-blanks)
         (union caps thumbcaps)
-        #_(union
-         (thumb-key-prism 30 -5)
-         (finger-key-prism 30 -5))
-        #_(color [0 1 0 0.7] (finger-prism 30 0))
-        #_(color [0 1 0 0.7] (thumb-top-outline-prism2 45 0))
-        #_(apply union (sides-connectors-frame-from-notation sides-frame-joints))
-        ; pulling in all the sides-connectors-sides results in 104MB of scad code :(
-        #_(apply union (sides-connectors-sides-from-notation sides-frame-joints mallow-slices-right))
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
-
-#_(say-spit "things/dactyl-bottom-right.scad"
-      (write-scad-with-uses dactyl-bottom-right))
-
-;; (say-spit "things/dactyl-top-left.scad"
-      ;; (write-scad-with-uses dactyl-top-left))
-
-;; (say-spit "things/dactyl-bottom-left.scad"
-       ;; (write-scad-with-uses dactyl-bottom-left))
-
-;; (say-spit "things/dactyl-top-left-with-teensy.scad"
-;;       (write-scad-with-uses (mirror [-1 0 0] dactyl-top-right)))
-
-;; (say-spit "things/dactyl-bottom-left-with-teensy.scad"
-;;       (write-scad-with-uses (mirror [-1 0 0] dactyl-bottom-right)))
