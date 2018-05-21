@@ -11,8 +11,8 @@
 
 ; you may wish to change chosen-single-plate below
 
-(def keyswitch-height 14.4) ;; Was 14.1, then 14.25
-(def keyswitch-width 14.4)
+(def keyswitch-height 14.0) ;; Was 14.1, then 14.25
+(def keyswitch-width 14.0)
 
 (def sa-profile-key-height 12.7)
 (def sa-length 18.25)
