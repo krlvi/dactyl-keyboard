@@ -203,6 +203,9 @@
 (say-spit "things/switch-hole.scad"
       (write-scad-with-uses chosen-single-plate))
 
+(say-spit "things/dactyl-top-right-thumb.scad"
+          (write-scad-with-uses dactyl-top-right-thumb))
+
 (doseq [[partno part1 part2]
         (map vector (range)
              (dactyl-top-right-pieces key-holes-pieces)
