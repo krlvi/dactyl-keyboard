@@ -15,7 +15,8 @@
 
 (defn hull-a-grid [rows-of-columns]
   "Hull a grid of shapes together. If some of the shapes are nil, that is fine."
-  (apply union
+  (if (not (empty? (drop 1 rows-of-columns)))
+    (apply union
          (for [[row next-row] (map vector rows-of-columns
                                    (drop 1 rows-of-columns))]
            (for [[column next-column column-in-next-row
@@ -23,7 +24,10 @@
                  (map vector row (drop 1 row) next-row (drop 1 next-row))]
              (union
               (hull column next-column column-in-next-row)
-              (hull next-column next-column-in-next-row column-in-next-row))))))
+              (hull next-column next-column-in-next-row column-in-next-row)))))
+    (apply union
+           (for [row rows-of-columns]
+             (apply hull-pairs row)))))
 
 (defn bottom [height p]
   (->> (project p)
