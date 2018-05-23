@@ -170,10 +170,10 @@
                           :else r))
 
 (defn key-place-fn [notation1]
-  "Turn a piece of notation like [:sw :k 3 2] into a function that
+  "Turn a piece of notation like [:k 3 2] into a function that
   places a shape in the center of the indicated place on the
   keyboard."
-  (let [[grav-kw place-kw col row] notation1
+  (let [[place-kw col row] notation1
         c (reify-column col)
         r (reify-row row)
         place ({:k key-place, :t thumb-place} place-kw)
@@ -198,7 +198,7 @@
         se [eby sby (- down)]
         ne [eby nby (- down)]
         nw [wby nby (- down)]
-        there (key-place-fn notation1)
+        there (key-place-fn (rest notation1))
         place-vs
         {:nw [w nw n], :n [n], :ne [n ne e], :e [e],
          :se [e se s], :s [s], :sw [s sw w], :w [w],

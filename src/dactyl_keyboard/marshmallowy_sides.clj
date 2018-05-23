@@ -267,7 +267,7 @@
         bottom-remove
         (apply hull-pairs (for [n notation]
                        (frustum distance-below-to-intersect 0
-                                (key-place-fn n) chosen-blank-single-plate)))
+                                (key-place-fn (rest n)) chosen-blank-single-plate)))
         top-remove
         (apply hull-pairs (for [n notation]
                        (let [[g p c r] n
