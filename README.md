@@ -1,4 +1,4 @@
-# Jared's Dactyl Keyboard
+# Dactyl Marshmallow
 The Dactyl is a parameterized, split-hand, concave, columnar, ergonomic keyboard, originally written by Matt Adereth. See [his README](https://github.com/adereth/dactyl-keyboard/README.md) for general info. Here's what's different about mine:
 
 * The whole thing is split into pieces, so you can print each piece on a printer with a smaller build volume, and in a couple of hours not a dozen.
@@ -6,6 +6,7 @@ The Dactyl is a parameterized, split-hand, concave, columnar, ergonomic keyboard
 * Round, marshmallowy sides and bottom, in contrast to adereth's minimalist squarish shape.
 * (In theory) more configurability, like for different numbers of rows and columns. The thumb is still kind of hardcoded, and there are still hacks.
 
+<img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/concept-shot.png" alt="The keyboard as rendered by OpenSCAD" />
 
 ## Assembly
 
