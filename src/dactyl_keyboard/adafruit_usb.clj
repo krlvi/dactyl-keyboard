@@ -5,9 +5,9 @@
             [dactyl-keyboard.util :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.switch-hole :refer [mount-height]]
-            [dactyl-keyboard.marshmallowy-sides
-             :refer [marshmallowy-sides-radius
-                     marshmallowy-sides-downness]]
+            [dactyl-keyboard.sides
+             :refer [sides-radius
+                     sides-downness]]
             [dactyl-keyboard.placement :refer [key-place]]))
 
                                         ; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
@@ -61,8 +61,8 @@
 (defn usb-cutout-place [shape]
     (->> shape
          (translate [0 (/ mount-height 2) 0])
-         (translate [0 marshmallowy-sides-radius
-                     (- marshmallowy-sides-radius)])
-         (translate [0 0 (- marshmallowy-sides-downness)])
+         (translate [0 sides-radius
+                     (- sides-radius)])
+         (translate [0 0 (- sides-downness)])
          #_(translate [0 0 -5]) ; for radius 12
          (key-place 2 0)))

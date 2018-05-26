@@ -8,7 +8,7 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
-            [dactyl-keyboard.marshmallowy-sides :refer :all]
+            [dactyl-keyboard.sides :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
             [unicode-math.core :refer :all]))
 
@@ -244,11 +244,11 @@
                              (some (partial = grav) [:n :s])
                                         ; one and two are the columns
                              [[grav place one three] [grav place two three]])
-                       pertinent-shell (marshmallowy-partial-sides
-                                        marshmallowy-sides-flatness
-                                        marshmallowy-sides-downness
-                                        marshmallowy-sides-thickness
-                                        marshmallowy-sides-radius
+                       pertinent-shell (partial-sides
+                                        sides-flatness
+                                        sides-downness
+                                        sides-thickness
+                                        sides-radius
                                         pertinent-shell-notation)]
                    ((gravities grav) (places place) one two three
                     pertinent-shell))))))))

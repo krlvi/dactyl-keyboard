@@ -29,13 +29,13 @@
            (for [row rows-of-columns]
              (apply hull-pairs row)))))
 
-(defn bottom [height p]
+(defn downward-shadow [height p]
   (->> (project p)
        (extrude-linear {:height height :twist 0 :convexity 0})
        (translate [0 0 (/ height 2)])))
 
-(defn bottom-hull [p]
-  (hull p (bottom 1 p)))
+(defn downward-shadow-hull [p]
+  (hull p (downward-shadow 1 p)))
 
 ; https://tauday.com
 (def ^:const τ (* π 2))

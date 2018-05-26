@@ -1,4 +1,4 @@
-(ns dactyl-keyboard.marshmallowy-sides-pieces
+(ns dactyl-keyboard.sides-pieces
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
@@ -8,11 +8,11 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
-            [dactyl-keyboard.marshmallowy-sides :refer :all]
+            [dactyl-keyboard.sides :refer :all]
             [unicode-math.core :refer :all]))
 
 (defn intersects-from-notation [notation]
-  "Create intersect shapes to split the marshmallowy sides from the layout's :sides-partitions vector. This vector is of the form [ [[:place x y] ...] ...]. Each :place is :at-k, :at-t, :D-of-k, or :D-of-t, where D is one of the eight compass directions n, s, e, w, nw, sw, ne, se. You are essentially drawing polygons in the 2-D space of the keyboard; at-k or at-t places a vertex at a key-place or thumb-place, respectively; the compass directions place a vertex outside the keyboard in that direction. Some directions, e.g. :ne-of-t, are unimplemented (northeast of the thumb is toward the inside of the keyboard). The polygons you describe are sort of extruded into 3-D, such that they enclose parts of the keyboard's edge. The sides are then split by taking the intersection of the entire sides shape with each successive intersect. Therefore the intersects must add up to enclose the entire marshmallowy-sides shape."
+  "Create intersect shapes to split the marshmallowy sides from the layout's :sides-partitions vector. This vector is of the form [ [[:place x y] ...] ...]. Each :place is :at-k, :at-t, :D-of-k, or :D-of-t, where D is one of the eight compass directions n, s, e, w, nw, sw, ne, se. You are essentially drawing polygons in the 2-D space of the keyboard; at-k or at-t places a vertex at a key-place or thumb-place, respectively; the compass directions place a vertex outside the keyboard in that direction. Some directions, e.g. :ne-of-t, are unimplemented (northeast of the thumb is toward the inside of the keyboard). The polygons you describe are sort of extruded into 3-D, such that they enclose parts of the keyboard's edge. The sides are then split by taking the intersection of the entire sides shape with each successive intersect. Therefore the intersects must add up to enclose the entire sides shape."
   (let [off-top (- (first rows) 1)
         off-bottom (+ (last rows) 1)
         off-left (- (first columns) 3)
@@ -75,9 +75,9 @@
                     (apply (funs (first post)) (rest post)))))))
 
 
-(def marshmallow-slice-intersects (intersects-from-notation sides-partitions))
+(def sides-slice-intersects (intersects-from-notation sides-partitions))
 
-; this is related to the -5 above in the big-marshmallowy-sides
+; this is related to the -5 above in the sides
 ; function. the -5 results in the sa-cap x and y dimensions being
 ; multiplied by 105%. if you adjust the above, you need to adjust
 ; this, so the glue joints end up in the right place relative to the
@@ -85,7 +85,7 @@
 (def joint-nudge-out 1.2)
 
 (defn slice-joints-from-notation [notation]
-  (let [z marshmallowy-sides-downness
+  (let [z sides-downness
         south (fn [shape] (->> shape
                                (translate [0 (+ (* 1/2 mount-height)
                                                 joint-nudge-out)
@@ -108,16 +108,16 @@
                    (reify-column col) (reify-row row)
                    ((gravities grav) shape))))))
 
-(def marshmallow-slice-joints (slice-joints-from-notation sides-slice-joints))
+(def the-sides-slice-joints (slice-joints-from-notation sides-slice-joints))
 
-(defn marshmallow-sides-regions-for [notation]
+(defn sides-regions-for [notation]
   (for [[grav place col row] notation]
-    (marshmallowy-partial-sides marshmallowy-sides-flatness
-                                marshmallowy-sides-downness
-                                marshmallowy-sides-thickness
-                                marshmallowy-sides-radius
+    (partial-sides sides-flatness
+                                sides-downness
+                                sides-thickness
+                                sides-radius
                                 (around-edge-region [place
                                                      (reify-column col)
                                                      (reify-row row)]))))
 
-(def marshmallow-sides-regions (marshmallow-sides-regions-for sides-slice-joints))
+(def sides-regions (sides-regions-for sides-slice-joints))

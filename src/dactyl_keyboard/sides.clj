@@ -1,4 +1,4 @@
-(ns dactyl-keyboard.marshmallowy-sides
+(ns dactyl-keyboard.sides
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
@@ -14,10 +14,10 @@
 ;; Case ;;
 ;;;;;;;;;;
 
-(def marshmallowy-sides-flatness 40) ; see flatness comments below
-(def marshmallowy-sides-downness -10)
-(def marshmallowy-sides-thickness 3)
-(def marshmallowy-sides-radius 19)
+(def sides-flatness 40) ; see flatness comments below
+(def sides-downness -10)
+(def sides-thickness 3)
+(def sides-radius 19)
 (def thumb-sides-above-finger-sides -20) ; how far above the
                                          ; marshmallowy sides of the
                                          ; finger the marshmallowy
@@ -34,8 +34,8 @@
                                         ; to 1000.
 
 
-(def distance-below-to-intersect (max (+ marshmallowy-sides-downness
-                                         marshmallowy-sides-flatness) 35))
+(def distance-below-to-intersect (max (+ sides-downness
+                                         sides-flatness) 35))
                                         ; the thumb is set above (+z)
                                         ; the finger, but its prism
                                         ; interacts with the
@@ -254,7 +254,7 @@
                         (hull this next)))]
     ribbon))
 
-(defn marshmallowy-partial-sides [flatness downness thickness radius notation]
+(defn partial-sides [flatness downness thickness radius notation]
   "Produce only part of the marshmallowy sides. This is used to
   construct connectors between pieces of the sides, because
   intersecting the entire sides object with a thin cube to get a
@@ -279,22 +279,22 @@
                              (silo distance-below-to-intersect 6 -5
                                    place widenings c r
                                    chosen-blank-single-plate))))
-        marshmallow-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) false))
-        tube (difference (marshmallow-gasket radius)
-                         (marshmallow-gasket (- radius thickness)))
+        sides-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) false))
+        tube (difference (sides-gasket radius)
+                         (sides-gasket (- radius thickness)))
         sides (difference
                tube
                bottom-remove
                top-remove)]
     (union sides)))
 
-(defn big-marshmallowy-sides [flatness downness thickness radius notation closed]
+(defn sides [flatness downness thickness radius notation closed]
   (let [outline-thickness 1
         finger-big-intersection-shape
         (finger-prism distance-below-to-intersect 0)
         thumb-big-intersection-shape
         (thumb-prism thumb-distance-below -5)
-        marshmallow-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) closed))
+        sides-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) closed))
         ; this -5 sets how far away from the keys the top of the
                                         ; marshmallowy sides will be.
                                         ; 6 was orig written in silo
@@ -304,8 +304,8 @@
         key-prism (union
                    (thumb-key-prism 6 thumb-distance-below -5)
                    (finger-key-prism 6 distance-below-to-intersect -5))
-        tube (difference (marshmallow-gasket radius)
-                         (marshmallow-gasket (- radius thickness)))
+        tube (difference (sides-gasket radius)
+                         (sides-gasket (- radius thickness)))
         sides (difference
                tube
                finger-big-intersection-shape
@@ -326,11 +326,11 @@
                key-prism)]
     (union sides)))
 
-(def mallowy-sides-right
-  (big-marshmallowy-sides marshmallowy-sides-flatness
-                          marshmallowy-sides-downness
-                          marshmallowy-sides-thickness
-                          marshmallowy-sides-radius
+(def sides-right
+  (sides sides-flatness
+                          sides-downness
+                          sides-thickness
+                          sides-radius
                           around-edge true))
 
 

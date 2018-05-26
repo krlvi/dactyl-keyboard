@@ -1,4 +1,4 @@
-(ns dactyl-keyboard.marshmallowy-bottom
+(ns dactyl-keyboard.bottom
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
@@ -8,11 +8,11 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
-            [dactyl-keyboard.marshmallowy-sides :refer :all]
+            [dactyl-keyboard.sides :refer :all]
             [unicode-math.core :refer :all]))
 
 
-(defn big-marshmallowy-bottom [flatness downness thickness radius]
+(defn bottom [flatness downness thickness radius]
   (let [fudged (- downness (* radius 3/10)) #_downness
         finger-big-intersection-shape
         (finger-prism distance-below-to-intersect 0)
@@ -66,8 +66,8 @@
       finger-big-intersection-shape
       thumb-big-intersection-shape)))))
 
-(def mallowy-bottom-right
-  (render (big-marshmallowy-bottom marshmallowy-sides-flatness
-                                   marshmallowy-sides-downness
-                                   marshmallowy-sides-thickness
-                                   marshmallowy-sides-radius)))
+(def bottom-right
+  (render (bottom sides-flatness
+                                   sides-downness
+                                   sides-thickness
+                                   sides-radius)))

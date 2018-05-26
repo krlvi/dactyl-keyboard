@@ -10,9 +10,9 @@
             [dactyl-keyboard.connectors :refer :all]
             [dactyl-keyboard.sides-connectors :refer :all]
             [dactyl-keyboard.frame-glue-joint :refer :all]
-            [dactyl-keyboard.marshmallowy-sides :refer :all]
-            [dactyl-keyboard.marshmallowy-bottom :refer :all]
-            [dactyl-keyboard.marshmallowy-sides-pieces :refer :all]
+            [dactyl-keyboard.sides :refer :all]
+            [dactyl-keyboard.bottom :refer :all]
+            [dactyl-keyboard.sides-pieces :refer :all]
             [dactyl-keyboard.teensy :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
@@ -182,18 +182,18 @@
   (union thumb
          thumb-to-fingers-glue-joints))
 
-(def define-mallowy-sides-with-right-ports
-  (define-module "MallowySidesWithRightPorts"
+(def define-sides-with-right-ports
+  (define-module "SidesWithRightPorts"
     (difference
      (binding [*fn* 12]
        (union
-        mallowy-sides-right
+        sides-right
         (usb-cutout-place adafruit-usb-plate)))
      (usb-cutout-place adafruit-usb-cutout))))
 
 
 (defn write-scad-with-uses [& body]
-  (write-scad (cons (use "key-place.scad") (cons define-mallowy-sides-with-right-ports body))))
+  (write-scad (cons (use "key-place.scad") (cons define-sides-with-right-ports body))))
 
 (defn say-spit [& body]
   (do
@@ -220,20 +220,20 @@
               caps
               thumbcaps)))
 
-(def mallowy-sides-with-right-ports
-  (call-module "MallowySidesWithRightPorts"))
+(def sides-with-right-ports
+  (call-module "SidesWithRightPorts"))
   
-(def mallow-slices-right
-  (pieces-with-x-pins-and-holes-faster (* marshmallowy-sides-radius 3/4)
-                                marshmallow-slice-joints
-                                marshmallow-slice-intersects
-                                mallowy-sides-with-right-ports
-                                marshmallow-sides-regions))
+(def sides-slices-right
+  (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
+                                the-sides-slice-joints
+                                sides-slice-intersects
+                                sides-with-right-ports
+                                sides-regions))
 
 (doseq [[partno part1 part2] (map vector (range)
-                           mallow-slices-right
-                           (sides-connectors-sides-from-notation sides-frame-joints mallow-slices-right))]
-  (say-spit (format "things/marshmallow-right-%02d.scad" partno)
+                           sides-slices-right
+                           (sides-connectors-sides-from-notation sides-frame-joints sides-slices-right))]
+  (say-spit (format "things/sides-right-%02d.scad" partno)
         (write-scad-with-uses (union part1 part2))))
 
 (say-spit "things/splits.scad"
@@ -241,7 +241,7 @@
        (union
         (union dactyl-top-right-thumb
                (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        marshmallow-slice-intersects
+        sides-slice-intersects
         )))
 
 (say-spit "things/joins.scad"
@@ -249,13 +249,13 @@
        (union
         (union dactyl-top-right-thumb
                (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) marshmallow-slice-joints))))
+        (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
 
 (say-spit "things/dactyl-photo.scad"
       (write-scad-with-uses
        (union
-        mallowy-sides-right
-        mallowy-bottom-right
+        sides-right
+        bottom-right
         (union caps thumbcaps)
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
