@@ -183,7 +183,7 @@
          thumb-to-fingers-glue-joints))
 
 (def define-mallowy-sides-with-right-ports
-  (define-module-no-parameters "MallowySidesWithRightPorts" 
+  (define-module "MallowySidesWithRightPorts"
     (difference
      (binding [*fn* 12]
        (union
