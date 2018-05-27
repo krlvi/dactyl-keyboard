@@ -261,12 +261,10 @@
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
 
-
-(doseq [[isectno isect]
-        (map vector (range) sides-slice-intersects)]
-  (say-spit (format "things/dactyl-bottom-right-%02d.scad" isectno)
-            (write-scad-with-uses
-             (intersection bottom-right isect))))
+(say-spit "things/dactyl-bottom-right.scad"
+          (write-scad-with-uses
+           (union
+            bottom-right)))
 
 (def entire-x 220)
 (def entire-y 200)
