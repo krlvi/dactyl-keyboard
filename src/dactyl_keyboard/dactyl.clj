@@ -260,3 +260,32 @@
         (union dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))
         )))
+
+
+(doseq [[isectno isect]
+        (map vector (range) sides-slice-intersects)]
+  (say-spit (format "things/dactyl-bottom-right-%02d.scad" isectno)
+            (write-scad-with-uses
+             (intersection bottom-right isect))))
+
+(def entire-x 220)
+(def entire-y 200)
+(def entire-z 120)
+; set so that there aren't any little bits in the first slice
+(def bottom-slice-offset 0)
+(def bottom-slice-spacing 60)
+(def bottom-glue-tolerance 0.2)
+(doseq [slice (range (/ entire-x bottom-slice-spacing))]
+  (doseq [[ab-letter ab-number] [["a" 0] ["b" 1]]]
+    (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
+                      slice ab-letter)
+            (write-scad-with-uses
+             (use "vertical-prisms.scad")
+             (render (->> (call-module "vertical_prisms_slice"
+                                       entire-x entire-y entire-z
+                                       bottom-slice-spacing
+                                       bottom-glue-tolerance
+                                       ab-number
+                                       slice)
+                          (translate [bottom-slice-offset 0 (/ entire-z 2)])
+                          (intersection bottom-right)))))))
