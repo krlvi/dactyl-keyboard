@@ -37,7 +37,14 @@
                           [[:w :t 2 0 1] [:s :t 2 1 1]]
                           [[:s :t 1 0 1] [:s :k 2 3 4]]]
     :thumb-glue-joint-left-of [[-1 3] [1 4]]
-    :silo-widenings y-and-b-key-silo-widenings}
+    :silo-widenings y-and-b-key-silo-widenings
+    :screw-holes-at [[:k -1 1/2] [:k -1 3/2] [:k -1 5/2] [:k -1 7/2]
+                     [:k 1/2 1/2] [:k 1/2 3/2] [:k 1/2 5/2]
+                     [:k 2 1/2] [:k 2 3/2] [:k 2 5/2] [:k 2 7/2]
+                     [:k 3 1/2] [:k 3 3/2] [:k 3 5/2] [:k 3 7/2]
+                     [:k (+ 4 1/2) 1/2] [:k (+ 4 1/2) 3/2]
+                     [:k (+ 4 1/2) 5/2] [:k (+ 4 1/2) 7/2]
+                     [:t 1/2 -1/2] [:t 2 -1/2] [:t 2 1/2]]}
 
    :mini
    {:columns-pieces [(range -1 2)]
@@ -67,6 +74,7 @@
 (def sides-partitions (chosen-layout :sides-partitions))
 (def sides-slice-joints (chosen-layout :sides-slice-joints))
 (def sides-frame-joints (chosen-layout :sides-frame-joints))
+(def screw-holes-at (chosen-layout :screw-holes-at))
 (defn key-silo-widenings [c r]
   ((chosen-layout :silo-widenings) columns rows c r))
 

@@ -166,7 +166,7 @@
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
 
-(defn dactyl-top-right-pieces [key-pieces]
+(defn dactyl-top-right-plusses [key-pieces]
   ; agh i made bad names and now i pay for it
   (let [pieces-of-pieces (map vector
                               (map fingers-to-thumb-glue-joints-for-columns columns-pieces)
@@ -178,9 +178,22 @@
     (for [pieces-of-this-piece pieces-of-pieces]
       (apply union pieces-of-this-piece))))
 
+(defn dactyl-top-right-minuses [key-pieces]
+  (let [pieces-of-pieces (map vector
+                              screw-holes-in-fingerpieces)]
+    (for [pieces-of-this-piece pieces-of-pieces]
+      (apply union pieces-of-this-piece))))
+
+(defn dactyl-top-right-pieces [key-pieces]
+  (for [[plus minus] (map vector
+                          (dactyl-top-right-plusses key-pieces)
+                          (dactyl-top-right-minuses key-pieces))]
+        (difference plus minus)))
+
 (def dactyl-top-right-thumb
-  (union thumb
-         thumb-to-fingers-glue-joints))
+  (union
+   (union thumb thumb-to-fingers-glue-joints)
+   screw-holes-in-thumb))
 
 (def define-sides-with-right-ports
   (define-module "SidesWithRightPorts"
@@ -264,7 +277,10 @@
 (say-spit "things/dactyl-bottom-right.scad"
           (write-scad-with-uses
            (union
-            bottom-right)))
+        (union dactyl-top-right-thumb
+                 (apply union (dactyl-top-right-pieces key-holes-pieces)))
+
+        bottom-right)))
 
 (def entire-x 220)
 (def entire-y 200)

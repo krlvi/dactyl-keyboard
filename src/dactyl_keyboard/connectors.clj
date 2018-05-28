@@ -98,6 +98,30 @@
                    (column-connectors column))))]
     (map connectors-for-columns columns-pieces)))
 
+                                        ; M3 screws
+(def frame-screw-radius 3/2)
+
+(def screw-holes-in-fingerpieces
+  (for [columns columns-pieces]
+    (apply union
+           (for [place screw-holes-at]
+             (let [[p c r] place]
+               (if (and (= p :k)
+                        (>= c (first columns))
+                        (<= c (last columns)))
+                 (->> (cylinder frame-screw-radius (* 3 web-thickness))
+                      (color [1 0 0])
+                      ((key-place-fn place)))))))))
+
+(def screw-holes-in-thumb
+  (for [columns columns-pieces]
+    (apply union
+           (for [place screw-holes-at]
+             (let [[p c r] place]
+               (if (= p :t)
+                 (->> (cylinder frame-screw-radius (* 3 web-thickness))
+                      (color [1 0 0])
+                      ((key-place-fn place)))))))))
 
 (def thumb-connectors
   (union
