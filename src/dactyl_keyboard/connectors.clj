@@ -6,6 +6,7 @@
             [dactyl-keyboard.switch-hole :refer :all]
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
+            [dactyl-keyboard.screw-hole :refer :all]
             [unicode-math.core :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -98,9 +99,6 @@
                    (column-connectors column))))]
     (map connectors-for-columns columns-pieces)))
 
-                                        ; M3 screws
-(def frame-screw-radius 3/2)
-
 (def screw-holes-in-fingerpieces
   (for [columns columns-pieces]
     (apply union
@@ -109,7 +107,7 @@
                (if (and (= p :k)
                         (>= c (first columns))
                         (<= c (last columns)))
-                 (->> (cylinder frame-screw-radius (* 3 web-thickness))
+                 (->> frame-screw-hole
                       (color [1 0 0])
                       ((key-place-fn place)))))))))
 
@@ -119,7 +117,7 @@
            (for [place screw-holes-at]
              (let [[p c r] place]
                (if (= p :t)
-                 (->> (cylinder frame-screw-radius (* 3 web-thickness))
+                 (->> frame-screw-hole
                       (color [1 0 0])
                       ((key-place-fn place)))))))))
 

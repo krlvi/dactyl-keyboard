@@ -13,6 +13,7 @@
             [dactyl-keyboard.sides :refer :all]
             [dactyl-keyboard.bottom :refer :all]
             [dactyl-keyboard.sides-pieces :refer :all]
+            [dactyl-keyboard.screw-hole :refer :all]
             [dactyl-keyboard.teensy :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
