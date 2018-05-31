@@ -192,7 +192,7 @@
         (difference plus minus)))
 
 (def dactyl-top-right-thumb
-  (union
+  (difference
    (union thumb thumb-to-fingers-glue-joints)
    screw-holes-in-thumb))
 
@@ -276,31 +276,35 @@
         )))
 
 (say-spit "things/dactyl-bottom-right.scad"
-          (write-scad-with-uses
+          (write-scad
+           (use "key-place.scad")
            (union
-        (union dactyl-top-right-thumb
-                 (apply union (dactyl-top-right-pieces key-holes-pieces)))
+            bottom-right
+            (union dactyl-top-right-thumb
+                   (apply union
+                          (dactyl-top-right-pieces key-holes-pieces))))))
 
-        bottom-right)))
-
-(def entire-x 220)
+(def entire-x 280)
 (def entire-y 200)
-(def entire-z 120)
+(def entire-z 200)
 ; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset 0)
-(def bottom-slice-spacing 60)
+(def bottom-slice-offset (* mount-width 1))
+(def bottom-slice-spacing (* mount-width 8))
 (def bottom-glue-tolerance 0.2)
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
   (doseq [[ab-letter ab-number] [["a" 0] ["b" 1]]]
     (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
                       slice ab-letter)
-            (write-scad-with-uses
-             (use "vertical-prisms.scad")
-             (render (->> (call-module "vertical_prisms_slice"
-                                       entire-x entire-y entire-z
-                                       bottom-slice-spacing
-                                       bottom-glue-tolerance
-                                       ab-number
-                                       slice)
-                          (translate [bottom-slice-offset 0 (/ entire-z 2)])
-                          (intersection bottom-right)))))))
+              (write-scad
+               (use "key-place.scad")
+               (use "vertical-prisms.scad")
+               (render (->> (call-module "vertical_prisms_slice"
+                                         entire-x entire-y entire-z
+                                         bottom-slice-spacing
+                                         bottom-glue-tolerance
+                                         ab-number
+                                         slice)
+                            (rotate (* 1/24 τ) [0 1 0])
+                            (translate [bottom-slice-offset 0
+                                        (* 1/3 entire-z)])
+                            (intersection bottom-right)))))))

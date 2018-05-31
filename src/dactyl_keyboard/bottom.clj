@@ -8,6 +8,7 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
+            [dactyl-keyboard.screw-hole :refer :all]
             [dactyl-keyboard.sides :refer :all]
             [unicode-math.core :refer :all]))
 
@@ -83,6 +84,14 @@
                                         ; FUDGE: remove extra bits of top of finger hull grid
                    (extra-finger-silos [2 4] [2 5])
                    (extra-finger-silos [3 4] [3 5]))
+        screw-hole-pillar-height (+ (Math/abs (float fudged))
+                                    (- radius thickness))
+        pillars
+        (apply union
+               (for [hole screw-holes-at]
+                 (->> (screw-hole-pillar-lower screw-hole-pillar-height)
+                      (translate [0 0 (- (- plate-thickness web-thickness))])
+                      ((key-place-fn hole)))))
         ]
     (union
     (intersection
@@ -96,7 +105,8 @@
       key-prism)
      (union
       finger-big-intersection-shape
-      thumb-big-intersection-shape)))))
+      thumb-big-intersection-shape))
+    pillars)))
 
 (def bottom-right
   (render (bottom sides-flatness
