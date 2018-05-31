@@ -14,7 +14,6 @@
 ;; Case ;;
 ;;;;;;;;;;
 
-(def sides-flatness 40) ; see flatness comments below
 (def sides-downness -10)
 (def sides-thickness 3)
 (def sides-radius 19)
@@ -34,8 +33,7 @@
                                         ; to 1000.
 
 
-(def distance-below-to-intersect (max (+ sides-downness
-                                         sides-flatness) 35))
+(def distance-below-to-intersect 35)
                                         ; the thumb is set above (+z)
                                         ; the finger, but its prism
                                         ; interacts with the
@@ -254,7 +252,7 @@
                         (hull this next)))]
     ribbon))
 
-(defn partial-sides [flatness downness thickness radius notation]
+(defn partial-sides [downness thickness radius notation]
   "Produce only part of the marshmallowy sides. This is used to
   construct connectors between pieces of the sides, because
   intersecting the entire sides object with a thin cube to get a
@@ -288,7 +286,7 @@
                top-remove)]
     (union sides)))
 
-(defn sides [flatness downness thickness radius notation closed]
+(defn sides [downness thickness radius notation closed]
   (let [outline-thickness 1
         finger-big-intersection-shape
         (finger-prism distance-below-to-intersect 0)
@@ -327,11 +325,8 @@
     (union sides)))
 
 (def sides-right
-  (sides sides-flatness
-                          sides-downness
-                          sides-thickness
-                          sides-radius
-                          around-edge true))
+  (sides sides-downness sides-thickness sides-radius around-edge
+                          true))
 
 
 
