@@ -45,7 +45,7 @@
                      [:k (+ 4 1/2) 1/2] #_[:k (+ 4 1/2) 3/2]
                      #_[:k (+ 4 1/2) 5/2] [:k (+ 4 1/2) 7/2]
                      [:t 1/2 -1/2] [:t 3/2 -1/2] ]}
-
+   :usb-socket-at [:n :k 2 0]
    :mini
    {:columns-pieces [(range -1 2)]
     :rows (range 2 5)
@@ -75,6 +75,7 @@
 (def sides-slice-joints (chosen-layout :sides-slice-joints))
 (def sides-frame-joints (chosen-layout :sides-frame-joints))
 (def screw-holes-at (chosen-layout :screw-holes-at))
+(def usb-socket-at (chosen-layout :usb-socket-at))
 (defn key-silo-widenings [c r]
   ((chosen-layout :silo-widenings) columns rows c r))
 
