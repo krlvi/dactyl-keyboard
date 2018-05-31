@@ -207,7 +207,9 @@
 
 
 (defn write-scad-with-uses [& body]
-  (write-scad (cons (use "key-place.scad") (cons define-sides-with-right-ports body))))
+  (write-scad (cons (use "key-place.scad")
+                    (cons (use "vertical-prisms.scad")
+                          (cons define-sides-with-right-ports body)))))
 
 (defn say-spit [& body]
   (do
