@@ -72,10 +72,12 @@
         (apply union
                (for [ab [0 1]]
                  (apply union
-                        (for [slice (range (+ 1 (quot tz pattern-size)))]
+                        (for [slice (range (+ 2 (quot tz pattern-size)))]
                           (call-module "vertical_prisms_slice"
                                        tz ty tx pattern-size (- ε)
-                                       ab slice)))))]
+                                       ab slice)))))
+        
+        ]
     (->> all-slices
          (rotate (* 1/4 τ) [0 1 0])
          (translate [0 0 (* 1/2 tz)]))))

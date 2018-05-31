@@ -308,3 +308,8 @@
                             (translate [bottom-slice-offset 0
                                         (* 1/3 entire-z)])
                             (intersection bottom-right)))))))
+
+(say-spit "things/screw-hole-top.scad"
+          (write-scad
+           (use "vertical-prisms.scad")
+           (screw-hole-pillar-upper screw-hole-pillar-height)))

@@ -12,15 +12,18 @@
             [dactyl-keyboard.sides :refer :all]
             [unicode-math.core :refer :all]))
 
+(def bottom-distance (- sides-downness (* sides-radius 3/10)))
+(def screw-hole-pillar-height (+ (Math/abs (float bottom-distance))
+                                 (- sides-radius sides-thickness)))
 
-(defn bottom [flatness downness thickness radius]
-  (let [fudged (- downness (* radius 3/10)) #_downness
-        finger-big-intersection-shape
+(def bottom
+  (let [finger-big-intersection-shape
         (finger-prism (* distance-below-to-intersect 5) 0)
         thumb-big-intersection-shape
         (thumb-prism (* thumb-distance-below 5) -5)
-        sph1 (with-fn gasket-sphere-fn (sphere radius))
-        sph0 (with-fn gasket-sphere-fn (sphere (- radius thickness)))
+        sph1 (with-fn gasket-sphere-fn (sphere sides-radius))
+        sph0 (with-fn gasket-sphere-fn (sphere (- sides-radius
+                                                  sides-thickness)))
         floor-scale 0.7
         for-finger
         (fn [sh] (for [row rows #_(range (- (first rows) 1)
@@ -29,7 +32,7 @@
                                               (+ (last columns) 1))]
                      (if (finger-has-key-place-p row col)
                        (->> sh
-                            (translate [0 0 fudged])
+                            (translate [0 0 bottom-distance])
                             (key-place col row))))))
         for-finger-with-floor
         (fn [sh] (for [row rows #_(range (- (first rows) 1)
@@ -39,10 +42,10 @@
                      (if (finger-has-key-place-p row col)
                        (hull
                         (->> sh
-                             (translate [0 0 fudged])
+                             (translate [0 0 bottom-distance])
                              (key-place col row))
                         (->> sh
-                             (translate [0 0 fudged])
+                             (translate [0 0 bottom-distance])
                              (key-place col row)
                              (downward-shadow 1)
                              (scale [floor-scale floor-scale 1])))))))
@@ -50,17 +53,17 @@
         (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
                    (for [col [0 1 2] #_[-1 0 1 2 3]]
                      (->> sh
-                          (translate [0 0 fudged])
+                          (translate [0 0 bottom-distance])
                           (thumb-place col row)))))
         for-thumb-with-floor
         (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
                    (for [col [0 1 2] #_[-1 0 1 2 3]]
                      (hull
                       (->> sh
-                           (translate [0 0 fudged])
+                           (translate [0 0 bottom-distance])
                            (thumb-place col row))
                       (->> sh
-                           (translate [0 0 fudged])
+                           (translate [0 0 bottom-distance])
                            (thumb-place col row)
                            (downward-shadow 1)
                            (scale [floor-scale floor-scale 1]))))))
@@ -70,8 +73,8 @@
                                         ; definition. from there i
                                         ; don't kknow where it came
                                         ; from.
-        kp-down (+ 6 radius)
-        kp-shrink -20
+        kp-down (+ 6 sides-radius)
+        kp-shrink -20 ; percent
         extra-finger-silos
         (fn [& coordss]
           (apply hull
@@ -84,8 +87,6 @@
                                         ; FUDGE: remove extra bits of top of finger hull grid
                    (extra-finger-silos [2 4] [2 5])
                    (extra-finger-silos [3 4] [3 5]))
-        screw-hole-pillar-height (+ (Math/abs (float fudged))
-                                    (- radius thickness))
         pillars
         (apply union
                (for [hole screw-holes-at]
@@ -109,7 +110,4 @@
     pillars)))
 
 (def bottom-right
-  (render (bottom sides-flatness
-                                   sides-downness
-                                   sides-thickness
-                                   sides-radius)))
+  (render bottom))
