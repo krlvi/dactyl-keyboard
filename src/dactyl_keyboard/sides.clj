@@ -42,6 +42,10 @@
                                         ; to be taller.
 (def thumb-distance-below (* 1.5 distance-below-to-intersect))
 
+;; Silo widenings only matter where columns are offset relative to
+;; each other.
+(defn thumb-silo-widenings [c r] [0 0])
+
 
 ; This is the thing differenced out of the middle of the giant
 ; marshmallow to make room for the keys. It is much more complicated
@@ -77,9 +81,11 @@
                        1])
                (pyramid distance-below)
                placer))
+
 (defn key-frustum [distance-below narrow-percent column row]
   (frustum distance-below narrow-percent
            (partial key-place column row) chosen-blank-single-plate))
+
 (defn thumb-frustum [distance-below narrow-percent column row shape]
   (frustum distance-below narrow-percent
            (partial thumb-place column row) shape))
@@ -122,7 +128,6 @@
     #_(apply union middle-prisms)(union
      (apply union (map vector top-prisms middle-prisms bottom-prisms)))))
 
-(defn thumb-silo-widenings [c r] [0 0])
 
 (defn thumb-key-prism [distance-below distance-above narrow-percent]
   (let [ts #(silo distance-below distance-above narrow-percent thumb-place thumb-silo-widenings % %2 %3)]
@@ -252,7 +257,7 @@
                         (hull this next)))]
     ribbon))
 
-(defn partial-sides [downness thickness radius notation]
+(defn partial-sides [notation]
   "Produce only part of the marshmallowy sides. This is used to
   construct connectors between pieces of the sides, because
   intersecting the entire sides object with a thin cube to get a
@@ -277,14 +282,17 @@
                              (silo distance-below-to-intersect 6 -5
                                    place widenings c r
                                    chosen-blank-single-plate))))
-        sides-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) false))
-        tube (difference (sides-gasket radius)
-                         (sides-gasket (- radius thickness)))
+        gasket (fn [r]
+                 (let [sph (with-fn gasket-sphere-fn (sphere r))]
+                   (key-placed-outline
+                    notation (* 1/2 sides-radius) 0 sph false)))
+        tube (difference (gasket sides-radius)
+                         (gasket (- sides-radius sides-thickness)))
         sides (difference
                tube
                bottom-remove
                top-remove)]
-    (union sides)))
+    sides))
 
 (defn sides [downness thickness radius notation closed]
   (let [outline-thickness 1

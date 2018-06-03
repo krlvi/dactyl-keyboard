@@ -245,10 +245,6 @@
                                         ; one and two are the columns
                              [[grav place one three] [grav place two three]])
                        pertinent-shell (partial-sides
-                                        sides-flatness
-                                        sides-downness
-                                        sides-thickness
-                                        sides-radius
                                         pertinent-shell-notation)]
                    ((gravities grav) (places place) one two three
                     pertinent-shell))))))))

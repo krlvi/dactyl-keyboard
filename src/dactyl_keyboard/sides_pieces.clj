@@ -112,12 +112,8 @@
 
 (defn sides-regions-for [notation]
   (for [[grav place col row] notation]
-    (partial-sides sides-flatness
-                                sides-downness
-                                sides-thickness
-                                sides-radius
-                                (around-edge-region [place
-                                                     (reify-column col)
-                                                     (reify-row row)]))))
+    (partial-sides (around-edge-region [place
+                                        (reify-column col)
+                                        (reify-row row)]))))
 
 (def sides-regions (sides-regions-for sides-slice-joints))
