@@ -198,12 +198,11 @@
 
 (def define-sides-with-right-ports
   (define-module "SidesWithRightPorts"
-    (difference
-     (binding [*fn* 12]
-       (union
-        sides-right
-        (usb-cutout-place adafruit-usb-plate)))
-     (usb-cutout-place adafruit-usb-cutout))))
+    (with-fn 12
+      (difference
+       (union sides-right
+              usb-nice-plate)
+       (usb-cutout-place adafruit-usb-cutout)))))
 
 
 (defn say-spit [& body]

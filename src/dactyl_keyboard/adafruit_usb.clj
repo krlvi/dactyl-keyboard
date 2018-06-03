@@ -8,6 +8,9 @@
             [dactyl-keyboard.sides
              :refer [sides-radius
                      sides-downness]]
+            [dactyl-keyboard.layout :refer [key-place-fn usb-socket-at
+                                            usb-socket-region]]
+            [dactyl-keyboard.sides :refer [partial-sides]]
             [dactyl-keyboard.placement :refer [key-place]]))
 
 ;; https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
@@ -25,8 +28,8 @@
 (def adafruit-usb-screws-diameter 2.5)
 (def adafruit-usb-screws-center 18)
 
-(def adafruit-usb-plate-thickness 4)
-(def adafruit-usb-cutout-depth 15)
+(def adafruit-usb-plate-thickness 2)
+(def adafruit-usb-cutout-depth 20)
 
 (def adafruit-usb-cutout
   (let [overmold-hole (cube micro-b-overmold-width
@@ -41,9 +44,8 @@
         screw-hole-2 (mirror [-1 0 0] screw-hole-1)]
     (union overmold-hole screw-hole-1 screw-hole-2)))
 
-(defn adafruit-usb-plate-shape [r]
-  (let [thickness adafruit-usb-plate-thickness
-        screw-plate-1 (->>
+(defn adafruit-usb-plate-shape [thickness r]
+  (let [screw-plate-1 (->>
                        (cylinder r thickness)
                        (rotate (* 1/4 τ) [1 0 0])
                        (translate
@@ -53,7 +55,29 @@
     (union screw-plate-1 screw-plate-2 joiner)))
 
 (def adafruit-usb-plate
-  (adafruit-usb-plate-shape (* 1/2 (* 3/2 micro-b-overmold-height)))
+  (adafruit-usb-plate-shape adafruit-usb-plate-thickness
+                            (* 1/2 (* 3/2 micro-b-overmold-height))))
 
 (def adafruit-usb-region
-  (adafruit-usb-plate-shape (* 4/3 (* 1/2 (* 3/2 micro-b-overmold-height))))
+  (adafruit-usb-plate-shape (* 4 adafruit-usb-plate-thickness)
+                            (* 4/3 (* 1/2 (* 3/2 micro-b-overmold-height)))))
+
+
+(defn usb-cutout-place [shape]
+  (do
+    (print "usb-socket-at is" usb-socket-at "\n")
+  (->> shape
+       (translate [0 (/ mount-height 2) 0])
+       (translate [0 sides-radius
+                   (- sides-radius)])
+       (translate [0 0 (- sides-downness)])
+       (translate [0 (- adafruit-usb-plate-thickness) 0]) ; fudge this
+       ((key-place-fn (rest usb-socket-at))))))
+
+(def usb-intersect
+  (intersection
+   (usb-cutout-place adafruit-usb-region)
+   (partial-sides usb-socket-region)))
+
+(def usb-nice-plate
+  (hull usb-intersect (usb-cutout-place adafruit-usb-plate)))
