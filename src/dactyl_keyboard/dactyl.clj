@@ -206,35 +206,35 @@
      (usb-cutout-place adafruit-usb-cutout))))
 
 
-(defn write-scad-with-uses [& body]
-  (write-scad (cons (use "key-place.scad")
-                    (cons (use "vertical-prisms.scad")
-                          (cons define-sides-with-right-ports body)))))
-
 (defn say-spit [& body]
   (do
     (print (format "%s\n" (first body)))
     (apply spit body)))
 
 (say-spit "things/switch-hole.scad"
-      (write-scad-with-uses chosen-single-plate))
+      (write-scad chosen-single-plate))
 
 (say-spit "things/dactyl-top-right-thumb.scad"
-          (write-scad-with-uses dactyl-top-right-thumb))
+          (write-scad
+           (use "key-place.scad")
+           dactyl-top-right-thumb))
 
 (doseq [[partno part1 part2]
         (map vector (range)
              (dactyl-top-right-pieces key-holes-pieces)
              (sides-connectors-frame-from-notation sides-frame-joints))]
   (say-spit (format "things/dactyl-top-right-%02d.scad" partno)
-        (write-scad-with-uses (union part1 part2))))
+            (write-scad
+             (use "key-place.scad")
+             (union part1 part2))))
 
 (say-spit "things/dactyl-top-right-all.scad"
-      (write-scad-with-uses
-       (union dactyl-top-right-thumb
-              (apply union (dactyl-top-right-pieces key-holes-pieces))
-              caps
-              thumbcaps)))
+          (write-scad
+           (use "key-place.scad")
+           (union dactyl-top-right-thumb
+                  (apply union (dactyl-top-right-pieces key-holes-pieces))
+                  caps
+                  thumbcaps)))
 
 (def sides-with-right-ports
   (call-module "SidesWithRightPorts"))
@@ -250,32 +250,40 @@
                            sides-slices-right
                            (sides-connectors-sides-from-notation sides-frame-joints sides-slices-right))]
   (say-spit (format "things/sides-right-%02d.scad" partno)
-        (write-scad-with-uses (union part1 part2))))
+            (write-scad
+             (use "key-place.scad")
+             define-sides-with-right-ports
+             (union part1 part2))))
 
 (say-spit "things/splits.scad"
-      (write-scad-with-uses
-       (union
-        (union dactyl-top-right-thumb
-               (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        sides-slice-intersects
-        )))
+          (write-scad
+           (use "key-place.scad")
+           (union
+            (union dactyl-top-right-thumb
+                   (apply union (dactyl-top-right-pieces key-holes-pieces)))
+            sides-slice-intersects
+            )))
 
 (say-spit "things/joins.scad"
-      (write-scad-with-uses
-       (union
-        (union dactyl-top-right-thumb
-               (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
+          (write-scad
+           (use "key-place.scad")
+           define-sides-with-right-ports
+           (union
+            (union dactyl-top-right-thumb
+                   (apply union (dactyl-top-right-pieces key-holes-pieces)))
+            (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
 
 (say-spit "things/dactyl-photo.scad"
-      (write-scad-with-uses
-       (union
-        sides-right
-        bottom-right
-        (union caps thumbcaps)
-        (union dactyl-top-right-thumb
-                 (apply union (dactyl-top-right-pieces key-holes-pieces)))
-        )))
+          (write-scad
+           (use "key-place.scad")
+           define-sides-with-right-ports
+           (union
+            sides-right
+            bottom-right
+            (union caps thumbcaps)
+            (union dactyl-top-right-thumb
+                   (apply union (dactyl-top-right-pieces key-holes-pieces)))
+            )))
 
 (say-spit "things/dactyl-bottom-right.scad"
           (write-scad
