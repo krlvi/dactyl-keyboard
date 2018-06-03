@@ -23,7 +23,7 @@
 ;; they don't sell custom screws, so i did the math and figured a
 ;; standard size.
 ;;
-;; https://www.mcmaster.com/#91006A153
+;; https://www.mcmaster.com/#90116A153
 (def frame-screw-length 8)
 
 (def frame-screw-hole

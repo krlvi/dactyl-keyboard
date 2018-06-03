@@ -19,11 +19,10 @@
         (/ glue-joint-height 4)))
 
 (def glue-joint-not-lug
-  (let [tolerance (* 2 glue-joint-glue-thickness)
-        a-bit-more (* 3/2 tolerance)]
+  (let [tolerance (* 2 glue-joint-glue-thickness)]
     (cube (+ (/ glue-joint-wall-thickness 2) tolerance)
-          (+ (/ mount-height 4) a-bit-more)
-          (+ (/ glue-joint-height 4) a-bit-more))))
+          (+ (/ mount-height 4) tolerance)
+          (+ (/ glue-joint-height 4) tolerance))))
 
 (defn glue-joint-l-places [shape]
   (union
