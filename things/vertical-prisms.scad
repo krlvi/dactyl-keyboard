@@ -16,6 +16,7 @@ module vertical_prism(height, major_radius) {
 }
 
 module vertical_prisms_slice(x_size, y_size, z_size, spacing, glue_tolerance, bp, x_iteration) {
+     shear = 0.4;
      major_radius = spacing / (2 + 2 * sin(180/6));
      x_scale_factor = (major_radius - glue_tolerance) / major_radius;
      minor_radius = major_radius * cos(180/6);
@@ -31,14 +32,14 @@ module vertical_prisms_slice(x_size, y_size, z_size, spacing, glue_tolerance, bp
           for(y=[-y_size/2+y_offset:2*minor_radius:y_size/2]) {
                for(z=[-z_size/2:zigzag_length:z_size/2]) {
                     translate([x, y, z]) {
-                         multmatrix([[x_scale_factor,0,0.5,0],
+                         multmatrix([[x_scale_factor,0,shear,0],
                                      [0,1,0,0],
                                      [0,0,1,0],
                                      [0,0,0,1]])
                               vertical_prism(zigzag_length/2, major_radius);
                     }
                     translate([x, y, z+zigzag_length/2]) {
-                         multmatrix([[x_scale_factor,0,-0.5,0],
+                         multmatrix([[x_scale_factor,0,-shear,0],
                                      [0,1,0,0],
                                      [0,0,1,0],
                                      [0,0,0,1]])
@@ -66,3 +67,7 @@ module vertical_prisms_b(x_size, y_size, z_size, spacing, glue_tolerance) {
 //vertical_prisms_a(20, 20, 20, 5, 0.1);
 //vertical_prisms_b(20, 20, 20, 5, 0.1);
 //vertical_prisms_slice(20, 20, 20, 5, 0.1, 0, 1);
+union() {
+     vertical_prisms_a(5, 30, 30, 5, -0.000001);
+     vertical_prisms_b(5, 30, 30, 5, -0.000001);
+}
