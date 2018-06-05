@@ -17,7 +17,8 @@
             [dactyl-keyboard.teensy :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
-            [dactyl-keyboard.adafruit-usb :refer :all]))
+            [dactyl-keyboard.adafruit-usb :refer :all]
+            [dactyl-keyboard.rj11 :refer :all]))
 
 
 
@@ -36,12 +37,6 @@
    (thumb-place 1 -1/2 double-plates-blank)))
 
 
-
-
-                                        ; https://www.mouser.com/ds/2/18/61835-1003706.pdf
-(def rj11-face-width 11.18)
-(def rj11-face-height 15.87)
-(def rj11-body-width 13.72)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -201,8 +196,10 @@
     (with-fn 12
       (difference
        (union sides-right
-              usb-nice-plate)
-       (usb-cutout-place adafruit-usb-cutout)))))
+              usb-nice-plate
+              rj11-nice-plate)
+       (usb-cutout-place adafruit-usb-cutout)
+       (rj11-cutout-place rj11-cutout)))))
 
 
 (defn say-spit [& body]
