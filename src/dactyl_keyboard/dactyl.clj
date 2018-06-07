@@ -294,8 +294,8 @@
 (def entire-y 200)
 (def entire-z 200)
 ; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset (* mount-width 1))
-(def bottom-slice-spacing (* mount-width 8))
+(def bottom-slice-offset (* mount-width 0.5))
+(def bottom-slice-spacing (* mount-width 3.2))
 (def bottom-glue-tolerance 0.2)
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
   (doseq [[ab-letter ab-number] [["a" 0] ["b" 1]]]
@@ -310,7 +310,7 @@
                                          bottom-glue-tolerance
                                          ab-number
                                          slice)
-                            (rotate (* 1/24 τ) [0 1 0])
+                            (rotate (* 3/100 τ) [0 0 1])
                             (translate [bottom-slice-offset 0
                                         (* 1/3 entire-z)])
                             (intersection bottom-right)))))))
