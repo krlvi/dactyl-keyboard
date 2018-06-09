@@ -294,7 +294,7 @@
 (def entire-y 200)
 (def entire-z 200)
 ; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset (* mount-width 0.5))
+(def bottom-slice-offset (* mount-width 0.58))
 (def bottom-slice-spacing (* mount-width 3.2))
 (def bottom-glue-tolerance 0.2)
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
