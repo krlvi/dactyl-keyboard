@@ -8,8 +8,8 @@ tenting_angle = tau / 24;
 thu_alp = tau / 24;
 thu_bet = tau / 72;
 // switch_hole
-keyswitch_height = 14.4;
-keyswitch_width = 14.4;
+keyswitch_height = 14.1;
+keyswitch_width = 14.1;
 mount_width = keyswitch_width + 3;
 mount_height = keyswitch_height + 3;
 sa_profile_key_height = 12.7;
