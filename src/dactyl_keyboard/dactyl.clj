@@ -78,7 +78,20 @@
 
    (key-place -3/2 3 (color [0 1 0] glue-joint-center-right))
    (color [1 0 1] (hull (thumb-place 2 1 web-post-tr) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] glue-post-t))
-                        (thumb-place 2 1 web-post-br) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] glue-post-b))))))
+                        (thumb-place 2 1 web-post-br) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] glue-post-b))))
+   ;; this below is a block so you can clamp this joint when you glue it.
+   (color [0 0 1] (hull (->> glue-post-t
+                             (translate [(* -7 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))
+                        (->> glue-post-b
+                             (translate [(* -7 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))
+                        (->> glue-post-t
+                             (translate [(* -1 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))
+                        (->> glue-post-b
+                             (translate [(* -1 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))))))
 
 (def right-glue-joints-for-fingerpieces
   (let [rgj-for-this
