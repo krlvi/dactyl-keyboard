@@ -33,9 +33,9 @@
                          [:w :t 2 0] [:s :t 1 -1]]
     :sides-frame-joints  [[[:e :k 5 0 1] [:e :k 5 1 2] [:e :k 5 3 4]]
                           [[:n :k 2 3 0] [:n :k 0 1 0] [:w :k -1 0 1]]
-                          [[:w :k -1 1 2] [:w :t 2 -1 0]]
-                          [[:w :t 2 0 1] [:s :t 2 1 1]]
-                          [[:s :t 1 0 1] [:s :k 2 3 4]]]
+                          [[:w :k -1 1 2] [:w :t 2 0 1]]
+                          [[:w :t 2 -1 0] [:s :t 2 1 -1]]
+                          [[:s :t 1 0 -1] [:s :k 2 3 4]]]
     :thumb-glue-joint-left-of [[-1 3] [1 4]]
     :silo-widenings y-and-b-key-silo-widenings
     :screw-holes-at [
