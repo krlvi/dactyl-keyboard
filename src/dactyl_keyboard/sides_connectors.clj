@@ -91,29 +91,87 @@
 (def sides-connector-frame-w 
   (partial sides-connector-frame-x -1))
 
-(defn sides-connector-frame-y [out-y-direction place column1 column2 row]
-  "place is a placement function. connector will be between column1 and column2 at row.
-   out-y-direction is either 1 or -1, depending on whether column is on the north or
-   south side of the board."
-  ; a-ward is -x (left in key row space); b-ward is +x (right)
-  (sides-connector-frame-common
-   #(translate [0 (* out-y-direction %) 0] %2)
-   (if (= out-y-direction -1)
-     #(rotate (* 3/4 τ) [0 0 1] %)
-     #(rotate (* 1/4 τ) [0 0 1] %))
-   #(place (/ (+ column1 column2) 2) row %)
-   #(place column2 row %)
-   #(place column1 row %)
-   (* 1/2 mount-height)
-   web-post-l
-   web-post-r))
+;; This one, unlike the one above, works properly to construct
+;; connectors even between rows that are offset relative to each
+;; other. But its use of widths and heights makes it only correct in
+;; the specific case of north or south frame connectors, despite
+;; its "common" name.
+(defn sides-connector-frame-common-2 [move-outward
+                                      turn-outward
+                                      move-middle-between-keys
+                                      move-half-a-row-inward-between-keys
+                                      move-key-a
+                                      move-key-b
+                                      rotate-top-inward
+                                      to-edge-distance]
+  (let [
+        block-height (+ (* 2 web-thickness) sides-connector-radius)
+                                        ; * 2 because the block starts at
+                                        ; the top of the switch hole
+        bigger (* 3 block-height)
+        move-connector
+        (fn [shape]
+          (->> shape
+               turn-outward
+               (move-outward to-edge-distance)
+               (translate [0 0 (- plate-thickness)])
+               move-middle-between-keys))
+        move-block-top-into-web
+        #(translate [0 0 (+ (* -1/2 block-height) web-thickness)] %)
+        clearance 2 ; horizontal, between hole and side of block
+        clearance-cube (cube (+ clearance keyswitch-width)
+                             (+ clearance keyswitch-height)
+                             bigger)
+        more-clearance-cube (cube (+ clearance keyswitch-width ε)
+                             (* 3 keyswitch-height)
+                             bigger)
+        connector-block
+        (difference
+         (->> (cube keyswitch-width mount-height block-height)
+              move-block-top-into-web
+              move-middle-between-keys)
+         (move-key-a more-clearance-cube)
+         (move-key-b more-clearance-cube)
+         (->> clearance-cube
+              (rotate-top-inward (* 1/12 τ))
+              move-half-a-row-inward-between-keys))
+        connector-pin-space
+        (difference
+         (->> (cube keyswitch-width pin-length block-height)
+              (move-outward (+ to-edge-distance (* 1/2 pin-length)))
+              move-block-top-into-web
+              move-middle-between-keys)
+         (move-key-a more-clearance-cube)
+         (move-key-b more-clearance-cube))
+        ]
+    (union
+     (color [1 0 0] (intersection
+         connector-pin-space
+         (move-connector (xu (x-solid-pins sides-connector-radius)))))
+     (color [0 1 0] connector-block))))
 
-(def sides-connector-frame-n 
-  (partial sides-connector-frame-y 1))
-(def sides-connector-frame-s 
-  (partial sides-connector-frame-y -1))
 
+(defn sides-connector-frame-s [place col1 col2 row]
+  (sides-connector-frame-common-2
+   #(translate [0 (- %) 0] %2)
+   #(rotate (* -1/4 τ) [0 0 1] %)
+   #(key-place (* 1/2 (+ col1 col2)) row %)
+   #(key-place (* 1/2 (+ col1 col2)) (- row 1/2) %)
+   #(key-place col1 row %)
+   #(key-place col2 row %)
+   #(rotate (- %) [1 0 0] %2)
+   (* 1/2 mount-height)))
 
+(defn sides-connector-frame-n [place col1 col2 row]
+  (sides-connector-frame-common-2
+   #(translate [0 % 0] %2)
+   #(rotate (* 1/4 τ) [0 0 1] %)
+   #(key-place (* 1/2 (+ col1 col2)) row %)
+   #(key-place (* 1/2 (+ col1 col2)) (+ row 1/2) %)
+   #(key-place col1 row %)
+   #(key-place col2 row %)
+   #(rotate % [1 0 0] %2)
+   (* 1/2 mount-height)))
 
 (defn sides-connector-sides-common [move-outward
                                     turn-outward
