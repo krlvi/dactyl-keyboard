@@ -14,6 +14,17 @@
 
 (def ^:const sides-connector-radius 8)
 
+;; There isn't room for the whole semicircle of the
+;; sides-connector-sides because of the connectors that connect the
+;; pieces of the sides to each other. And the sides-connector-frames
+;; are not very wide anyway. So we're going to clip the
+;; sides-connector-sides to this width.
+(def ^:const sides-connector-sides-width sides-connector-radius)
+
+
+(defn sides-connector-sides-clip [shape]
+  (let [big 100]
+    (intersection shape (cube big sides-connector-sides-width big))))
 
 (def xu (partial rotate (* -1/4 τ) [1 0 0]))
 
@@ -190,15 +201,23 @@
                (move-outward to-edge-distance)
                (translate [0 0 (- plate-thickness)])
                move-middle-between-keys))
-        sides-hull-space (move-connector
-                          (xu (x-half-cylinder
+        sides-hull-space (->> (x-half-cylinder
                            [sides-connector-radius (* 3 sides-connector-radius)]
                            (* 4 sides-connector-radius)
-                           0)))
+                           0)
+                              xu
+                              move-connector)
         to-holes (hull (intersection sides-hull-space sides-shape)
-                       (move-connector (xu (x-solid-holes-for-hull sides-connector-radius))))
+                       (->> (x-solid-holes-for-hull sides-connector-radius)
+                            xu
+                            sides-connector-sides-clip
+                            move-connector))
+        the-holes (->> (x-solid-holes sides-connector-radius)
+                       xu
+                       sides-connector-sides-clip
+                       move-connector)
         ]
-    (union to-holes (move-connector (xu (x-solid-holes sides-connector-radius))))))
+    (union to-holes the-holes)))
 
 (defn sides-connector-sides-x [out-x-direction place column row1 row2 shape]
   "place is a placement function. connector will be between row1 and row2 at column.
