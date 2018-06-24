@@ -162,7 +162,7 @@
      (color [0 1 0] connector-block))))
 
 
-(defn sides-connector-frame-s [place col1 col2 row]
+(defn sides-connector-frame-k-s [col1 col2 row]
   (sides-connector-frame-common-2
    #(translate [0 (- %) 0] %2)
    #(rotate (* -1/4 τ) [0 0 1] %)
@@ -173,7 +173,7 @@
    #(rotate (- %) [1 0 0] %2)
    (* 1/2 mount-height)))
 
-(defn sides-connector-frame-n [place col1 col2 row]
+(defn sides-connector-frame-k-n [col1 col2 row]
   (sides-connector-frame-common-2
    #(translate [0 % 0] %2)
    #(rotate (* 1/4 τ) [0 0 1] %)
@@ -181,6 +181,30 @@
    #(key-place (* 1/2 (+ col1 col2)) (+ row 1/2) %)
    #(key-place col1 row %)
    #(key-place col2 row %)
+   #(rotate % [1 0 0] %2)
+   (* 1/2 mount-height)))
+
+;; thumb hacks! the rows go backward in the thumb
+
+(defn sides-connector-frame-t-s [col1 col2 row]
+  (sides-connector-frame-common-2
+   #(translate [0 (- %) 0] %2)
+   #(rotate (* -1/4 τ) [0 0 1] %)
+   #(thumb-place (* 1/2 (+ col1 col2)) row %)
+   #(thumb-place (* 1/2 (+ col1 col2)) (+ row 1/2) %)
+   #(thumb-place col1 row %)
+   #(thumb-place col2 row %)
+   #(rotate (- %) [1 0 0] %2)
+   (* 1/2 mount-height)))
+
+(defn sides-connector-frame-t-n [col1 col2 row]
+  (sides-connector-frame-common-2
+   #(translate [0 % 0] %2)
+   #(rotate (* 1/4 τ) [0 0 1] %)
+   #(thumb-place (* 1/2 (+ col1 col2)) row %)
+   #(thumb-place (* 1/2 (+ col1 col2)) (- row 1/2) %)
+   #(thumb-place col1 row %)
+   #(thumb-place col2 row %)
    #(rotate % [1 0 0] %2)
    (* 1/2 mount-height)))
 
@@ -267,8 +291,8 @@
 
 
 (defn sides-connectors-frame-from-notation [notation & rest]
-  (let [gravities {:n sides-connector-frame-n
-                   :s sides-connector-frame-s
+  (let [gravities {:n sides-connector-frame-k-n
+                   :s sides-connector-frame-k-s
                    :e sides-connector-frame-e
                    :w sides-connector-frame-w}
         places {:k key-place :t thumb-place}]
@@ -296,8 +320,33 @@
                      (do
                        (print (format "scffn : columns %s; params %s\n"
                                       (str cols) (str [grav place one two three])))
-                       (apply (gravities grav) (places place) one two three rest))))))))
+                       (apply (gravities grav) one two three rest))))))))
 
+;; this is pretty duplicative with the above, continuing the theme
+;; that the thumb is a hack.
+(defn sides-connectors-thumb-from-notation [notation & rest]
+  (let [gravities {:n sides-connector-frame-t-n
+                   :s sides-connector-frame-t-s
+                   :e sides-connector-frame-e
+                   :w sides-connector-frame-w}
+        places {:k key-place :t thumb-place}]
+    (apply union
+           (for [[grav place one two three] (apply concat notation)]
+             (cond (and
+                    (= place :t)
+                    (some (partial = grav) [:e :w])) ; one is the constant column
+                   (do
+                     (print (format "sctfn : params %s\n"
+                                    (str [grav place one two three])))
+                                        ; rows go the opposite direction in the thumb
+                     (apply (gravities grav) (places place) one three two rest))
+                   (and
+                    (= place :t)
+                    (some (partial = grav) [:n :s])) ; one and two are the columns
+                   (do
+                     (print (format "sctfn : params %s\n"
+                                    (str [grav place one two three])))
+                     (apply (gravities grav) one two three rest)))))))
 
 (defn sides-connectors-sides-from-notation [notation shape]
   (let [gravities {:n sides-connector-sides-n

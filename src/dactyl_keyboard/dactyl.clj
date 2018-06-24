@@ -226,7 +226,8 @@
 (say-spit "things/dactyl-top-right-thumb.scad"
           (write-scad
            (use "key-place.scad")
-           dactyl-top-right-thumb))
+           dactyl-top-right-thumb
+           (sides-connectors-thumb-from-notation sides-frame-joints)))
 
 (doseq [[partno part1 part2]
         (map vector (range)
