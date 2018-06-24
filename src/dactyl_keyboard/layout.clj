@@ -28,7 +28,7 @@
                        [[:at-k 4 1] [:n-of-k 4 0] [:nw-of-k -1 0] [:w-of-k -1 1]]
                        [[:w-of-k -1 1] [:w-of-t 2 0] [:at-t 0 0] [:at-k 0 1]]
                        [[:at-t 1 0] [:w-of-t 2 0] [:sw-of-t 2 -1] [:s-of-t 1 -1]]
-                       [[:at-t 1 0] [:s-of-t 2 0] [:s-of-k 4 1] [:at-k 4 1]]]
+                       [[:at-t 1 0] [:s-of-t 1 -1] [:s-of-k 4 1] [:at-k 4 1]]]
     :sides-slice-joints [[:s :k 4 :last] [:n :k 4 :first] [:w :k :first 1]
                          [:w :t 2 0] [:s :t 1 -1]]
     :sides-frame-joints  [[[:e :k 5 0 1] [:e :k 5 1 2] [:e :k 5 3 4]]
