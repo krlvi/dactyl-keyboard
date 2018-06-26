@@ -6,7 +6,9 @@ The Dactyl is a parameterized, split-hand, concave, columnar, ergonomic keyboard
 * Round, marshmallowy sides and bottom, in contrast to adereth's minimalist squarish shape.
 * (In theory) more configurability, like for different numbers of rows and columns. The thumb is still kind of hardcoded, and there are still hacks.
 
-<img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/concept-shot.png" alt="The keyboard as rendered by OpenSCAD" />
+<img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/concept-shot.png" alt="The whole right hand of the keyboard, assembled" />
+<br/>
+<img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/pieces.png" alt="The whole right hand of the keyboard, exploded view" />
 
 ## Assembly
 
