@@ -183,7 +183,14 @@
                               key-pieces
                               connectors-inside-fingerpieces
                               left-glue-joints-for-fingerpieces
-                              #_(repeat teensy-support))]
+                              (for [cols columns-pieces]
+                                (let [teensy-column (nth teensy-bracket-at 1)]
+                                  (if (and (>= teensy-column (first cols))
+                                           (<= teensy-column (last cols)))
+                                    (union
+                                     teensy-support
+                                     (key-place 1/2 1/2 (screw-hole-pillar-upper screw-hole-pillar-height))
+                                     (key-place 1/2 5/2 (screw-hole-pillar-upper screw-hole-pillar-height)) )))))]
     (for [pieces-of-this-piece pieces-of-pieces]
       (apply union pieces-of-this-piece))))
 
@@ -257,13 +264,18 @@
                                 sides-regions))
 
 (doseq [[partno part1 part2] (map vector (range)
-                           sides-slices-right
-                           (sides-connectors-sides-from-notation sides-frame-joints sides-slices-right))]
+                                  sides-slices-right
+                                  (sides-connectors-sides-from-notation
+                                   sides-frame-joints
+                                   sides-slices-right))]
   (say-spit (format "things/sides-right-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
              define-sides-with-right-ports
-             (union part1 part2))))
+             (union part1 part2
+                    #_(union dactyl-top-right-thumb
+                           (apply union (dactyl-top-right-pieces
+                                         key-holes-pieces)))))))
 
 (say-spit "things/splits.scad"
           (write-scad
@@ -282,6 +294,12 @@
             (union dactyl-top-right-thumb
                    (apply union (dactyl-top-right-pieces key-holes-pieces)))
             (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
+
+(say-spit "things/keys.scad"
+          (write-scad
+           (use "key-place.scad")
+           (union
+            (union caps thumbcaps))))
 
 (say-spit "things/dactyl-photo.scad"
           (write-scad

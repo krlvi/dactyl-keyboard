@@ -48,7 +48,8 @@
     :usb-socket-at [:n :k -1 0]
     :usb-socket-region [[:nw :k -1 0] [:n :k 0 0]]
     :rj11-socket-at [:n :k (+ 1 1/2) 0]
-    :rj11-socket-region [[:n :k 1 0] [:n :k 2 0]]}
+    :rj11-socket-region [[:n :k 1 0] [:n :k 2 0]]
+    :teensy-bracket-at [:k 1/2 3/2]}
    :mini
    {:columns-pieces [(range -1 2)]
     :rows (range 2 5)
@@ -82,6 +83,7 @@
 (def usb-socket-region (chosen-layout :usb-socket-region))
 (def rj11-socket-at (chosen-layout :rj11-socket-at))
 (def rj11-socket-region (chosen-layout :rj11-socket-region))
+(def teensy-bracket-at (chosen-layout :teensy-bracket-at))
 (defn key-silo-widenings [c r]
   ((chosen-layout :silo-widenings) columns rows c r))
 
