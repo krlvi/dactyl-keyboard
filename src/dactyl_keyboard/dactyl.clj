@@ -221,6 +221,13 @@
        (usb-cutout-place adafruit-usb-cutout)
        (rj11-cutout-place rj11-cutout)))))
 
+(def define-sides-with-left-ports
+  (define-module "SidesWithLeftPorts"
+    (with-fn 12
+      (difference
+       (union sides-right
+              rj11-nice-plate)
+       (rj11-cutout-place rj11-cutout)))))
 
 (defn say-spit [& body]
   (do
@@ -236,14 +243,27 @@
            dactyl-top-right-thumb
            (sides-connectors-thumb-from-notation sides-frame-joints)))
 
+(say-spit "things/dactyl-top-left-thumb.scad"
+          (write-scad
+           (use "key-place.scad")
+           (mirror [1 0 0]
+                   dactyl-top-right-thumb
+                   (sides-connectors-thumb-from-notation sides-frame-joints)))
+
 (doseq [[partno part1 part2]
         (map vector (range)
              (dactyl-top-right-pieces key-holes-pieces)
              (sides-connectors-frame-from-notation sides-frame-joints))]
-  (say-spit (format "things/dactyl-top-right-%02d.scad" partno)
+  (do
+    (say-spit (format "things/dactyl-top-right-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
-             (union part1 part2))))
+             (union part1 part2)))
+    (say-spit (format "things/dactyl-top-left-%02d.scad" partno)
+            (write-scad
+             (use "key-place.scad")
+             (mirror [1 0 0]
+                     (union part1 part2))))))
 
 (say-spit "things/dactyl-top-right-all.scad"
           (write-scad
@@ -253,14 +273,27 @@
                   caps
                   thumbcaps)))
 
-(def sides-with-right-ports
-  (call-module "SidesWithRightPorts"))
-  
+(say-spit "things/dactyl-top-left-all.scad"
+          (write-scad
+           (use "key-place.scad")
+           (mirror [1 0 0]
+                   (union dactyl-top-right-thumb
+                          (apply union (dactyl-top-right-pieces key-holes-pieces))
+                          caps
+                          thumbcaps))))
+
 (def sides-slices-right
   (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
                                 the-sides-slice-joints
                                 sides-slice-intersects
-                                sides-with-right-ports
+                                (call-module "SidesWithRightPorts")
+                                sides-regions))
+
+(def sides-slices-left
+  (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
+                                the-sides-slice-joints
+                                sides-slice-intersects
+                                (call-module "SidesWithLeftPorts")
                                 sides-regions))
 
 (doseq [[partno part1 part2] (map vector (range)
@@ -277,7 +310,18 @@
                            (apply union (dactyl-top-right-pieces
                                          key-holes-pieces)))))))
 
-(say-spit "things/splits.scad"
+(doseq [[partno part1 part2] (map vector (range)
+                                  sides-slices-left
+                                  (sides-connectors-sides-from-notation
+                                   sides-frame-joints
+                                   sides-slices-right))]
+  (say-spit (format "things/sides-left-%02d.scad" partno)
+            (write-scad
+             (use "key-place.scad")
+             define-sides-with-left-ports
+             (mirror [1 0 0] (union part1 part2)))))
+
+(say-spit "things/splits-right.scad"
           (write-scad
            (use "key-place.scad")
            (union
@@ -286,7 +330,7 @@
             sides-slice-intersects
             )))
 
-(say-spit "things/joins.scad"
+(say-spit "things/joins-right.scad"
           (write-scad
            (use "key-place.scad")
            define-sides-with-right-ports
@@ -317,10 +361,17 @@
           (write-scad
            (use "key-place.scad")
            (union
-            bottom-right
-            (union dactyl-top-right-thumb
+            bottom-right)
+            #_(union dactyl-top-right-thumb
                    (apply union
                           (dactyl-top-right-pieces key-holes-pieces))))))
+
+(say-spit "things/dactyl-bottom-left.scad"
+          (write-scad
+           (use "key-place.scad")
+           (mirror [1 0 0]
+                   (union
+                    bottom-right))))
 
 (def entire-x 280)
 (def entire-y 200)
@@ -331,21 +382,38 @@
 (def bottom-glue-tolerance 0.2)
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
   (doseq [[ab-letter ab-number] [["a" 0] ["b" 1]]]
-    (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
-                      slice ab-letter)
-              (write-scad
-               (use "key-place.scad")
-               (use "vertical-prisms.scad")
-               (render (->> (call-module "vertical_prisms_slice"
-                                         entire-x entire-y entire-z
-                                         bottom-slice-spacing
-                                         bottom-glue-tolerance
-                                         ab-number
-                                         slice)
-                            (rotate (* 3/100 τ) [0 0 1])
-                            (translate [bottom-slice-offset 0
-                                        (* 1/3 entire-z)])
-                            (intersection bottom-right)))))))
+    (do
+      (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
+                        slice ab-letter)
+                (write-scad
+                 (use "key-place.scad")
+                 (use "vertical-prisms.scad")
+                 (render (->> (call-module "vertical_prisms_slice"
+                                           entire-x entire-y entire-z
+                                           bottom-slice-spacing
+                                           bottom-glue-tolerance
+                                           ab-number
+                                           slice)
+                              (rotate (* 3/100 τ) [0 0 1])
+                              (translate [bottom-slice-offset 0
+                                          (* 1/3 entire-z)])
+                              (intersection bottom-right)))))
+      (say-spit (format "things/dactyl-bottom-left-%02d%s.scad"
+                        slice ab-letter)
+                (write-scad
+                 (use "key-place.scad")
+                 (use "vertical-prisms.scad")
+                 (mirror [1 0 0]
+                         (render (->> (call-module "vertical_prisms_slice"
+                                                   entire-x entire-y entire-z
+                                                   bottom-slice-spacing
+                                                   bottom-glue-tolerance
+                                                   ab-number
+                                                   slice)
+                                      (rotate (* 3/100 τ) [0 0 1])
+                                      (translate [bottom-slice-offset 0
+                                                  (* 1/3 entire-z)])
+                                      (intersection bottom-right)))))))))
 
 (say-spit "things/screw-hole-top.scad"
           (write-scad
