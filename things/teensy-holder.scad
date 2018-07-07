@@ -91,76 +91,80 @@ module tab () {
 }
 
 module teensy_holder_piece_a () {
-     union() {
-          difference() {
-               intersection() {
-                    translate([0, frame_thickness+tb_margin/2+small/2, 0]) {
-                         cube(size=[
-                                   tb_width+2*frame_thickness+small,
-                                   tb_length+2*frame_thickness+small,
-                                   overmold_height+2*frame_thickness+small],
-                              center=true);
+     translate([(tb_width/2+frame_thickness+screw_diameter*2),0,0]) {
+          union() {
+               difference() {
+                    intersection() {
+                         translate([0, frame_thickness+tb_margin/2+small/2, 0]) {
+                              cube(size=[
+                                        tb_width+2*frame_thickness+small,
+                                        tb_length+2*frame_thickness+small,
+                                        overmold_height+2*frame_thickness+small],
+                                   center=true);
+                         }
+                         teensy_holder() {}
                     }
-                    teensy_holder() {}
-               }
-               translate([-(tb_width/2 + frame_thickness/2),
-                          -(tb_length/2 + tb_margin),
-                          0]) {
-                    rotate(-tau/4,[1,0,0]) {
-                         cylinder(h=3,
-                                  d1=hole_diameter,
-                                  d2=hole_diameter/2,
-                                  $fn=hole_fn);
+                    translate([-(tb_width/2 + frame_thickness/2),
+                               -(tb_length/2 + tb_margin),
+                               0]) {
+                         rotate(-tau/4,[1,0,0]) {
+                              cylinder(h=3,
+                                       d1=hole_diameter,
+                                       d2=hole_diameter/2,
+                                       $fn=hole_fn);
+                         }
+                    }
+                    translate([(tb_width/2 + frame_thickness/2),
+                               -(tb_length/2 + tb_margin),
+                               0]) {
+                         rotate(-tau/4,[1,0,0]) {
+                              cylinder(h=3,
+                                       d1=hole_diameter,
+                                       d2=hole_diameter/2,
+                                       $fn=hole_fn);
+                         }
                     }
                }
-               translate([(tb_width/2 + frame_thickness/2),
-                          -(tb_length/2 + tb_margin),
-                          0]) {
-                    rotate(-tau/4,[1,0,0]) {
-                         cylinder(h=3,
-                                  d1=hole_diameter,
-                                  d2=hole_diameter/2,
-                                  $fn=hole_fn);
-                    }
+               translate([-(tb_width/2+frame_thickness), 0, 0]) {
+                    tab() {}
                }
-          }
-          translate([-(tb_width/2+frame_thickness), 0, 0]) {
-               tab() {}
           }
      }
-
 }
+
 module teensy_holder_piece_b () {
-     union() {
-          intersection() {
-               translate([0, -(tb_length+frame_thickness)/2, 0]) {
-                    cube(size=[tb_width+2*frame_thickness+small,
-                               frame_thickness+tb_margin,
-                               overmold_height+2*frame_thickness+small],
-                         center=true);
-               }
-               teensy_holder() {}
+     translate([(tb_width/2+frame_thickness+screw_diameter*2),0,0]) {
+          union() {
+              intersection() {
+                   translate([0, -(tb_length+frame_thickness)/2, 0]) {
+                        cube(size=[tb_width+2*frame_thickness+small,
+                                   frame_thickness+tb_margin,
+                                   overmold_height+2*frame_thickness+small],
+                             center=true);
+                   }
+                   teensy_holder() {}
+              }
+              translate([-(tb_width/2 + frame_thickness/2),
+                         -(tb_length/2 + tb_margin),
+                         0]) {
+                   rotate(-tau/4,[1,0,0]) {
+                        cylinder(h=3,
+                                 d1=hole_diameter-(bump_tolerance*2),
+                                 d2=hole_diameter/2-(bump_tolerance*2),
+                                 $fn=hole_fn);
+                   }
+              }
+              translate([(tb_width/2 + frame_thickness/2),
+                         -(tb_length/2 + tb_margin),
+                         0]) {
+                   rotate(-tau/4,[1,0,0]) {
+                        cylinder(h=3,
+                                 d1=hole_diameter-(bump_tolerance*2),
+                                 d2=hole_diameter/2-(bump_tolerance*2),
+                                 $fn=hole_fn);
+                   }
+              }
           }
-          translate([-(tb_width/2 + frame_thickness/2),
-                     -(tb_length/2 + tb_margin),
-                     0]) {
-               rotate(-tau/4,[1,0,0]) {
-                    cylinder(h=3,
-                             d1=hole_diameter-(bump_tolerance*2),
-                             d2=hole_diameter/2-(bump_tolerance*2),
-                             $fn=hole_fn);
-               }
-          }
-          translate([(tb_width/2 + frame_thickness/2),
-                     -(tb_length/2 + tb_margin),
-                     0]) {
-               rotate(-tau/4,[1,0,0]) {
-                    cylinder(h=3,
-                             d1=hole_diameter-(bump_tolerance*2),
-                             d2=hole_diameter/2-(bump_tolerance*2),
-                             $fn=hole_fn);
-               }
-          }
-    }
+     }
 }
 
