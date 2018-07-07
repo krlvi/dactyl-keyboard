@@ -13,6 +13,9 @@
 (def insert-hole-bottom-diameter 5.1)
 (def insert-hole-top-diameter 5.31)
 (def insert-hole-height 3.8)
+
+;; thicker, and you impinge on the switch holes... with the α and β I
+;; used anyway
 (def screw-hole-wall-thickness 1.3)
 
 ;; M3 screws.
@@ -27,7 +30,12 @@
 (def frame-screw-length 8)
 
 (def frame-screw-hole
-  (cylinder screw-radius (* 3 web-thickness)))
+  (with-fn 12
+    (cylinder screw-radius (* 3 web-thickness))))
+
+;; leave room for diodes and wires; too tall and the teensy runs into
+;; the bottom
+(def teensy-screw-hole-height (+ insert-hole-height 5))
 
 ;; top is at z=0
 (def insert-boss
@@ -92,3 +100,13 @@
   (intersection (screw-hole-pillar height)
                 (translate [0 0 (- height)]
                            (screw-hole-pillar-splitter height))))
+
+(def screw-hole-for-teensy
+  (let [height teensy-screw-hole-height]
+    (difference
+     (translate [0 0 (* -1/2 height)]
+                (cylinder (+ (* 1/2 insert-hole-top-diameter) screw-hole-wall-thickness)
+                          height))
+     (->> insert-boss
+          (rotate (* 1/2 τ) [1 0 0])
+          (translate [0 0 (+ (- height) (- ε))])))))

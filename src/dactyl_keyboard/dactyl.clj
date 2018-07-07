@@ -14,7 +14,6 @@
             [dactyl-keyboard.bottom :refer :all]
             [dactyl-keyboard.sides-pieces :refer :all]
             [dactyl-keyboard.screw-hole :refer :all]
-            [dactyl-keyboard.teensy :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
             [dactyl-keyboard.adafruit-usb :refer :all]
@@ -187,10 +186,8 @@
                                 (let [teensy-column (nth teensy-bracket-at 1)]
                                   (if (and (>= teensy-column (first cols))
                                            (<= teensy-column (last cols)))
-                                    (union
-                                     teensy-support
-                                     (key-place 1/2 1/2 (screw-hole-pillar-upper screw-hole-pillar-height))
-                                     (key-place 1/2 5/2 (screw-hole-pillar-upper screw-hole-pillar-height)) )))))]
+                                    (->> screw-hole-for-teensy
+                                         ((key-place-fn teensy-bracket-at)))))))]
     (for [pieces-of-this-piece pieces-of-pieces]
       (apply union pieces-of-this-piece))))
 
