@@ -63,6 +63,12 @@ module teensy_holder() {
             2*frame_thickness+small,
             overmold_height], center=true);
         }
+        /* you know, i bet we don't need the bottom half of that
+         * overmold surround */
+        translate([0, 0, -(frame_thickness/2 + overmold_height/2)]) {
+             cube(size=[2*tb_width, 2*tb_length, overmold_height],
+                  center=true);
+        }
     }
 }
 
