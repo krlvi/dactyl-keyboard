@@ -91,7 +91,9 @@ module tab () {
 }
 
 module teensy_holder_piece_a () {
-     translate([(tb_width/2+frame_thickness+screw_diameter*2),0,0]) {
+     translate([(tb_width/2+frame_thickness+screw_diameter*2),
+                0,
+                (-frame_thickness/2)]) {
           union() {
                difference() {
                     intersection() {
@@ -133,7 +135,9 @@ module teensy_holder_piece_a () {
 }
 
 module teensy_holder_piece_b () {
-     translate([(tb_width/2+frame_thickness+screw_diameter*2),0,0]) {
+     translate([(tb_width/2+frame_thickness+screw_diameter*2),
+                0,
+                (-frame_thickness/2)]) {
           union() {
               intersection() {
                    translate([0, -(tb_length+frame_thickness)/2, 0]) {
