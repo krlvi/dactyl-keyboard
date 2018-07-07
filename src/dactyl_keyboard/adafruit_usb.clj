@@ -64,15 +64,13 @@
 
 
 (defn usb-cutout-place [shape]
-  (do
-    (print "usb-socket-at is" usb-socket-at "\n")
   (->> shape
        (translate [0 (/ mount-height 2) 0])
        (translate [0 sides-radius
                    (- sides-radius)])
        (translate [0 0 (- sides-downness)])
        (translate [0 (- adafruit-usb-plate-thickness) 0]) ; fudge this
-       ((key-place-fn (rest usb-socket-at))))))
+       ((key-place-fn (rest usb-socket-at)))))
 
 (def usb-intersect
   (intersection
