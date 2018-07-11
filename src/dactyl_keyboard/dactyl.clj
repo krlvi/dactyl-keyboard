@@ -244,8 +244,9 @@
           (write-scad
            (use "key-place.scad")
            (mirror [1 0 0]
-                   dactyl-top-right-thumb
-                   (sides-connectors-thumb-from-notation sides-frame-joints)))
+                   (union
+                    dactyl-top-right-thumb
+                    (sides-connectors-thumb-from-notation sides-frame-joints)))))
 
 (doseq [[partno part1 part2]
         (map vector (range)
@@ -354,6 +355,17 @@
                    (apply union (dactyl-top-right-pieces key-holes-pieces)))
             )))
 
+(say-spit "things/clearance-check.scad"
+          (write-scad
+           (use "key-place.scad")
+           (use "teensy-holder.scad")
+           (union
+            (->> (call-module "teensy_holder_piece_a")
+                 (rotate (* 1/2 τ) [0 0 1])
+                 (translate [0 0 (- teensy-screw-hole-height)])
+                 ((key-place-fn teensy-bracket-at)))
+            bottom-right)))
+
 (say-spit "things/dactyl-bottom-right.scad"
           (write-scad
            (use "key-place.scad")
@@ -361,7 +373,7 @@
             bottom-right)
             #_(union dactyl-top-right-thumb
                    (apply union
-                          (dactyl-top-right-pieces key-holes-pieces))))))
+                          (dactyl-top-right-pieces key-holes-pieces)))))
 
 (say-spit "things/dactyl-bottom-left.scad"
           (write-scad
