@@ -24,8 +24,8 @@
 
 ;; Adafruit Panel Mount Extension USB Cable - Micro B Male to Micro B Female [ADA3258]
 ;;
-;; "4-40 screws... 18mm apart." 4-40 -> 0.112" major diameter.
-(def adafruit-usb-screws-diameter 2.5)
+;; "4-40 screws... 18mm apart." 4-40 -> 0.112" major diameter -> 2.844mm.
+(def adafruit-usb-screws-diameter 3)
 (def adafruit-usb-screws-center 18)
 
 (def adafruit-usb-plate-thickness 2)
@@ -36,8 +36,9 @@
                             adafruit-usb-cutout-depth
                             micro-b-overmold-height)
         screw-hole-1 (->>
-                      (cylinder (/ adafruit-usb-screws-diameter 2)
-                                adafruit-usb-cutout-depth)
+                      (with-fn 12
+                        (cylinder (/ adafruit-usb-screws-diameter 2)
+                                  adafruit-usb-cutout-depth))
                       (rotate (/ π 2) [1 0 0])
                       (translate [(/ adafruit-usb-screws-center 2)
                                   0 0]))
