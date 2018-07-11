@@ -12,7 +12,7 @@
             [dactyl-keyboard.sides :refer :all]
             [unicode-math.core :refer :all]))
 
-(def bottom-distance (- sides-downness (* sides-radius 3/10)))
+(def bottom-distance (- (+ sides-downness (* sides-radius 3/10))))
 (def screw-hole-pillar-height (+ (Math/abs (float bottom-distance))
                                  (- sides-radius sides-thickness)))
 

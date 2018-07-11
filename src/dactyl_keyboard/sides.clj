@@ -14,7 +14,7 @@
 ;; Case ;;
 ;;;;;;;;;;
 
-(def sides-downness -10)
+(def sides-downness 3)
 (def sides-thickness 3)
 (def sides-radius 19)
 (def thumb-sides-above-finger-sides -20) ; how far above the
@@ -300,7 +300,7 @@
         (finger-prism distance-below-to-intersect 0)
         thumb-big-intersection-shape
         (thumb-prism thumb-distance-below -5)
-        sides-gasket (fn [r] (key-placed-outline notation (* 1/2 radius) 0 (with-fn gasket-sphere-fn (sphere r)) closed))
+        sides-gasket (fn [r] (key-placed-outline notation downness 0 (with-fn gasket-sphere-fn (sphere r)) closed))
         ; this -5 sets how far away from the keys the top of the
                                         ; marshmallowy sides will be.
                                         ; 6 was orig written in silo
