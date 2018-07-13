@@ -32,19 +32,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
    separate files, that we can print separately and glue together.
    */
 
-module vertical_prism(height, major_radius) {
-     cylinder(h=height, r=major_radius, $fn=6, center=true);
+module vertical_prism(width, depth, height) {
+     /* A hexagonal prism, imagined as a rectangular prism with two halves
+      * of hexagonal prisms on the sides. width >= height. */
+     minor_radius = depth / 2;
+     major_radius = 2 * minor_radius / sqrt(3);
+     rect_width = width - 2 * major_radius;
+     linear_extrude(height=height, center=true) {
+          polygon(points=[
+                       [  rect_width/2 + major_radius, 0],
+                       [  rect_width/2 + major_radius/2 , -minor_radius],
+                       [-(rect_width/2 + major_radius/2), -minor_radius],
+                       [-(rect_width/2 + major_radius), 0],
+                       [-(rect_width/2 + major_radius/2), minor_radius],
+                       [  rect_width/2 + major_radius/2 , minor_radius]]);
+     }
 }
 
 module vertical_prisms_slice(x_size, y_size, z_size, spacing, glue_tolerance, bp, x_iteration) {
+     /* constants */
      shear = 0.4;
-     major_radius = spacing / (2 + 2 * sin(180/6));
-     x_scale_factor = (major_radius - glue_tolerance) / major_radius;
-     minor_radius = major_radius * cos(180/6);
-     diameter = major_radius + minor_radius;
-     width = diameter / 2;
-     side_length = major_radius * 2 * sin(180/6);
-     zigzag_length = spacing;
+     y_spacing = spacing / 4;
+     zigzag_length = spacing / 3;
+     /* the following are chosen not arbitrarily, but because our
+      * prism is hexagonal */
+     minor_radius = y_spacing / 2;
+     major_radius = 2 * minor_radius / sqrt(3);
+     prism_width = spacing / 2 + major_radius / 2;
+     prism_depth = y_spacing;
+     x_scale_factor = (prism_width - glue_tolerance) / prism_width;
      x_offset = bp ? spacing/2 : 0;
      y_offset = bp ? minor_radius : 0;
      col = bp ? "plum" : "lightgreen";
@@ -57,14 +73,14 @@ module vertical_prisms_slice(x_size, y_size, z_size, spacing, glue_tolerance, bp
                                      [0,1,0,0],
                                      [0,0,1,0],
                                      [0,0,0,1]])
-                              vertical_prism(zigzag_length/2, major_radius);
+                              vertical_prism(prism_width, prism_depth, zigzag_length/2);
                     }
                     translate([x, y, z+zigzag_length/2]) {
                          multmatrix([[x_scale_factor,0,-shear,0],
                                      [0,1,0,0],
                                      [0,0,1,0],
                                      [0,0,0,1]])
-                              vertical_prism(zigzag_length/2, major_radius);
+                              vertical_prism(prism_width, prism_depth, zigzag_length/2);
                     }
                }
           }
@@ -89,6 +105,6 @@ module vertical_prisms_b(x_size, y_size, z_size, spacing, glue_tolerance) {
 //vertical_prisms_b(20, 20, 20, 5, 0.1);
 //vertical_prisms_slice(20, 20, 20, 5, 0.1, 0, 1);
 union() {
-     vertical_prisms_a(5, 30, 30, 5, -0.000001);
-     vertical_prisms_b(5, 30, 30, 5, -0.000001);
+     vertical_prisms_a(5, 30, 30, 5, 0.1);
+     vertical_prisms_b(5, 30, 30, 5, 0.1);
 }
