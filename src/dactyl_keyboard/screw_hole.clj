@@ -92,7 +92,7 @@
         tz (* height-fraction height)
         ty (* 3/2 screw-hole-base-diameter)
         tx (* 3/2 screw-hole-base-diameter)
-        pattern-size 8
+        pattern-size 16
         all-slices
         (apply union
                (for [ab [0 1]]
