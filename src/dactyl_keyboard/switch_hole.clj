@@ -114,11 +114,15 @@
         top-plate (->> (cube mount-width plate-height web-thickness)
                        (translate [0 (/ (+ plate-height mount-height) 2)
                                    (- plate-thickness (/ web-thickness 2))]))
-        stabilizer-cutout (union (->> (cube 14.2 3.5 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2))])
+        stabilizer-cutout (union (->> (cube keyswitch-width 3.5 web-thickness)
+                                      (translate [0 12 (- plate-thickness (/ web-thickness 2))])
                                       (color [1 0 0 1/2]))
-                                 (->> (cube 16 3.5 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2) 1.4)])
+                                 ;; not sure why this lower cube was
+                                 ;; wider, but it caused a weak
+                                 ;; spot (jaredjennings#30). making it
+                                 ;; narrower.
+                                 (->> (cube (+ keyswitch-width 0) 3.5 web-thickness)
+                                      (translate [0 12 (- plate-thickness (/ web-thickness 2) 1.4)])
                                       (color [1 0 0 1/2])))
         top-plate (difference top-plate stabilizer-cutout)]
     (union top-plate (mirror [0 1 0] top-plate))))
