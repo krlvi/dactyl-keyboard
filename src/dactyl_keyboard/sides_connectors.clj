@@ -53,7 +53,7 @@
                                     to-edge-distance
                                     web-post-b-ward
                                     web-post-a-ward]
-  (let [wedge-factor 2/3
+  (let [wedge-factor 0
         move-connector
         (fn [shape]
           (->> shape
@@ -161,7 +161,6 @@
          (move-key-a more-clearance-cube)
          (move-key-b more-clearance-cube)
          (->> clearance-cube
-              (rotate-top-inward (* 1/12 τ))
               move-half-a-row-inward-between-keys))
         connector-pin-space
         (difference
