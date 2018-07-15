@@ -29,17 +29,20 @@
 
 (def insert-hole-bottom-diameter 5.1)
 (def insert-hole-top-diameter 5.31)
-(def insert-hole-height 3.8)
+(def insert-height 3.8)
+;; #31
+(def insert-hole-depth (+ insert-height 2.0))
 
 ;; thicker, and you impinge on the switch holes... with the α and β I
-;; used anyway
-(def screw-hole-wall-thickness 1.3)
+;; used anyway.  but too thin and you start squishing the walls when
+;; you melt the insert in
+(def screw-hole-wall-thickness 1.8)
 
 ;; M3 screws.
 (def screw-diameter 3)
 (def screw-radius (* 1/2 screw-diameter))
 
-;; this would have been (+ plate-thickness insert-hole-height) but
+;; this would have been (+ plate-thickness insert-height) but
 ;; they don't sell custom screws, so i did the math and figured a
 ;; standard size.
 ;;
@@ -52,14 +55,14 @@
 
 ;; leave room for diodes and wires; too tall and the teensy runs into
 ;; the bottom
-(def teensy-screw-hole-height (+ insert-hole-height 5))
+(def teensy-screw-hole-height (+ insert-hole-depth 5))
 
 ;; top is at z=0
 (def insert-boss
   (let [bottom-radius (* 1/2 insert-hole-bottom-diameter)
         top-radius (* 1/2 insert-hole-top-diameter)]
-    (translate [0 0 (* -1/2 insert-hole-height)]
-               (cylinder [bottom-radius top-radius] insert-hole-height))))
+    (translate [0 0 (* -1/2 insert-hole-depth)]
+               (cylinder [bottom-radius top-radius] insert-hole-depth))))
 
 (def screw-hole-base-diameter 25)
 (defn screw-hole-pillar [height]
@@ -77,7 +80,7 @@
                  (let [ny (+ y step-size)
                        y-r (f y)
                        ny-r (f ny)]
-                   (->> (cylinder [y-r ny-r] step-size)
+                   (->> (with-fn 12 (cylinder [y-r ny-r] step-size))
                         (translate [0 0 (- (+ y (* 1/2 step-size))
                                            height)])))))]
     (difference horn
