@@ -91,7 +91,7 @@
 (def screw-hole-pillar-glue-tolerance 0.2)
 
 (defn screw-hole-pillar-splitter [height]
-  (let [height-fraction 1/6
+  (let [height-fraction 1/16
         tz (* height-fraction height)
         ty (* 3/2 screw-hole-base-diameter)
         tx (* 3/2 screw-hole-base-diameter)
