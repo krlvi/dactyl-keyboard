@@ -386,6 +386,7 @@
 (say-spit "things/dactyl-bottom-right.scad"
           (write-scad
            (use "key-place.scad")
+           (use "vertical-prisms.scad")
            (union
             bottom-right)
             #_(union dactyl-top-right-thumb
@@ -395,6 +396,7 @@
 (say-spit "things/dactyl-bottom-left.scad"
           (write-scad
            (use "key-place.scad")
+           (use "vertical-prisms.scad")
            (mirror [1 0 0]
                    (union
                     bottom-right))))
