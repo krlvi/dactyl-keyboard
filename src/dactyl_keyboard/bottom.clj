@@ -111,19 +111,22 @@
                                         ; FUDGE: remove extra bits of top of finger hull grid
                    (extra-finger-silos [2 4] [2 5])
                    (extra-finger-silos [3 4] [3 5]))
-        pillars
+        big-marshmallow (union
+                         (hull-a-grid (for-finger sph1))
+                         (hull-a-grid (for-thumb sph1)))
+        raw-pillars
         (apply union
                (for [hole screw-holes-at]
                  (->> (screw-hole-pillar-lower screw-hole-pillar-height)
                       (translate [0 0 (- (- plate-thickness web-thickness))])
                       ((key-place-fn hole)))))
+        pillars (intersection raw-pillars big-marshmallow)
         ]
     (union
     (intersection
      (difference
       (union
-       (hull-a-grid (for-finger sph1))
-       (hull-a-grid (for-thumb sph1))
+       big-marshmallow
        (apply union (legs-for-finger sph1))
        (apply union (legs-for-thumb sph1)))
       (union
