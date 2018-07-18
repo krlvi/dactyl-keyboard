@@ -41,7 +41,8 @@
         sph1 (with-fn gasket-sphere-fn (sphere sides-radius))
         sph0 (with-fn gasket-sphere-fn (sphere (- sides-radius
                                                   sides-thickness)))
-        floor-scale 0.7
+        floor-scale 0.9
+        pre-scale 0.7
         for-finger
         (fn [sh] (for [row rows #_(range (- (first rows) 1)
                                          (+ (last rows) 1))]
@@ -51,7 +52,7 @@
                        (->> sh
                             (translate [0 0 bottom-distance])
                             (key-place col row))))))
-        for-finger-with-floor
+        legs-for-finger
         (fn [sh] (for [row rows #_(range (- (first rows) 1)
                                          (+ (last rows) 1))]
                    (for [col columns #_(range (- (first columns) 1)
@@ -59,31 +60,37 @@
                      (if (finger-has-key-place-p row col)
                        (hull
                         (->> sh
+                             (scale [pre-scale pre-scale 1])
                              (translate [0 0 bottom-distance])
                              (key-place col row))
-                        (->> sh
-                             (translate [0 0 bottom-distance])
-                             (key-place col row)
-                             (downward-shadow 1)
-                             (scale [floor-scale floor-scale 1])))))))
+                        (if (some #(= [:k col row] %) legs-at)
+                          (->> sh
+                               (scale [pre-scale pre-scale 1])
+                               (translate [0 0 bottom-distance])
+                               (key-place col row)
+                               (downward-shadow 1)
+                               (scale [floor-scale floor-scale 1]))))))))
         for-thumb
         (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
                    (for [col [0 1 2] #_[-1 0 1 2 3]]
                      (->> sh
                           (translate [0 0 bottom-distance])
                           (thumb-place col row)))))
-        for-thumb-with-floor
+        legs-for-thumb
         (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
                    (for [col [0 1 2] #_[-1 0 1 2 3]]
                      (hull
                       (->> sh
+                           (scale [pre-scale pre-scale 1])
                            (translate [0 0 bottom-distance])
                            (thumb-place col row))
-                      (->> sh
-                           (translate [0 0 bottom-distance])
-                           (thumb-place col row)
-                           (downward-shadow 1)
-                           (scale [floor-scale floor-scale 1]))))))
+                      (if (some #(= [:t col row] %) legs-at)
+                        (->> sh
+                             (scale [pre-scale pre-scale 1])
+                             (translate [0 0 bottom-distance])
+                             (thumb-place col row)
+                             (downward-shadow 1)
+                             (scale [floor-scale floor-scale 1])))))))
         ; this -5 sets how far away from the keys the top of the
                                         ; marshmallowy sides will be.
                                         ; 6 was orig written in silo
@@ -115,8 +122,10 @@
     (intersection
      (difference
       (union
-       (hull-a-grid (for-finger-with-floor sph1))
-       (hull-a-grid (for-thumb-with-floor sph1)))
+       (hull-a-grid (for-finger sph1))
+       (hull-a-grid (for-thumb sph1))
+       (apply union (legs-for-finger sph1))
+       (apply union (legs-for-thumb sph1)))
       (union
        (hull-a-grid (for-finger sph0))
        (hull-a-grid (for-thumb sph0)))

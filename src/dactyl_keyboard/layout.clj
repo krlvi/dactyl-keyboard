@@ -62,6 +62,9 @@
                      [:k (+ 4 1/2) 1/2] #_[:k (+ 4 1/2) 3/2]
                      #_[:k (+ 4 1/2) 5/2] [:k (+ 4 1/2) 7/2]
                      [:t 1/2 -1/2] [:t 3/2 -1/2] ]
+    :legs-at [
+              [:k -1 0] [:k 5 0] [:k 5 4] [:k 2 2]
+              [:t 2 0] ]
     :usb-socket-at [:n :k -1 0]
     :usb-socket-region [[:nw :k -1 0] [:n :k 0 0]]
     :rj11-socket-at [:n :k (+ 1 1/2) 0]
@@ -96,6 +99,7 @@
 (def sides-slice-joints (chosen-layout :sides-slice-joints))
 (def sides-frame-joints (chosen-layout :sides-frame-joints))
 (def screw-holes-at (chosen-layout :screw-holes-at))
+(def legs-at (chosen-layout :legs-at))
 (def usb-socket-at (chosen-layout :usb-socket-at))
 (def usb-socket-region (chosen-layout :usb-socket-region))
 (def rj11-socket-at (chosen-layout :rj11-socket-at))
