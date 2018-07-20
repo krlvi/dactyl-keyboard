@@ -406,7 +406,7 @@
            (use "key-place.scad")
            (use "vertical-prisms.scad")
            (legs true)
-           (translate [0 0 -100] (apply union (legs false)))
+           (apply union (legs false))
            ))
 
 (doseq [[partno leg] (map vector (range) (legs false))]

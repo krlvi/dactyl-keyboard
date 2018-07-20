@@ -32,8 +32,9 @@
 (def bottom-distance (- (+ sides-downness (* sides-radius 3/10))))
 (def screw-hole-pillar-height (+ (Math/abs (float bottom-distance))
                                  (- sides-radius sides-thickness)))
+(def legs-glue-tolerance 0.2)
 
-(def leg-pillar-splitter
+(def leg-pillar-splitter-a
   (let [height 80
         interface-height 24
         leg-radius-fudge (* 4 sides-radius)
@@ -44,7 +45,7 @@
                            interface-height
                            (* 3/2 leg-radius-fudge)
                            (* 3/2 leg-radius-fudge)
-                           pattern-size (- ε) 0 0)
+                           pattern-size legs-glue-tolerance 0 0)
         interface (->> slice
                        (rotate (* 1/4 τ) [0 1 0])
                        (translate [0 0 (* -1/2 interface-height)])
@@ -55,6 +56,31 @@
     (union interface
            (->> cone
                 (translate [0 0 (- 0
+                                   (* 1/2 height)
+                                   (* 1/2 interface-height))])))))
+
+(def leg-pillar-splitter-b
+  (let [height 80
+        interface-height 24
+        leg-radius-fudge (* 4 sides-radius)
+        max-leg-radius (* 10 sides-radius) ;; includes allowance for
+        ;; being rotated athwart the leg
+        pattern-size 48
+        slice (call-module "vertical_prisms_slice"
+                           interface-height
+                           (* 3/2 leg-radius-fudge)
+                           (* 3/2 leg-radius-fudge)
+                           pattern-size legs-glue-tolerance 1 -1)
+        interface (->> slice
+                       (rotate (* 1/4 τ) [0 1 0])
+                       (translate [0 0 (* -1/2 interface-height)])
+                       (translate [0 0 (* -1/4 pattern-size)]))
+        cone (->> (cylinder [leg-radius-fudge max-leg-radius]
+                            height))
+        ]
+    (union interface
+           (->> cone
+                (translate [0 0 (+ 0
                                    (* 1/2 height)
                                    (* 1/2 interface-height))])))))
 
@@ -83,21 +109,27 @@
         legs-for-finger (partial legs-for :k key-place rows columns)
         legs-for-thumb (partial legs-for :t thumb-place [-1 0 1] [0 1 2])
         splitters-for
-        (fn [place-symbol place rows columns]
+        (fn [place-symbol place rows columns sh]
           (for [row rows col columns
                 :when (some #(= [place-symbol col row] %) legs-at)]
-            (->> leg-pillar-splitter
+            (->> sh
                  (translate [0 0 (- 0 screw-hole-pillar-height
                                     leg-nub-height)])
                  (place col row))))
-        splitters-for-thumb (splitters-for :t thumb-place
+        splitters-for-thumb (partial splitters-for :t thumb-place
                                      [-1 0 1] [0 1 2])
-        splitters-for-finger (splitters-for :k key-place
+        splitters-for-finger (partial splitters-for :k key-place
                                       rows columns)
         legs (concat (legs-for-finger sph1) (legs-for-thumb sph1))
-        splitters (concat splitters-for-finger splitters-for-thumb)]
-    (for [[leg splitter] (map vector legs splitters)]
-      ((if nubsp difference intersection) leg splitter))))
+        splitters-a
+        (concat (splitters-for-finger leg-pillar-splitter-a)
+                (splitters-for-thumb leg-pillar-splitter-a))
+        splitters-b
+        (concat (splitters-for-finger leg-pillar-splitter-b)
+                (splitters-for-thumb leg-pillar-splitter-b))
+        ]
+    (for [[leg a b] (map vector legs splitters-a splitters-b)]
+      (intersection leg (if nubsp b a)))))
 
 
 (def bottom
