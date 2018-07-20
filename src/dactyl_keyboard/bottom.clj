@@ -33,16 +33,82 @@
 (def screw-hole-pillar-height (+ (Math/abs (float bottom-distance))
                                  (- sides-radius sides-thickness)))
 
+(def leg-pillar-splitter
+  (let [height 80
+        interface-height 24
+        leg-radius-fudge (* 4 sides-radius)
+        max-leg-radius (* 10 sides-radius) ;; includes allowance for
+        ;; being rotated athwart the leg
+        pattern-size 48
+        slice (call-module "vertical_prisms_slice"
+                           interface-height
+                           (* 3/2 leg-radius-fudge)
+                           (* 3/2 leg-radius-fudge)
+                           pattern-size (- ε) 0 0)
+        interface (->> slice
+                       (rotate (* 1/4 τ) [0 1 0])
+                       (translate [0 0 (* -1/2 interface-height)])
+                       (translate [0 0 (* -1/4 pattern-size)]))
+        cone (->> (cylinder [max-leg-radius leg-radius-fudge]
+                            height))
+        ]
+    (union interface
+           (->> cone
+                (translate [0 0 (- 0
+                                   (* 1/2 height)
+                                   (* 1/2 interface-height))])))))
+
+(defn legs [nubsp]
+  (let [leg-nub-height 4
+        sph1 (with-fn gasket-sphere-fn (sphere sides-radius))
+        floor-scale 0.9 ;; values smaller than 1.0 push the bottoms of
+                        ;; the legs toward the origin
+        pre-scale 0.7 ;; factor of sides-radius that determines leg
+                      ;; diameter
+        legs-for
+        (fn [place-symbol place rows columns sh]
+          (for [row rows col columns
+                :when (some #(= [place-symbol col row] %) legs-at)]
+                   (hull
+                    (->> sh
+                         (scale [pre-scale pre-scale pre-scale])
+                         (translate [0 0 bottom-distance])
+                         (place col row))
+                    (->> sh
+                         (scale [pre-scale pre-scale pre-scale])
+                         (translate [0 0 bottom-distance])
+                         (place col row)
+                         (downward-shadow 1)
+                         (scale [floor-scale floor-scale 1])))))
+        legs-for-finger (partial legs-for :k key-place rows columns)
+        legs-for-thumb (partial legs-for :t thumb-place [-1 0 1] [0 1 2])
+        splitters-for
+        (fn [place-symbol place rows columns]
+          (for [row rows col columns
+                :when (some #(= [place-symbol col row] %) legs-at)]
+            (->> leg-pillar-splitter
+                 (translate [0 0 (- 0 screw-hole-pillar-height
+                                    leg-nub-height)])
+                 (place col row))))
+        splitters-for-thumb (splitters-for :t thumb-place
+                                     [-1 0 1] [0 1 2])
+        splitters-for-finger (splitters-for :k key-place
+                                      rows columns)
+        legs (concat (legs-for-finger sph1) (legs-for-thumb sph1))
+        splitters (concat splitters-for-finger splitters-for-thumb)]
+    (for [[leg splitter] (map vector legs splitters)]
+      ((if nubsp difference intersection) leg splitter))))
+
+
 (def bottom
-  (let [finger-big-intersection-shape
+  (let [
+        finger-big-intersection-shape
         (finger-prism (* distance-below-to-intersect 5) 0)
         thumb-big-intersection-shape
         (thumb-prism (* thumb-distance-below 5) -5)
         sph1 (with-fn gasket-sphere-fn (sphere sides-radius))
         sph0 (with-fn gasket-sphere-fn (sphere (- sides-radius
                                                   sides-thickness)))
-        floor-scale 0.9
-        pre-scale 0.7
         for-finger
         (fn [sh] (for [row rows #_(range (- (first rows) 1)
                                          (+ (last rows) 1))]
@@ -52,46 +118,13 @@
                        (->> sh
                             (translate [0 0 bottom-distance])
                             (key-place col row))))))
-        legs-for-finger
-        (fn [sh] (for [row rows #_(range (- (first rows) 1)
-                                         (+ (last rows) 1))]
-                   (for [col columns #_(range (- (first columns) 1)
-                                              (+ (last columns) 1))]
-                     (if (finger-has-key-place-p row col)
-                       (hull
-                        (->> sh
-                             (scale [pre-scale pre-scale 1])
-                             (translate [0 0 bottom-distance])
-                             (key-place col row))
-                        (if (some #(= [:k col row] %) legs-at)
-                          (->> sh
-                               (scale [pre-scale pre-scale 1])
-                               (translate [0 0 bottom-distance])
-                               (key-place col row)
-                               (downward-shadow 1)
-                               (scale [floor-scale floor-scale 1]))))))))
         for-thumb
         (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
                    (for [col [0 1 2] #_[-1 0 1 2 3]]
                      (->> sh
                           (translate [0 0 bottom-distance])
                           (thumb-place col row)))))
-        legs-for-thumb
-        (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
-                   (for [col [0 1 2] #_[-1 0 1 2 3]]
-                     (hull
-                      (->> sh
-                           (scale [pre-scale pre-scale 1])
-                           (translate [0 0 bottom-distance])
-                           (thumb-place col row))
-                      (if (some #(= [:t col row] %) legs-at)
-                        (->> sh
-                             (scale [pre-scale pre-scale 1])
-                             (translate [0 0 bottom-distance])
-                             (thumb-place col row)
-                             (downward-shadow 1)
-                             (scale [floor-scale floor-scale 1])))))))
-        ; this -5 sets how far away from the keys the top of the
+        ;; this -5 sets how far away from the keys the top of the
                                         ; marshmallowy sides will be.
                                         ; 6 was orig written in silo
                                         ; definition. from there i
@@ -127,8 +160,7 @@
      (difference
       (union
        big-marshmallow
-       (apply union (legs-for-finger sph1))
-       (apply union (legs-for-thumb sph1)))
+       (apply union (legs true)))
       (union
        (hull-a-grid (for-finger sph0))
        (hull-a-grid (for-thumb sph0)))

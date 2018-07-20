@@ -401,11 +401,33 @@
                    (union
                     bottom-right))))
 
-(def entire-x 280)
-(def entire-y 200)
+(say-spit "things/legs-right.scad"
+          (write-scad
+           (use "key-place.scad")
+           (use "vertical-prisms.scad")
+           (legs true)
+           (translate [0 0 -100] (apply union (legs false)))
+           ))
+
+(doseq [[partno leg] (map vector (range) (legs false))]
+  (say-spit (format "things/dactyl-legs-right-%02d.scad" partno)
+            (write-scad
+             (use "key-place.scad")
+             (use "vertical-prisms.scad")
+             leg)))
+
+(doseq [[partno leg] (map vector (range) (legs false))]
+  (say-spit (format "things/dactyl-legs-right-%02d.scad" partno)
+            (write-scad
+             (use "key-place.scad")
+             (use "vertical-prisms.scad")
+             (mirror [1 0 0] leg))))
+
+(def entire-x 220)
+(def entire-y 180)
 (def entire-z 200)
 ; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset (* mount-width 0.58))
+(def bottom-slice-offset 3)
 (def bottom-slice-spacing (* mount-width 3.2))
 (def bottom-glue-tolerance 0.2)
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
