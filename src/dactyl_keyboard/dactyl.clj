@@ -428,42 +428,43 @@
 (def entire-z 200)
 ; set so that there aren't any little bits in the first slice
 (def bottom-slice-offset 3)
-(def bottom-slice-spacing (* mount-width 3.2))
+;;(def bottom-slice-spacing (* mount-width 3.2))
+(def bottom-slice-spacing (* mount-width 4.8))
 (def bottom-glue-tolerance 0.2)
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
   (doseq [[ab-letter ab-number] [["a" 0] ["b" 1]]]
-    (do
-      (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
-                        slice ab-letter)
-                (write-scad
-                 (use "key-place.scad")
-                 (use "vertical-prisms.scad")
-                 (render (->> (call-module "vertical_prisms_slice"
-                                           entire-x entire-y entire-z
-                                           bottom-slice-spacing
-                                           bottom-glue-tolerance
-                                           ab-number
-                                           slice)
-                              (rotate (* 3/100 τ) [0 0 1])
-                              (translate [bottom-slice-offset 0
-                                          (* 1/3 entire-z)])
-                              (intersection bottom-right)))))
-      (say-spit (format "things/dactyl-bottom-left-%02d%s.scad"
-                        slice ab-letter)
-                (write-scad
-                 (use "key-place.scad")
-                 (use "vertical-prisms.scad")
-                 (mirror [1 0 0]
-                         (render (->> (call-module "vertical_prisms_slice"
-                                                   entire-x entire-y entire-z
-                                                   bottom-slice-spacing
-                                                   bottom-glue-tolerance
-                                                   ab-number
-                                                   slice)
-                                      (rotate (* 3/100 τ) [0 0 1])
-                                      (translate [bottom-slice-offset 0
-                                                  (* 1/3 entire-z)])
-                                      (intersection bottom-right)))))))))
+    (let [slice-shape (call-module "vertical_prisms_slice"
+                                   entire-x entire-y entire-z
+                                   bottom-slice-spacing
+                                   bottom-glue-tolerance
+                                   ab-number
+                                   slice)
+          holes-shape (call-module "vertical_prisms_stitch_hole_a"
+                                   entire-x entire-y entire-z
+                                   bottom-slice-spacing
+                                   bottom-glue-tolerance
+                                   ab-number
+                                   slice)
+          s-h (difference slice-shape holes-shape)
+          placed (->> s-h
+                      (rotate (* 3/100 τ) [0 0 1])
+                      (translate [bottom-slice-offset 0
+                                  (* 1/3 entire-z)])
+                      (intersection bottom-right))]
+      (do
+        (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
+                          slice ab-letter)
+                  (write-scad
+                   (use "key-place.scad")
+                   (use "vertical-prisms.scad")
+                   (render placed)))
+        (say-spit (format "things/dactyl-bottom-left-%02d%s.scad"
+                          slice ab-letter)
+                  (write-scad
+                   (use "key-place.scad")
+                   (use "vertical-prisms.scad")
+                   (mirror [1 0 0]
+                           (render placed))))))))
 
 (say-spit "things/screw-hole-top.scad"
           (write-scad
