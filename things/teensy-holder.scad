@@ -23,11 +23,14 @@ frame_thickness = 4;
 small=0.01;
 tau=360;
 
-/* https://www.pjrc.com/teensy/dimensions.html
-teensy lc */
-tb_width = 17.78;
-tb_length = 35.56;
-tb_thickness = 1.57;
+/*
+ * started with https://www.pjrc.com/teensy/dimensions.html.
+ *
+ * teensy lc. tweaked as necessary after printing
+ */
+tb_width = 18.1;
+tb_length = 35.9;
+tb_thickness = 1.7;
 tb_margin = 0.8;
 
 /* https://www.cs.jhu.edu/~carlson/download/datasheets/Micro-USB_1_01.pdf
