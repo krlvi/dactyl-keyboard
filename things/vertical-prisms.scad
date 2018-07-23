@@ -35,25 +35,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 module vertical_prism(width, depth, height) {
      /* A hexagonal prism, imagined as a rectangular prism with two halves
       * of hexagonal prisms on the sides. width >= height. */
+     epsilon = height * 0.0001;
      minor_radius = depth / 2;
      major_radius = 2 * minor_radius / sqrt(3);
      rect_width = width - 2 * major_radius;
      linear_extrude(height=height, center=true) {
           polygon(points=[
                        [  rect_width/2 + major_radius, 0],
-                       [  rect_width/2 + major_radius/2 , -minor_radius],
-                       [-(rect_width/2 + major_radius/2), -minor_radius],
+                       [  rect_width/2 + major_radius/2 , -(minor_radius+epsilon)],
+                       [-(rect_width/2 + major_radius/2), -(minor_radius+epsilon)],
                        [-(rect_width/2 + major_radius), 0],
-                       [-(rect_width/2 + major_radius/2), minor_radius],
-                       [  rect_width/2 + major_radius/2 , minor_radius]]);
+                       [-(rect_width/2 + major_radius/2), minor_radius+epsilon],
+                       [  rect_width/2 + major_radius/2 , minor_radius+epsilon]]);
      }
 }
 
 module vertical_prisms_slice(x_size, y_size, z_size, spacing, glue_tolerance, bp, x_iteration) {
      /* constants */
-     shear = 0.4;
-     y_spacing = spacing / 4;
-     zigzag_length = spacing / 3;
+     epsilon = z_size * 0.0001;
+     shear = 0.3;
+     y_spacing = spacing / 5;
+     zigzag_length = spacing / 4;
      /* the following are chosen not arbitrarily, but because our
       * prism is hexagonal */
      minor_radius = y_spacing / 2;
