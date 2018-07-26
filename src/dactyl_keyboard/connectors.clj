@@ -49,23 +49,19 @@
 (def web-post-l  (translate [(+ (/ mount-width -2) post-adj) 0 0] web-post))
 (def web-post-r  (translate [(- (/ mount-width 2) post-adj) 0 0] web-post))
 
-(defn row-connector [row column]
+(defn row-connector [column row]
   (triangle-hulls
      (key-place (inc column) row web-post-tl)
      (key-place column row web-post-tr)
      (key-place (inc column) row web-post-bl)
      (key-place column row web-post-br)))
-(defn row-connector-untranslate [shape]
-  (translate [(- (- (/ mount-width 2) post-adj)) 0 0] shape))
-(defn row-connector-retranslate [shape]
-  (translate [(- (/ mount-width 2) post-adj) 0 0] shape))
 
 (defn row-connectors [column]
   (for [row rows
-        :when (finger-has-key-place-p row column)]
-    (row-connector row column)))
+        :when (finger-has-key-place-p column row)]
+    (row-connector column row)))
 
-(defn diagonal-connector [row column]
+(defn diagonal-connector [column row]
   (triangle-hulls
      (key-place column row web-post-br)
      (key-place column (inc row) web-post-tr)
@@ -83,11 +79,11 @@
 (defn diagonal-connectors [column]
   (for [row (drop-last rows)
         :when (and
-               (finger-has-key-place-p (inc row) (inc column))
-               (not (thumb-glue-joint-left-of-p (inc row) (inc column))))]
-    (diagonal-connector row column)))
+               (finger-has-key-place-p (inc column) (inc row))
+               (not (thumb-glue-joint-left-of-p (inc column) (inc row))))]
+    (diagonal-connector column row)))
 
-(defn column-connector [row column]
+(defn column-connector [column row]
   (triangle-hulls
      (key-place column row web-post-bl)
      (key-place column row web-post-br)
@@ -100,8 +96,8 @@
 
 (defn column-connectors [column]
   (for [row (drop-last rows)
-        :when (finger-has-key-place-p (inc row) column)]
-    (column-connector row column)))
+        :when (finger-has-key-place-p column (inc row))]
+    (column-connector column row)))
 
 (def connectors-inside-fingerpieces
   (let

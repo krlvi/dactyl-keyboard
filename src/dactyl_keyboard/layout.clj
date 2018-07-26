@@ -111,7 +111,7 @@
                                         ; this defines the keys
                                         ; missing from the finger part
                                         ; that make room for the thumb
-(defn finger-has-key-place-p [row column]
+(defn finger-has-key-place-p [column row]
   (every? false? (for [[c r] (chosen-layout :finger-knockouts)]
                    (and (= c column) (= r row)))))
 
@@ -134,20 +134,20 @@
                                         ; order. this is a description
                                         ; of whether a given key place
                                         ; is around the edge.
-(defn around-edge-p [row column]
+(defn around-edge-p [column row]
   (and
-   (finger-has-key-place-p row column)
+   (finger-has-key-place-p column row)
    (or (= column (first columns))
        (= column (last columns))
        (= row (first rows))
        (= row (last rows))
        ; this may not be general to any possible set of knockouts
-       (not (finger-has-key-place-p row (inc column)))
-       (not (finger-has-key-place-p (inc row) column))
-       (not (finger-has-key-place-p (inc row) (dec column))))))
+       (not (finger-has-key-place-p (inc column) row))
+       (not (finger-has-key-place-p column (inc row)))
+       (not (finger-has-key-place-p (dec column) (inc row))))))
 
 
-(defn thumb-glue-joint-left-of-p [row column]
+(defn thumb-glue-joint-left-of-p [column row]
   (some true? (for [[c r] (chosen-layout :thumb-glue-joint-left-of)]
                 (and (= c column) (= row r)))))
 
@@ -156,7 +156,7 @@
   (apply union
          (for [column columns
                row rows
-               :when (finger-has-key-place-p row column)]
+               :when (finger-has-key-place-p column row)]
            (->> shape
                 (key-place column row)))))
 
@@ -171,7 +171,7 @@
   (apply union
          (for [column columns
                row rows
-               :when (finger-has-key-place-p row column)]
+               :when (finger-has-key-place-p column row)]
            (->> (sa-cap (if (= column 5) 1 1))
                 (key-place column row)))))
 
