@@ -32,7 +32,7 @@
 ;;;;;;;;;;
 
 (def sides-downness 3)
-(def sides-thickness 2)
+(def sides-thickness 3)
 (def sides-radius 19)
 (def thumb-sides-above-finger-sides -20) ; how far above the
                                          ; marshmallowy sides of the
