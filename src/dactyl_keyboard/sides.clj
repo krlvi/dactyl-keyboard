@@ -302,7 +302,7 @@
         gasket (fn [r]
                  (let [sph (with-fn gasket-sphere-fn (sphere r))]
                    (key-placed-outline
-                    notation (* 1/2 sides-radius) 0 sph false)))
+                    notation sides-downness 0 sph false)))
         tube (difference (gasket sides-radius)
                          (gasket (- sides-radius sides-thickness)))
         sides (difference
