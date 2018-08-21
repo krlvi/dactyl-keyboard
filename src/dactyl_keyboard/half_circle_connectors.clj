@@ -28,14 +28,24 @@
 (def ^:const pin-fn 6) ; hexagonal cones
 (def ^:const interface-thickness 2)
 
-(defn x-half-cylinder-common [nudge gasket-shape-radius height position]
+;; This is necessary because the amount by which the key frusta and
+;; key prisms cut the marshmallow gasket leaves it slightly less than
+;; semicircular in some places; if the connector protrudes beyond the
+;; residual half-gasket, the bottom won't fit. (issue #41)
+(def ^:const amount-of-half-circle 0.85)
+
+(defn x-half-cylinder-common [amount nudge gasket-shape-radius height position]
   (let [r (match [gasket-shape-radius]
                  [[gsr1 gsr2]] [(+ gsr1 pin-tolerance) gsr2]
                  [gsr] (+ gsr pin-tolerance))
         bigger (+ 2 (* 2 (if (vector? gasket-shape-radius)
                            (first gasket-shape-radius)
                            gasket-shape-radius)))
-        half (translate [0 (+ (* 1/2 bigger) nudge) 0]
+        one-r (match [gasket-shape-radius]
+                     [[gsr1 gsr2]] (max gsr1 gsr2)
+                     [gsr] gsr)
+        nq-half-circle-nudge (* one-r (- 1.0 amount))
+        half (translate [0 (+ (* 1/2 bigger) nudge nq-half-circle-nudge) 0]
                         (cube bigger bigger bigger))]
     (->> (cylinder r height)
          (rotate (/ τ 4) [0 1 0])
@@ -43,8 +53,9 @@
          (translate [(* 1/2 height) 0 0])
          (translate [position 0 0]))))
 
-(def x-half-cylinder-for-diff (partial x-half-cylinder-common (- ε)))
-(def x-half-cylinder (partial x-half-cylinder-common 0))
+(def x-half-cylinder-for-diff (partial x-half-cylinder-common 1.0 (- ε)))
+(def x-half-cylinder-for-intersect (partial x-half-cylinder-common 1.0 0))
+(def x-half-cylinder (partial x-half-cylinder-common amount-of-half-circle 0))
 
 (defn x-pins-places [radius shape]
   (let [axify #(vector 0 %1 %2)
@@ -114,17 +125,18 @@
                            (x-solid-pin-cone gasket-shape-radius 0.85))))))
 
 (defn x-gap [gasket-shape-radius]
-  (x-half-cylinder (* 2 gasket-shape-radius)
-                   (* 2 pin-tolerance)
-                   (- 0 pin-tolerance ε)))
+  (x-half-cylinder-for-intersect
+   (* 2 gasket-shape-radius)
+   (* 2 pin-tolerance)
+   (- 0 pin-tolerance ε)))
 
 (defn x-connect-common [x-offset gasket-shape-radius place shape]
   (let [section (x-half-cylinder gasket-shape-radius
                                  interface-thickness
                                  x-offset)
         core (x-half-cylinder-for-diff
-              (* 0.99 gasket-shape-radius)
-              (* 2 interface-thickness)
+              (* 1 gasket-shape-radius)
+              (+ (* 2 interface-thickness) pin-length)
               (+ (* -1/2 interface-thickness)
                  x-offset))
         intersect (x-half-cylinder

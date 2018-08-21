@@ -99,24 +99,24 @@
 ; multiplied by 105%. if you adjust the above, you need to adjust
 ; this, so the glue joints end up in the right place relative to the
 ; top edge of the marshmallowy sides.
-(def joint-nudge-out 1.2)
+(def joint-nudge-out 1.8)
 
 (defn slice-joints-from-notation [notation]
   (let [z sides-downness
         south (fn [shape] (->> shape
                                (translate [0 (+ (* 1/2 mount-height)
                                                 joint-nudge-out)
-                                           z])
+                                           (- z)])
                                (rotate (* τ 1/2) [0 0 1])))
         north (fn [shape] (->> shape
                       (translate [0 (+ (* 1/2 mount-height)
                                        joint-nudge-out)
-                                  z])))
+                                  (- z)])))
         west (fn [shape] (->> shape
                       (rotate (* τ 1/4) [0 0 1])
                       (translate [(- (* -1/2 mount-width)
                                      joint-nudge-out) 0
-                                  z])))
+                                  (- z)])))
         east (fn [shape] shape) ; unimplemented
         gravities {:n north :s south :e east :w west}
         places {:k key-place :t thumb-place}]
