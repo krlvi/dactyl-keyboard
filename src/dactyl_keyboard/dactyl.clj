@@ -423,19 +423,19 @@
              (use "vertical-prisms.scad")
              (mirror [1 0 0] leg))))
 
-(def entire-x 220)
+(def entire-x 180)
 (def entire-y 180)
-(def entire-z 200)
+(def entire-z 120)
 ; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset 3)
-;;(def bottom-slice-spacing (* mount-width 3.2))
-(def bottom-slice-spacing (* mount-width 4.8))
+(def bottom-slice-offset -5)
+(def bottom-slice-spacing (* mount-width 3.2))
+;; (def bottom-slice-spacing (* mount-width 4.8))
 (def bottom-glue-tolerance 0.2)
 (def bottom-string-hole-frequency 1/12) ; mm^-1
-(def bottom-eggcrate-resolution 2) ; mm
+(def bottom-eggcrate-resolution 3.5) ; mm
 (def bottom-eggcrate-freq-y 1/30) ; mm^-1
-(def bottom-eggcrate-freq-z 1/20) ; mm^-1
-(def bottom-eggcrate-amplitude 20) ; mm
+(def bottom-eggcrate-freq-z 1/25) ; mm^-1
+(def bottom-eggcrate-amplitude 15) ; mm
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
   (let [slice-shape (call-module "x_space_filling_eggcrate_box"
                                  slice
@@ -451,8 +451,8 @@
                                  bottom-eggcrate-amplitude)
           placed (->> slice-shape
                       (rotate (* 3/100 τ) [0 0 1])
-                      (translate [bottom-slice-offset 0
-                                  (* 1/3 entire-z)])
+                      (translate [bottom-slice-offset
+                                  (* -1/2 entire-y) 0])
                       (intersection bottom-right))]
       (do
         (say-spit (format "things/dactyl-bottom-right-%02d.scad" slice)
