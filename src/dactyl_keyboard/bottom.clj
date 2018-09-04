@@ -31,7 +31,10 @@
 
 (def bottom-distance (- (+ sides-downness (* sides-radius 3/10))))
 (def screw-hole-pillar-height (+ (Math/abs (float bottom-distance))
-                                 (- sides-radius sides-thickness)))
+                                 (- sides-radius sides-thickness)
+                                 ;; they are cut off at the bottom
+                                 ;; so add slop
+                                 3))
 (def legs-glue-tolerance 0.2)
 
 (def leg-pillar-splitter-a
