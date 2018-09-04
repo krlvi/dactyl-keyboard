@@ -386,7 +386,7 @@
 (say-spit "things/dactyl-bottom-right.scad"
           (write-scad
            (use "key-place.scad")
-           (use "vertical-prisms.scad")
+           (use "eggcrate.scad")
            (union
             bottom-right)
             #_(union dactyl-top-right-thumb
@@ -396,7 +396,7 @@
 (say-spit "things/dactyl-bottom-left.scad"
           (write-scad
            (use "key-place.scad")
-           (use "vertical-prisms.scad")
+           (use "eggcrate.scad")
            (mirror [1 0 0]
                    (union
                     bottom-right))))
@@ -431,40 +431,43 @@
 ;;(def bottom-slice-spacing (* mount-width 3.2))
 (def bottom-slice-spacing (* mount-width 4.8))
 (def bottom-glue-tolerance 0.2)
+(def bottom-string-hole-frequency 1/12) ; mm^-1
+(def bottom-eggcrate-resolution 2) ; mm
+(def bottom-eggcrate-freq-y 1/30) ; mm^-1
+(def bottom-eggcrate-freq-z 1/20) ; mm^-1
+(def bottom-eggcrate-amplitude 20) ; mm
 (doseq [slice (range (/ entire-x bottom-slice-spacing))]
-  (doseq [[ab-letter ab-number] [["a" 0] ["b" 1]]]
-    (let [slice-shape (call-module "vertical_prisms_slice"
-                                   entire-x entire-y entire-z
-                                   bottom-slice-spacing
-                                   bottom-glue-tolerance
-                                   ab-number
-                                   slice)
-          holes-shape (call-module "vertical_prisms_stitch_hole_a"
-                                   entire-x entire-y entire-z
-                                   bottom-slice-spacing
-                                   bottom-glue-tolerance
-                                   ab-number
-                                   slice)
-          s-h (difference slice-shape holes-shape)
-          placed (->> s-h
+  (let [slice-shape (call-module "x_space_filling_eggcrate_box"
+                                 slice
+                                 entire-x
+                                 bottom-glue-tolerance
+                                 bottom-string-hole-frequency
+                                 [bottom-slice-spacing entire-y entire-z]
+                                 [bottom-eggcrate-resolution
+                                  bottom-eggcrate-resolution
+                                  bottom-eggcrate-resolution]
+                                 [1 bottom-eggcrate-freq-y
+                                  bottom-eggcrate-freq-z]
+                                 bottom-eggcrate-amplitude)
+          placed (->> slice-shape
                       (rotate (* 3/100 τ) [0 0 1])
                       (translate [bottom-slice-offset 0
                                   (* 1/3 entire-z)])
                       (intersection bottom-right))]
       (do
-        (say-spit (format "things/dactyl-bottom-right-%02d%s.scad"
-                          slice ab-letter)
+        (say-spit (format "things/dactyl-bottom-right-%02d.scad" slice)
                   (write-scad
                    (use "key-place.scad")
                    (use "vertical-prisms.scad")
+                   (use "eggcrate.scad")
                    (render placed)))
-        (say-spit (format "things/dactyl-bottom-left-%02d%s.scad"
-                          slice ab-letter)
+        (say-spit (format "things/dactyl-bottom-left-%02d.scad" slice)
                   (write-scad
                    (use "key-place.scad")
                    (use "vertical-prisms.scad")
+                   (use "eggcrate.scad")
                    (mirror [1 0 0]
-                           (render placed))))))))
+                           (render placed)))))))
 
 (say-spit "things/screw-hole-top.scad"
           (write-scad
