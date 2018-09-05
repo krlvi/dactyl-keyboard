@@ -427,8 +427,8 @@
 (def entire-y 180)
 (def entire-z 120)
 ; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset -5)
-(def bottom-slice-spacing (* mount-width 3.2))
+(def bottom-slice-offset 18)
+(def bottom-slice-spacing (* mount-width 2.4))
 ;; (def bottom-slice-spacing (* mount-width 4.8))
 (def bottom-glue-tolerance 0.2)
 (def bottom-string-hole-frequency 1/12) ; mm^-1
