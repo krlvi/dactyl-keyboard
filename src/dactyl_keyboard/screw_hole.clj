@@ -91,33 +91,33 @@
 (def screw-hole-pillar-glue-tolerance 0.2)
 
 (defn screw-hole-pillar-splitter [height]
-  (let [height-fraction 1/16
-        tz (* height-fraction height)
-        ty (* 3/2 screw-hole-base-diameter)
-        tx (* 3/2 screw-hole-base-diameter)
-        pattern-size 24
-        all-slices
-        (apply union
-               (for [ab [0 1]]
-                 (apply union
-                        (for [slice (range (+ 2 (quot tz pattern-size)))]
-                          (call-module "vertical_prisms_slice"
-                                       tz ty tx pattern-size (- ε)
-                                       ab slice)))))
-        
-        ]
-    (->> all-slices
+  (let [split-at-height-fraction 3/16
+        tz (* split-at-height-fraction height)
+        shbd (* 1.5 screw-hole-base-diameter) ;; fudge
+        shbr (* 1/2 shbd)
+        sample-size (* 1/20 height)
+        sample-vector [sample-size sample-size sample-size]
+        frequencies [1 1/10 1/7]
+        amplitude (* 1/10 height)
+        eggcrate (call-module "x_single_eggcrate_box"
+                              [(* 1.1 height) ;; fudge
+                               shbd shbd]
+                              sample-vector
+                              frequencies
+                              amplitude)]
+
+    (->> eggcrate
          (rotate (* 1/4 τ) [0 1 0])
-         (translate [0 0 (* 1/2 tz)]))))
+         (translate [(- shbr) (- shbr) (+ tz (* 1/2 amplitude))]))))
 
 (defn screw-hole-pillar-upper [height]
-  (difference (screw-hole-pillar height)
+  (intersection (screw-hole-pillar height)
               (translate [0 0 (+ (- height)
                                  screw-hole-pillar-glue-tolerance)]
                          (screw-hole-pillar-splitter height))))
 
 (defn screw-hole-pillar-lower [height]
-  (intersection (screw-hole-pillar height)
+  (difference (screw-hole-pillar height)
                 (translate [0 0 (- height)]
                            (screw-hole-pillar-splitter height))))
 

@@ -472,4 +472,5 @@
 (say-spit "things/screw-hole-top.scad"
           (write-scad
            (use "vertical-prisms.scad")
+           (use "eggcrate.scad")
            (screw-hole-pillar-upper screw-hole-pillar-height)))
