@@ -205,12 +205,12 @@
   (apply union
          (for [column (drop-last columns)
                row (drop-last rows)
-               :when (and (finger-has-key-place-p row column)
-                          (finger-has-key-place-p (inc row) (inc column))
-                          (or (not (around-edge-p row column))
-                              (not (around-edge-p (inc row) (inc column))))
-                          (not (and (not (around-edge-p row column))
-                                    (not (around-edge-p (inc row) (inc column))))))]
+               :when (and (finger-has-key-place-p column row)
+                          (finger-has-key-place-p (inc column) (inc row))
+                          (or (not (around-edge-p column row))
+                              (not (around-edge-p (inc column) (inc row))))
+                          (not (and (not (around-edge-p column row))
+                                    (not (around-edge-p (inc column) (inc row))))))]
            (hull (key-frustum distance-below narrow-percent column row)
                  (key-frustum distance-below narrow-percent (inc column) (inc row))))))
                                         ; ... then the other.
@@ -218,21 +218,21 @@
   (apply union
          (for [column (drop 1 columns)
                row (drop-last rows)
-               :when (and (finger-has-key-place-p row column)
-                          (finger-has-key-place-p (inc row) (dec column))
-                          (or (not (around-edge-p row column))
-                              (not (around-edge-p (inc row) (dec column))))
-                          (not (and (not (around-edge-p row column))
-                                    (not (around-edge-p (inc row) (dec column))))))]
+               :when (and (finger-has-key-place-p column row)
+                          (finger-has-key-place-p (dec column) (inc row))
+                          (or (not (around-edge-p column row))
+                              (not (around-edge-p (dec column) (inc row))))
+                          (not (and (not (around-edge-p column row))
+                                    (not (around-edge-p (dec column) (inc row))))))]
            (hull (key-frustum distance-below narrow-percent column row)
                  (key-frustum distance-below narrow-percent (dec column) (inc row))))))
 (defn finger-middle-blob-prism [distance-below narrow-percent]
   (apply hull
          (for [column (drop-last (drop 1 columns))
                row (drop-last (drop 1 rows))
-               :when (and (finger-has-key-place-p row column)
-                          (finger-has-key-place-p (inc row) column)
-                          (finger-has-key-place-p row (inc column)))]
+               :when (and (finger-has-key-place-p column row)
+                          (finger-has-key-place-p column (inc row))
+                          (finger-has-key-place-p (inc column) row))]
            (key-frustum distance-below narrow-percent column row))))
 
 (defn finger-prism [distance-below narrow-percent]

@@ -146,7 +146,7 @@
                                          (+ (last rows) 1))]
                    (for [col columns #_(range (- (first columns) 1)
                                               (+ (last columns) 1))]
-                     (if (finger-has-key-place-p row col)
+                     (if (finger-has-key-place-p col row)
                        (->> sh
                             (translate [0 0 bottom-distance])
                             (key-place col row))))))
