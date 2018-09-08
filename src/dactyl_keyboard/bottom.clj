@@ -37,58 +37,50 @@
                                  3))
 (def legs-glue-tolerance 0.2)
 
-(def leg-pillar-splitter-a
+(defn leg-pillar-splitter [a-p]
   (let [height 80
         interface-height 24
+        face-size 1.5
+        amplitude 5
+        frequency [1 1/10 1/12]
         leg-radius-fudge (* 4 sides-radius)
         max-leg-radius (* 10 sides-radius) ;; includes allowance for
         ;; being rotated athwart the leg
         pattern-size 48
-        slice (call-module "vertical_prisms_slice"
-                           interface-height
-                           (* 3/2 leg-radius-fudge)
-                           (* 3/2 leg-radius-fudge)
-                           pattern-size legs-glue-tolerance 0 0)
+        modname (if a-p
+                  "x_single_eggcrate_box"
+                  "x_mating_single_eggcrate_box")
+        cone-radii (if a-p
+                     [max-leg-radius leg-radius-fudge]
+                     [leg-radius-fudge max-leg-radius])
+        cone-move-way (if a-p -1 1)
+        slice (call-module modname
+                           [interface-height
+                            (* 3/2 leg-radius-fudge)
+                            (* 3/2 leg-radius-fudge)]
+                           [face-size face-size face-size]
+                           frequency
+                           amplitude)
         interface (->> slice
-                       (rotate (* 1/4 τ) [0 1 0])
-                       (translate [0 0 (* -1/2 interface-height)])
-                       (translate [0 0 (* -1/4 pattern-size)]))
-        cone (->> (cylinder [max-leg-radius leg-radius-fudge]
-                            height))
+                       (color [1 0 0])
+                       (translate [0 (* -3/4 leg-radius-fudge)
+                                   (* -3/4 leg-radius-fudge)])
+                       (rotate (* -1/4 τ) [0 1 0])
+                       #_(translate [0 0 (* -1/2 interface-height)])
+                       #_(translate [0 0 (* -1/4 pattern-size)]))
+        cone (->> (cylinder cone-radii height))
         ]
     (union interface
            (->> cone
-                (translate [0 0 (- 0
-                                   (* 1/2 height)
-                                   (* 1/2 interface-height))])))))
+                (translate [0 0 (* cone-move-way
+                                   (+ (* 1/2 height)
+                                      (* 1/2 interface-height)))])))))
 
-(def leg-pillar-splitter-b
-  (let [height 80
-        interface-height 24
-        leg-radius-fudge (* 4 sides-radius)
-        max-leg-radius (* 10 sides-radius) ;; includes allowance for
-        ;; being rotated athwart the leg
-        pattern-size 48
-        slice (call-module "vertical_prisms_slice"
-                           interface-height
-                           (* 3/2 leg-radius-fudge)
-                           (* 3/2 leg-radius-fudge)
-                           pattern-size legs-glue-tolerance 1 -1)
-        interface (->> slice
-                       (rotate (* 1/4 τ) [0 1 0])
-                       (translate [0 0 (* -1/2 interface-height)])
-                       (translate [0 0 (* -1/4 pattern-size)]))
-        cone (->> (cylinder [leg-radius-fudge max-leg-radius]
-                            height))
-        ]
-    (union interface
-           (->> cone
-                (translate [0 0 (+ 0
-                                   (* 1/2 height)
-                                   (* 1/2 interface-height))])))))
+(def leg-pillar-splitter-a (leg-pillar-splitter true))
+(def leg-pillar-splitter-b (leg-pillar-splitter false))
 
 (defn legs [nubsp]
-  (let [leg-nub-height 4
+  (let [leg-nub-height 2
         sph1 (with-fn gasket-sphere-fn (sphere sides-radius))
         floor-scale 0.9 ;; values smaller than 1.0 push the bottoms of
                         ;; the legs toward the origin

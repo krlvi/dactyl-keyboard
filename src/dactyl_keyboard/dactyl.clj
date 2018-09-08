@@ -405,6 +405,7 @@
           (write-scad
            (use "key-place.scad")
            (use "vertical-prisms.scad")
+           (use "eggcrate.scad")
            (legs true)
            (apply union (legs false))
            ))
@@ -413,6 +414,7 @@
   (say-spit (format "things/dactyl-legs-right-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
+             (use "eggcrate.scad")
              (use "vertical-prisms.scad")
              leg)))
 
@@ -420,6 +422,7 @@
   (say-spit (format "things/dactyl-legs-left-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
+             (use "eggcrate.scad")
              (use "vertical-prisms.scad")
              (mirror [1 0 0] leg))))
 

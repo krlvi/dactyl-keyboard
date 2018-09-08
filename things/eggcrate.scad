@@ -169,6 +169,30 @@ module x_single_eggcrate_box(size, sample_size, frequency, amplitude,
           convexity=ceil(size.y*frequency.y + size.z*frequency.z)*2 );
 }
 
+/* this one mates with the x_single_eggcrate_box.
+   it is up to you to translate it to get a glue tolerance. */
+module x_mating_single_eggcrate_box(size, sample_size, frequency, amplitude,
+                                    phase=[0,0,0]) {
+     sy = floor(size.y / sample_size.y);
+     sz = floor(size.z / sample_size.z);
+     plus_x_points = x_grid_points(sy, sz,
+                                   sample_size.y, sample_size.z,
+                                   size.x);
+     minus_x_points = x_eggcrate_points(sy, sz,
+                                       sample_size.y, sample_size.z,
+                                       frequency.y, frequency.z,
+                                       phase.y, phase.z,
+                                       0, amplitude);
+     gf = concat(x_grid_faces_a(sy, sz), x_grid_faces_b(sy, sz));
+     bgf = concat(minusx_grid_faces_a(sy, sz),
+                  minusx_grid_faces_b(sy, sz));
+     bef = concat(x_box_edge_faces_a(sy, sz),
+                  x_box_edge_faces_b(sy, sz));
+     polyhedron(points=concat(plus_x_points, minus_x_points),
+                faces=concat(gf, bef, face_off(bgf, (sy+1)*(sz+1))),
+          convexity=ceil(size.y*frequency.y + size.z*frequency.z)*2 );
+}
+
 module x_double_eggcrate_box(size, sample_size, frequency, amplitude,
                              phase=[0,0,0]) {
      sy = floor(size.y / sample_size.y);
