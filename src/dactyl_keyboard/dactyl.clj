@@ -417,7 +417,7 @@
              leg)))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
-  (say-spit (format "things/dactyl-legs-right-%02d.scad" partno)
+  (say-spit (format "things/dactyl-legs-left-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
              (use "vertical-prisms.scad")
