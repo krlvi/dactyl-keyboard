@@ -57,28 +57,23 @@
 (def x-half-cylinder-for-intersect (partial x-half-cylinder-common 1.0 0))
 (def x-half-cylinder (partial x-half-cylinder-common amount-of-half-circle 0))
 
-(defn x-pins-places [radius shape]
-  (let [axify #(vector 0 %1 %2)
-        spacing (* 1.0 pin-length) ; should not depend on params: we use
-                                        ; different tooth sizes and
-                                        ; radii but need same places
-        npins (+ (/ radius spacing) 3)
-        polygonal-flat-diameter-ratio (Math/sin (/ τ pin-fn))]
-    (apply union
-           (for [x (range -1 (- npins 1))
-                 y (range (- npins) npins)]
-             (->> shape
-                  (rotate (* τ 1/4) [0 1 0])
-                  (translate (axify
-                              (* x spacing polygonal-flat-diameter-ratio)
-                              (* y 3/4 spacing)))
-                  (translate (axify (* (mod y 2) 1/2 pin-length) 0))
-                  (translate (axify 0 (* y -1/12 spacing))))))))
-
-(defn x-pin [length]
-  (with-fn pin-fn
-    (cylinder [length 0] length)))
-
+(defn x-bumpy-thing [r length]
+  (let [sample-factor 1/15
+        sample-size [(* sample-factor r)
+                     (* sample-factor r)
+                     (* sample-factor r)]
+        f (/ 1 (* 1/3 r))
+        frequency [1 (/ 1 (* 1/3 r)) (/ 1 (* 1/2 r))]
+        amplitude (* 1/4 length)]
+    (->>
+     (call-module "x_single_eggcrate_box"
+                  [(* 1/2 length) r (* 2 r)]
+                  sample-size
+                  frequency
+                  amplitude)
+     (translate [(+ #_interface-thickness
+                    (* 1/2 amplitude))
+                 0 (- r)]))))
 
 (defn x-solid-pin-cone [gasket-shape-radius pin-r-factor]
   (let [r gasket-shape-radius
@@ -86,7 +81,7 @@
         pin-r (* pin-r-factor r)
         pin-crop (x-half-cylinder [pin-r 0] pin-r 0)
         pins-front (intersection
-                    (x-pins-places gasket-shape-radius (x-pin pin-length))
+                    (x-bumpy-thing r pin-r)
                     pin-crop)]
     pins-front))
 

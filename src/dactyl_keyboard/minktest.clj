@@ -74,6 +74,7 @@
 
 (spit "things/minktest.scad"
       (write-scad
+       (use "eggcrate.scad")
        (union
         (x-hollow-pins 20)
         (x-hollow-holes 20))))
