@@ -254,12 +254,14 @@
 (say-spit "things/dactyl-top-right-thumb.scad"
           (write-scad
            (use "key-place.scad")
+           (use "eggcrate.scad")
            dactyl-top-right-thumb
            (sides-connectors-thumb-from-notation sides-frame-joints)))
 
 (say-spit "things/dactyl-top-left-thumb.scad"
           (write-scad
            (use "key-place.scad")
+           (use "eggcrate.scad")
            (mirror [1 0 0]
                    (union
                     dactyl-top-right-thumb
@@ -273,10 +275,12 @@
     (say-spit (format "things/dactyl-top-right-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
+             (use "eggcrate.scad")
              (union part1 part2)))
     (say-spit (format "things/dactyl-top-left-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
+             (use "eggcrate.scad")
              (mirror [1 0 0]
                      (union part1 part2))))))
 
@@ -319,8 +323,10 @@
   (say-spit (format "things/sides-right-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
+             (use "eggcrate.scad")
              define-sides-with-right-ports
              (union part1 part2
+                    ;; for reference when adjusting sides downness:
                     #_(union dactyl-top-right-thumb
                            (apply union (dactyl-top-right-pieces
                                          key-holes-pieces)))))))
@@ -333,6 +339,7 @@
   (say-spit (format "things/sides-left-%02d.scad" partno)
             (write-scad
              (use "key-place.scad")
+             (use "eggcrate.scad")
              define-sides-with-left-ports
              (mirror [1 0 0] (union part1 part2)))))
 
@@ -363,6 +370,7 @@
 (say-spit "things/dactyl-photo.scad"
           (write-scad
            (use "key-place.scad")
+           (use "eggcrate.scad")
            define-sides-with-right-ports
            (union
             sides-right
@@ -375,6 +383,7 @@
 (say-spit "things/clearance-check.scad"
           (write-scad
            (use "key-place.scad")
+           (use "eggcrate.scad")
            (use "teensy-holder.scad")
            (union
             (->> (call-module "teensy_holder_piece_a")
