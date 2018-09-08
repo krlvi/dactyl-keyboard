@@ -404,7 +404,6 @@
 (say-spit "things/legs-right.scad"
           (write-scad
            (use "key-place.scad")
-           (use "vertical-prisms.scad")
            (use "eggcrate.scad")
            (legs true)
            (apply union (legs false))
@@ -415,7 +414,6 @@
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
-             (use "vertical-prisms.scad")
              leg)))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
@@ -423,7 +421,6 @@
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
-             (use "vertical-prisms.scad")
              (mirror [1 0 0] leg))))
 
 (def entire-x 180)
@@ -461,19 +458,16 @@
         (say-spit (format "things/dactyl-bottom-right-%02d.scad" slice)
                   (write-scad
                    (use "key-place.scad")
-                   (use "vertical-prisms.scad")
                    (use "eggcrate.scad")
                    (render placed)))
         (say-spit (format "things/dactyl-bottom-left-%02d.scad" slice)
                   (write-scad
                    (use "key-place.scad")
-                   (use "vertical-prisms.scad")
                    (use "eggcrate.scad")
                    (mirror [1 0 0]
                            (render placed)))))))
 
 (say-spit "things/screw-hole-top.scad"
           (write-scad
-           (use "vertical-prisms.scad")
            (use "eggcrate.scad")
            (screw-hole-pillar-upper screw-hole-pillar-height)))
