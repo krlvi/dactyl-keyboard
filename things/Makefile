@@ -15,12 +15,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # --- END AGPLv3-preamble ---
-TARGETS = $(subst .scad,.stl,$(wildcard *.scad))
+SCADS = $(filter-out $(shell git ls-files), $(wildcard *.scad))
+TARGETS = $(subst .scad,.stl,$(SCADS))
+
 
 all: $(TARGETS)
 
 clean:
 	rm -rf $(TARGETS)
+realclean: clean
+	rm -rf $(SCADS)
 
 %.stl: %.scad
 	openscad --render -o $@ $^
