@@ -27,7 +27,7 @@
             [unicode-math.core :refer :all]))
 
 (def layouts
-  {:y-and-b
+  {:rollermouse-red
 ; we split the keyholes into pieces for smaller print volume and quicker printing
    {:columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)]
     :rows (range 0 5)
@@ -41,6 +41,12 @@
                   [:s :k 4 4] [:s :k 3 4] [:s :k 2 4] [:sw :k 1 4]
                   [:se :t 0 -1] [:s :t 1 -1] [:sw :t 2 -1]
                   [:w :t 2 0] [:nw :t 2 1] [:n :t 1 1]]
+    :sides-exist-at [[:w :t 2 0] [:nw :t 2 1] [:n :t 1 1]
+                     [:w :k -1 2] [:w :k -1 1] [:nw :k -1 0]
+                  [:n :k 0 0] [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
+                  [:e :k 5 1] [:e :k 5 2] [:e :k 5 3] [:se :k 5 4]
+                     [:s :k 4 4] [:s :k 3 4] [:s :k 2 4] [:sw :k 1 4]]
+    :sides-closed false
     :sides-partitions [[[:n-of-k 4 0] [:ne-of-k 5 0] [:se-of-k 5 4] [:s-of-k 4 4]]
                        [[:at-k 4 1] [:n-of-k 4 0] [:nw-of-k -1 0] [:w-of-k -1 1]]
                        [[:w-of-k -1 1] [:w-of-t 2 0] [:at-t 0 0] [:at-k 0 1]]
@@ -70,6 +76,58 @@
     :rj11-socket-at [:n :k (+ 1 1/2) 0]
     :rj11-socket-region [[:n :k 1 0] [:n :k 2 0]]
     :teensy-bracket-at [:k 1/2 3/2]}
+
+  :y-and-b
+; we split the keyholes into pieces for smaller print volume and quicker printing
+   {:columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)]
+    :rows (range 0 5)
+                                        ; some of these keys are not
+    ; within columns and rows. this is because the case bottom uses a
+    ; larger range
+    :finger-knockouts [[0 4] [-1 4] [-2 4] [0 5] [-1 5] [-2 5]]
+    :around-edge [#_[:sw :k -1 3] [:w :k -1 2] [:w :k -1 1] [:nw :k -1 0]
+                  [:n :k 0 0] [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
+                  [:e :k 5 1] [:e :k 5 2] [:e :k 5 3] [:se :k 5 4]
+                  [:s :k 4 4] [:s :k 3 4] [:s :k 2 4] [:sw :k 1 4]
+                  [:se :t 0 -1] [:s :t 1 -1] [:sw :t 2 -1]
+                  [:w :t 2 0] [:nw :t 2 1] [:n :t 1 1]]
+    :sides-exist-at [#_[:sw :k -1 3] [:w :k -1 2] [:w :k -1 1] [:nw :k -1 0]
+                  [:n :k 0 0] [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
+                  [:e :k 5 1] [:e :k 5 2] [:e :k 5 3] [:se :k 5 4]
+                  [:s :k 4 4] [:s :k 3 4] [:s :k 2 4] [:sw :k 1 4]
+                  [:se :t 0 -1] [:s :t 1 -1] [:sw :t 2 -1]
+                  [:w :t 2 0] [:nw :t 2 1] [:n :t 1 1]]
+    :sides-closed true
+    :sides-partitions [[[:n-of-k 4 0] [:ne-of-k 5 0] [:se-of-k 5 4] [:s-of-k 4 4]]
+                       [[:at-k 4 1] [:n-of-k 4 0] [:nw-of-k -1 0] [:w-of-k -1 1]]
+                       [[:w-of-k -1 1] [:w-of-t 2 0] [:at-t 0 0] [:at-k 0 1]]
+                       [[:at-t 1 0] [:w-of-t 2 0] [:sw-of-t 2 -1] [:s-of-t 1 -1]]
+                       [[:at-t 1 0] [:s-of-t 1 -1] [:s-of-k 4 1] [:at-k 4 1]]]
+    :sides-slice-joints [[:s :k 4 :last] [:n :k 4 :first] [:w :k :first 1]
+                         [:w :t 2 0] [:s :t 1 -1]]
+    :sides-frame-joints  [[[:e :k 5 0 1] [:e :k 5 1 2] [:e :k 5 3 4]]
+                          [[:n :k 2 3 0] [:n :k 0 1 0] [:w :k -1 0 1]]
+                          [[:w :k -1 1 2] [:w :t 2 0 1]]
+                          [[:w :t 2 -1 0] [:s :t 2 1 -1]]
+                          [[:s :t 1 0 -1] [:s :k 2 3 4]]]
+    :thumb-glue-joint-left-of [[-1 3] [1 4]]
+    :silo-widenings y-and-b-key-silo-widenings
+    :screw-holes-at [
+                     [:k 1/2 1/2] [:k 1/2 5/2]
+                     [:k 2 1/2] #_[:k 2 3/2] [:k 2 5/2] #_[:k 2 7/2]
+                     #_[:k 3 1/2] [:k 3 3/2] #_[:k 3 5/2] [:k 3 7/2]
+                     [:k (+ 4 1/2) 1/2] #_[:k (+ 4 1/2) 3/2]
+                     #_[:k (+ 4 1/2) 5/2] [:k (+ 4 1/2) 7/2]
+                     [:t 1/2 -1/2] [:t 3/2 -1/2] ]
+    :legs-at [
+              [:k -1 0] [:k 5 0] [:k 5 4] [:k 2 2]
+              [:t 2 0] ]
+    :usb-socket-at [:n :k -1 0]
+    :usb-socket-region [[:nw :k -1 0] [:n :k 0 0]]
+    :rj11-socket-at [:n :k (+ 1 1/2) 0]
+    :rj11-socket-region [[:n :k 1 0] [:n :k 2 0]]
+    :teensy-bracket-at [:k 1/2 3/2]}
+   
    :mini
    {:columns-pieces [(range -1 2)]
     :rows (range 2 5)
@@ -89,7 +147,7 @@
                         :else [0 0]))}})
 
 
-(def chosen-layout (layouts :y-and-b))
+(def chosen-layout (layouts :rollermouse-red))
 
 
 (def columns-pieces (chosen-layout :columns-pieces))
@@ -123,6 +181,8 @@
                                         ; start here -> ^**...*
                                         ;               xx****<
 (def around-edge (chosen-layout :around-edge))
+(def sides-exist-at (chosen-layout :sides-exist-at))
+(def sides-closed (chosen-layout :sides-closed))
 
 
 (defn rot1 [s] (concat (rest s) (list (first s))))

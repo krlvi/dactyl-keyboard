@@ -350,8 +350,8 @@
     (union sides)))
 
 (def sides-right
-  (sides sides-downness sides-thickness sides-radius around-edge
-                          true))
+  (sides sides-downness sides-thickness sides-radius sides-exist-at
+                          sides-closed))
 
 
 
