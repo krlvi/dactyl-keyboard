@@ -243,22 +243,40 @@
               rj11-nice-plate)
        (rj11-cutout-place rj11-cutout)))))
 
-(defn say-spit [& body]
-  (do
-    (print (format "%s\n" (first body)))
-    (apply spit body)))
+(defn emit? [tags] true)
 
-(say-spit "things/switch-hole.scad"
+(defn say-spit [tags & body]
+  (let [tag-abbrevs {:debugmodel "debug-"
+                     :piece "dm-"
+                     :frame "fra-"
+                     :bottom "bot-"
+                     :sides "sid-"
+                     :legs "leg-"
+                     :right "r"
+                     :left "l"
+                     :thumb "th"}
+        stringify (fn [x] (cond
+                            (integer? x) (format "%02d" x)
+                            (keyword? x) (or (tag-abbrevs x) (name x))))
+        filename (format "things/%s.scad"
+                         (clojure.string/join (map stringify tags)))]
+    (if (emit? tags)
+      (do
+        (print (format "%s\n" filename))
+        (apply spit (cons filename body)))
+      (print (format "skipped %s\n" filename)))))
+
+(say-spit [:debugmodel :single-plate]
       (write-scad chosen-single-plate))
 
-(say-spit "things/dactyl-top-right-thumb.scad"
+(say-spit [:piece :frame :right :thumb]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
            dactyl-top-right-thumb
            (sides-connectors-thumb-from-notation sides-frame-joints)))
 
-(say-spit "things/dactyl-top-left-thumb.scad"
+(say-spit [:piece :frame :left :thumb]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -272,19 +290,19 @@
              (dactyl-top-right-pieces key-holes-pieces)
              (sides-connectors-frame-from-notation sides-frame-joints))]
   (do
-    (say-spit (format "things/dactyl-top-right-%02d.scad" partno)
+    (say-spit [:piece :frame :right partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              (union part1 part2)))
-    (say-spit (format "things/dactyl-top-left-%02d.scad" partno)
+    (say-spit [:piece :frame :left partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              (mirror [1 0 0]
                      (union part1 part2))))))
 
-(say-spit "things/dactyl-top-right-all.scad"
+(say-spit [:debugmodel :frame :right :all]
           (write-scad
            (use "key-place.scad")
            (union dactyl-top-right-thumb
@@ -292,7 +310,7 @@
                   caps
                   thumbcaps)))
 
-(say-spit "things/dactyl-top-left-all.scad"
+(say-spit [:debugmodel :frame :left :all]
           (write-scad
            (use "key-place.scad")
            (mirror [1 0 0]
@@ -320,7 +338,7 @@
                                   (sides-connectors-sides-from-notation
                                    sides-frame-joints
                                    sides-slices-right))]
-  (say-spit (format "things/sides-right-%02d.scad" partno)
+  (say-spit [:piece :sides :right partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
@@ -336,14 +354,14 @@
                                   (sides-connectors-sides-from-notation
                                    sides-frame-joints
                                    sides-slices-right))]
-  (say-spit (format "things/sides-left-%02d.scad" partno)
+  (say-spit [:piece :sides :left partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              define-sides-with-left-ports
              (mirror [1 0 0] (union part1 part2)))))
 
-(say-spit "things/splits-right.scad"
+(say-spit [:debugmodel :splits]
           (write-scad
            (use "key-place.scad")
            (union
@@ -352,7 +370,7 @@
             sides-slice-intersects
             )))
 
-(say-spit "things/joins-right.scad"
+(say-spit [:debugmodel :joins]
           (write-scad
            (use "key-place.scad")
            define-sides-with-right-ports
@@ -361,13 +379,13 @@
                    (apply union (dactyl-top-right-pieces key-holes-pieces)))
             (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
 
-(say-spit "things/keys.scad"
+(say-spit [:debugmodel :keys]
           (write-scad
            (use "key-place.scad")
            (union
             (union caps thumbcaps))))
 
-(say-spit "things/dactyl-photo.scad"
+(say-spit [:debugmodel :photo]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -380,7 +398,7 @@
                    (apply union (dactyl-top-right-pieces key-holes-pieces)))
             )))
 
-(say-spit "things/clearance-check.scad"
+(say-spit [:debugmodel :teensy-holder-clearance-check]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -392,7 +410,7 @@
                  ((key-place-fn teensy-bracket-at)))
             bottom-right)))
 
-(say-spit "things/dactyl-bottom-right.scad"
+(say-spit [:debugmodel :bottom :right]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -402,7 +420,7 @@
                    (apply union
                           (dactyl-top-right-pieces key-holes-pieces)))))
 
-(say-spit "things/dactyl-bottom-left.scad"
+(say-spit [:debugmodel :bottom :left]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -410,7 +428,7 @@
                    (union
                     bottom-right))))
 
-(say-spit "things/legs-right.scad"
+(say-spit [:debugmodel :legs :right]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -419,14 +437,14 @@
            ))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
-  (say-spit (format "things/dactyl-legs-right-%02d.scad" partno)
+  (say-spit [:piece :legs :right partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              leg)))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
-  (say-spit (format "things/dactyl-legs-left-%02d.scad" partno)
+  (say-spit [:piece :legs :left partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
@@ -464,19 +482,19 @@
                                   (* -1/2 entire-y) 0])
                       (intersection bottom-right))]
       (do
-        (say-spit (format "things/dactyl-bottom-right-%02d.scad" slice)
+        (say-spit [:piece :bottom :right slice]
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
                    (render placed)))
-        (say-spit (format "things/dactyl-bottom-left-%02d.scad" slice)
+        (say-spit [:piece :bottom :left slice]
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
                    (mirror [1 0 0]
                            (render placed)))))))
 
-(say-spit "things/screw-hole-top.scad"
+(say-spit [:piece :screw-hole-top]
           (write-scad
            (use "eggcrate.scad")
            (screw-hole-pillar-upper screw-hole-pillar-height)))
