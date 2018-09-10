@@ -431,7 +431,7 @@
                  ((key-place-fn teensy-bracket-at)))
             bottom-right)))
 
-(say-spit [:debugmodel :bottom :right]
+(say-spit [:debugmodel :bottom :right :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -441,7 +441,7 @@
                    (apply union
                           (dactyl-top-right-pieces key-holes-pieces)))))
 
-(say-spit [:debugmodel :bottom :left]
+(say-spit [:debugmodel :bottom :left :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -449,7 +449,7 @@
                    (union
                     bottom-right))))
 
-(say-spit [:debugmodel :legs :right]
+(say-spit [:debugmodel :legs :right :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
