@@ -243,9 +243,26 @@
               rj11-nice-plate)
        (rj11-cutout-place rj11-cutout)))))
 
-(defn emit? [tags] true)
 
-(defn say-spit [tags & body]
+;; Put some keywords in skip-tags, and say-spit calls with those tags
+;; will not be evaluated. If you temporarily don't care about some
+;; parts, this may help you iterate faster. Usually this should be
+;; #{}.
+(def skip-tags #{})
+;; Put some keywords in emit-tags, and only say-spit calls with those
+;; tags will be evaluated. If you are iterating on just one or two
+;; parts, this may help you iterate faster. Usually this should be
+;; #{}.
+(def emit-tags #{})
+
+(defn emit? [tags]
+  (cond
+    (some emit-tags tags) true
+    (and (empty? emit-tags)
+         (not-any? skip-tags tags)) true
+    :else false))
+
+(defn make-filename [tags]
   (let [tag-abbrevs {:debugmodel "debug-"
                      :piece "dm-"
                      :frame "fra-"
@@ -260,11 +277,15 @@
                             (keyword? x) (or (tag-abbrevs x) (name x))))
         filename (format "things/%s.scad"
                          (clojure.string/join (map stringify tags)))]
-    (if (emit? tags)
-      (do
-        (print (format "%s\n" filename))
-        (apply spit (cons filename body)))
-      (print (format "skipped %s\n" filename)))))
+    filename))
+
+(defmacro say-spit [tags & body]
+  (if (emit? tags)
+    `(let [filename# (make-filename ~tags)]
+       (do
+         (print (format "%s  emitting  %s\n" ~tags filename#))
+         (spit filename# ~@body)))
+    `(print (format "%s *SKIPPING* %s\n" ~tags (make-filename ~tags)))))
 
 (say-spit [:debugmodel :single-plate]
       (write-scad chosen-single-plate))
