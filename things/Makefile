@@ -28,3 +28,5 @@ realclean: clean
 
 %.stl: %.scad
 	openscad --render -o $@ $^
+
+.PHONY: all clean realclean
