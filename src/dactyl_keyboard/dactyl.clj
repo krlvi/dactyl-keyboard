@@ -400,11 +400,16 @@
                    (apply union (dactyl-top-right-pieces key-holes-pieces)))
             (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
 
-(say-spit [:debugmodel :keys]
+(say-spit [:debugmodel :keys :right]
           (write-scad
            (use "key-place.scad")
            (union
             (union caps thumbcaps))))
+
+(say-spit [:debugmodel :keys :left]
+          (write-scad
+           (use "key-place.scad")
+           (mirror [1 0 0] (union caps thumbcaps))))
 
 (say-spit [:debugmodel :photo]
           (write-scad
