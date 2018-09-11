@@ -22,7 +22,8 @@
             [dactyl-keyboard.util :refer :all]
             [dactyl-keyboard.placement :refer [key-place]]
             [dactyl-keyboard.layout :refer [key-place-fn rj11-socket-at rj11-socket-region]]
-            [dactyl-keyboard.switch-hole :refer [mount-height]]
+            [dactyl-keyboard.switch-hole :refer [mount-height
+                                                 plate-thickness]]
             [dactyl-keyboard.sides
              :refer [sides-radius
                      sides-downness
@@ -49,9 +50,10 @@
 (defn rj11-cutout-place [shape]
   (->> shape
        (translate [0 (/ mount-height 2) 0])
-       (translate [0 sides-radius
-                   (- sides-radius)])
-       (translate [0 0 (- sides-downness)])
+       (translate [0 sides-radius (+ sides-downness
+                                     (- plate-thickness)
+                                     -3
+                                     )])
        (translate [0 (* -4/5 rj11-plate-thickness) 0]) ; fudged
        ((key-place-fn (rest rj11-socket-at)))))
 

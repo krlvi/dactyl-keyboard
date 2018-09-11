@@ -21,7 +21,8 @@
             [scad-clj.model :refer :all]
             [dactyl-keyboard.util :refer :all]
             [unicode-math.core :refer :all]
-            [dactyl-keyboard.switch-hole :refer [mount-height]]
+            [dactyl-keyboard.switch-hole :refer [mount-height
+                                                 plate-thickness]]
             [dactyl-keyboard.sides
              :refer [sides-radius
                      sides-downness]]
@@ -84,9 +85,10 @@
 (defn usb-cutout-place [shape]
   (->> shape
        (translate [0 (/ mount-height 2) 0])
-       (translate [0 sides-radius
-                   (- sides-radius)])
-       (translate [0 0 (- sides-downness)])
+       (translate [0 sides-radius (+ sides-downness
+                                     (- plate-thickness)
+                                     -3 ;; oh heck with it.
+                                     )])
        (translate [0 (- adafruit-usb-plate-thickness) 0]) ; fudge this
        ((key-place-fn (rest usb-socket-at)))))
 

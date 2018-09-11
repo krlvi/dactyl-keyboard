@@ -31,6 +31,8 @@
 ;; Case ;;
 ;;;;;;;;;;
 
+;; if you change this you will likely need to change the
+;; usb-cutout-place function and the rj11-cutout-place function
 (def sides-downness 3)
 (def sides-thickness 3)
 (def sides-radius 19)
