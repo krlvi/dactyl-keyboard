@@ -37,17 +37,6 @@ still have the old function with the old name hanging about, whereas a
 newly run, gosh-why-does-this-take-30-seconds-to-start REPL will catch
 your error.
 
-**
-
-
-### Printing
-Pregenerated STL files are available in the [things/](things/) directory.
-
-### Wiring
-Masks for the flexible PCBs I used are available for the [left](resources/pcb-left.svg) and [right](resources/pcb-right.svg) side.
-
-A [very rough guide for the brave is here](guide/README.org#wiring) - It will be improved over time (**TODO**)!
-
 ## License
 
 Copyright © 2015, 2018 Matthew Adereth and Jared Jennings
