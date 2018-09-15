@@ -221,7 +221,7 @@ module x_double_string_holes(hole_frequency,
                       size, sample_size, frequency, amplitude,
                       phase=[0,0,0]) {
      hole_diameter = 0.7;
-     away_from_edge = 3;
+     away_from_edge = 1.5;
      hole_fn = 6;
      for(y=[away_from_edge:1/hole_frequency:size.y-away_from_edge]) {
           translate([-(away_from_edge) +
