@@ -62,8 +62,9 @@
         sample-size [(* sample-factor r)
                      (* sample-factor r)
                      (* sample-factor r)]
-        f (/ 1 (* 1/3 r))
-        frequency [1 (/ 1 (* 1/3 r)) (/ 1 (* 1/2 r))]
+        fy (/ 3 (max r 15))
+        fz (/ 2 (max r 15))
+        frequency [1 fy fz]
         amplitude (* 1/4 length)]
     (->>
      (call-module "x_single_eggcrate_box"
