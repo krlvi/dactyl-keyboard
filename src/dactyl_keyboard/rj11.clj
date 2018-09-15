@@ -54,7 +54,7 @@
                                      (- plate-thickness)
                                      -3
                                      )])
-       (translate [0 (* -4/5 rj11-plate-thickness) 0]) ; fudged
+       (translate [0 (* -3/5 rj11-plate-thickness) 0]) ; fudged
        ((key-place-fn (rest rj11-socket-at)))))
 
 (def rj11-nice-plate
