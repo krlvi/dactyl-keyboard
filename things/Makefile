@@ -16,10 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # --- END AGPLv3-preamble ---
 SCADS = $(filter-out $(shell git ls-files), $(wildcard *.scad))
+RIGHT_SCADS = $(filter $(SCADS), $(wildcard *-r*))
 TARGETS = $(subst .scad,.stl,$(SCADS))
+RIGHT_TARGETS = $(subst .scad,.stl,$(RIGHT_SCADS))
 
 
 all: $(TARGETS)
+
+right: $(RIGHT_TARGETS)
 
 clean:
 	rm -rf $(TARGETS)
@@ -29,4 +33,4 @@ realclean: clean
 %.stl: %.scad
 	openscad --render -o $@ $^
 
-.PHONY: all clean realclean
+.PHONY: all clean realclean right
