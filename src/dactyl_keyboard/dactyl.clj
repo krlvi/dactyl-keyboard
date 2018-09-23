@@ -479,9 +479,12 @@
 (def entire-x 180)
 (def entire-y 180)
 (def entire-z 120)
-; set so that there aren't any little bits in the first slice
-(def bottom-slice-offset 14)
-(def bottom-slice-spacing (* mount-width 1.8))
+(def bottom-slice-spacing (* mount-width 1.9))
+
+; set so that there aren't any little bits in the first slice.  also
+; note that the eggcrate box is made so that its right side bumps are
+; centered on x=0.
+(def bottom-slice-offset (+ bottom-slice-spacing (* mount-width -0.05)))
 ;; (def bottom-slice-spacing (* mount-width 4.8))
 (def bottom-glue-tolerance 0.2)
 (def bottom-string-hole-frequency 1/12) ; mm^-1
@@ -489,36 +492,58 @@
 (def bottom-eggcrate-freq-y 1/30) ; mm^-1
 (def bottom-eggcrate-freq-z 1/25) ; mm^-1
 (def bottom-eggcrate-amplitude 15) ; mm
-(doseq [slice (range (/ entire-x bottom-slice-spacing))]
-  (let [slice-shape (call-module "x_space_filling_eggcrate_box"
-                                 slice
-                                 entire-x
-                                 bottom-glue-tolerance
-                                 bottom-string-hole-frequency
-                                 [bottom-slice-spacing entire-y entire-z]
-                                 [bottom-eggcrate-resolution
-                                  bottom-eggcrate-resolution
-                                  bottom-eggcrate-resolution]
-                                 [1 bottom-eggcrate-freq-y
-                                  bottom-eggcrate-freq-z]
-                                 bottom-eggcrate-amplitude)
-          placed (->> slice-shape
-                      (rotate (* 3/100 τ) [0 0 1])
-                      (translate [bottom-slice-offset
-                                  (* -1/2 entire-y) 0])
-                      (intersection bottom-right))]
+(defn with-eggcrate-splitters [use-splitter prepended-tags]
+  (doseq [slice (range (Math/ceil (/ entire-x bottom-slice-spacing)))]
+    (let [slice-shape (call-module "x_space_filling_eggcrate_box"
+                                   slice
+                                   entire-x
+                                   bottom-glue-tolerance
+                                   bottom-string-hole-frequency
+                                   [bottom-slice-spacing entire-y entire-z]
+                                   [bottom-eggcrate-resolution
+                                    bottom-eggcrate-resolution
+                                    bottom-eggcrate-resolution]
+                                   [1 bottom-eggcrate-freq-y
+                                    bottom-eggcrate-freq-z]
+                                   bottom-eggcrate-amplitude)
+          place (fn [shape] (->> shape
+                                 (rotate (* 2/100 τ) [0 0 1])
+                                 (translate [bottom-slice-offset
+                                             (* -1/2 entire-y) 0])))
+          axes (union
+                (cube entire-x 10 10)
+                (translate [0 (* 1/2 entire-y) 0]
+                           (cube 10 entire-y 10))
+                (translate [0 0 (* 1/2 entire-z)]
+                           (cube 10 10 entire-z)))
+          of-interest (use-splitter (place slice-shape))]
       (do
-        (say-spit [:piece :bottom :right slice]
+        (say-spit (apply vector (concat prepended-tags [:right slice]))
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
-                   (render placed)))
-        (say-spit [:piece :bottom :left slice]
+                   (union
+                    (render of-interest)
+                    (place axes))))
+        (say-spit (apply vector (concat prepended-tags [:left slice]))
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
                    (mirror [1 0 0]
-                           (render placed)))))))
+                           (union
+                            (render of-interest)
+                            (place axes)))))))))
+
+(with-eggcrate-splitters
+  #(intersection bottom-right %)
+  [:piece :bottom])
+
+(let [all-frame (union
+                 dactyl-top-right-thumb
+                 (apply union (dactyl-top-right-pieces key-holes-pieces)))]
+  (with-eggcrate-splitters
+    #(union all-frame %)
+    [:debugmodel :splitter-frame]))
 
 (say-spit [:piece :screw-hole-top]
           (write-scad
