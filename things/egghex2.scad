@@ -123,15 +123,13 @@ function hex_prism_eggcrate_points(sy, sz, dy, dz, fy, fz, py, pz, ay, az) =
                        [sin(a), cos(a),  0],
                        [0,      0,       1]] * v]);
 
-module hex_prism() {
-     s = [0, 23, 20];
-     d = [0, 0.5, 0.5];
-     f = [0, 1/5, 1/10];
+module hex_prism(rmin, h, res, waves, amp) {
+     side = rmin / (2*tan(180/6));
+     s = [0, side / res.y, h / res.z];
+     f = [0, waves.y/side, waves.z/h];
      p = [0, 0, 0];
-     a = [0, 2, 2];
-     points = hex_prism_eggcrate_points(s.y, s.z, d.y, d.z,
-          f.y, f.z, p.y, p.z, a.y, a.z);
-     echo(points[0]);
+     points = hex_prism_eggcrate_points(s.y, s.z, res.y, res.z,
+          f.y, f.z, p.y, p.z, amp.y, amp.z);
      faces = concat(minusx_grid_faces_a(s.z, s.y*6),
                     minusx_grid_faces_b(s.z, s.y*6),
                     hex_prism_end_faces_a(s.y, s.z)
@@ -144,14 +142,13 @@ module three() {
      minor_radius = 23*0.5*sqrt(3);
      tx = minor_radius + slop;
 
-     
-     hex_prism();
+     hex_prism(23, 40, 0.5, [0, 5, 1], [0, 5, 5]);
 
      for(a=[0:60:360]) {
           rotate(a=a, v=[0,0,1])
                translate([tx, 0, 0])
                rotate(a=-a, v=[0,0,1])
-               hex_prism();
+               hex_prism(23, 40, 0.5, [0, 5, 2], [0, 2, 2]);
      }
 }
 
