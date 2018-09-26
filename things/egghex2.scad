@@ -20,8 +20,6 @@ function ease(frac, total, x) =
                     (x <= a) ? (x / a) :
                     (x >= b) ? 1 - ((x-b) / a) : 1][0];
 
-for(x=[0:20]) echo(ease(0.3, 20, x));
-
 /** Points of a wobbly plane, to which the +x axis is normal.
     sy, sz: number of samples in y and z directions.
     dy, dz: size of samples in y and z directions, in units.
@@ -31,8 +29,8 @@ for(x=[0:20]) echo(ease(0.3, 20, x));
     x_offset: location of midpoint of waves, in units.
     amplitude: depth from peak to trough, in units.
 */
-function x_eggcrate_points(sy, sz, dy, dz, fy, fz, py, pz, ay, az,
-                           x_offset) =
+function x_eggcrate_points(sy, sz, dy, dz, fy, fz,
+                           py, pz, ay, az, x_offset) =
      [for(y=[0:1:sy-1], z=[0:1:sz])
                let(ease_frac = 0.2,
                    y_ease = ease(ease_frac, sy, y),
@@ -124,8 +122,8 @@ function hex_prism_eggcrate_points(sy, sz, dy, dz, fy, fz, py, pz, ay, az) =
                        [0,      0,       1]] * v]);
 
 module hex_prism(rmin, h, res, waves, amp) {
-     side = rmin / (2*tan(180/6));
-     s = [0, side / res.y, h / res.z];
+     side = rmin * (2*tan(180/6));
+     s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
      p = [0, 0, 0];
      points = hex_prism_eggcrate_points(s.y, s.z, res.y, res.z,
@@ -137,18 +135,22 @@ module hex_prism(rmin, h, res, waves, amp) {
      polyhedron(points=points, faces=faces);
 }
 
+module my_hex_prism() {
+     hex_prism(20, 40, [0, 0.5, 1], [0, 3, 4], [0, 3, 3]);
+}
+
 module three() {
      slop = 2;
-     minor_radius = 23*0.5*sqrt(3);
+     minor_radius = 40;
      tx = minor_radius + slop;
 
-     hex_prism(23, 40, 0.5, [0, 5, 1], [0, 5, 5]);
+     my_hex_prism();
 
-     for(a=[0:60:360]) {
+     for(a=[0:60:360-1]) {
           rotate(a=a, v=[0,0,1])
                translate([tx, 0, 0])
                rotate(a=-a, v=[0,0,1])
-               hex_prism(23, 40, 0.5, [0, 5, 2], [0, 2, 2]);
+               my_hex_prism();
      }
 }
 
