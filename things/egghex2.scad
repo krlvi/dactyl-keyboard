@@ -14,7 +14,7 @@ function x_grid_points(sy, sz, dy, dz, x_offset) =
                [x_offset, y*dy, z*dz]];
 
 function ease(frac, total, x) =
-     [for(dontcare=[0:1])
+     [for(dontcare=[0:0])
                let(a=floor(frac*total),
                    b=floor((1-frac)*total))
                     (x <= a) ? (x / a) :
@@ -39,7 +39,7 @@ function x_eggcrate_points(sy, sz, dy, dz, fy, fz,
                [x_offset+1/4*(0+ /* use 2 if you want troughs at 0 */
                               y_ease*z_ease*ay*sin((y*dy)*fy*360+py)+
                               y_ease*z_ease*az*sin((z*dz)*fz*360+pz)),
-                y*dy - sy/4,
+                y*dy - (sy/2 * dy),
                 z*dz]];
 
 /* maybe this *_a, *_b stuff is weak sauce, but i don't know how to
@@ -127,6 +127,7 @@ module hex_prism(rmin, h, res, waves, amp) {
      s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
      p = [0, 0, 0];
+     echo(s);
      points = hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
           f.y, f.z, p.y, p.z, amp.y, amp.z);
      faces = concat(minusx_grid_faces_a(s.z, s.y*6),
@@ -171,9 +172,9 @@ module three() {
 }
 
 module four() {
-     for(i=[0:8]) {
-          hex_prism_of_grid([220, 180, 200], i, 40, 1,
-                            [8,8,8], [5,5,5], [10, 10, 10]);
+     for(i=[0:10]) {
+          hex_prism_of_grid([220, 180, 200], i, 42, 1,
+                            [2,2,2], [5,5,5], [10, 10, 10]);
           }
 }
 
