@@ -107,16 +107,17 @@ function hex_prism_end_faces_a(sy, sz) =
            sz+4*sy*(sz+1)],
           ];
 
-function hex_prism_grid_points(sy, sz, dy, dz) =
+function hex_prism_grid_points(rmin, sy, sz, dy, dz) =
      concat([for(a=[0:60:360],
-                      v=x_grid_points(sy, sz, dy, dz, sy*dy*sqrt(3)/2))
+                      v=x_grid_points(sy, sz, dy, dz, rmin))
                       [[cos(a), -sin(a), 0],
                        [sin(a), cos(a), 0],
                        [0, 0, 1]] * v]);
 
-function hex_prism_eggcrate_points(sy, sz, dy, dz, fy, fz, py, pz, ay, az) =
+function hex_prism_eggcrate_points(rmin, sy, sz, dy, dz, fy, fz,
+                                   py, pz, ay, az) =
      concat([for(a=[0:60:360],
-                      v=x_eggcrate_points(sy, sz, dy, dz, fy, fz, py+a*2, pz+(a>180?180:0), ay, az, sy*dy*sqrt(3)/2))
+                      v=x_eggcrate_points(sy, sz, dy, dz, fy, fz, py+a*2, pz+(a>180?180:0), ay, az, rmin))
                       [[cos(a), -sin(a), 0],
                        [sin(a), cos(a),  0],
                        [0,      0,       1]] * v]);
@@ -126,7 +127,7 @@ module hex_prism(rmin, h, res, waves, amp) {
      s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
      p = [0, 0, 0];
-     points = hex_prism_eggcrate_points(s.y, s.z, res.y, res.z,
+     points = hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
           f.y, f.z, p.y, p.z, amp.y, amp.z);
      faces = concat(minusx_grid_faces_a(s.z, s.y*6),
                     minusx_grid_faces_b(s.z, s.y*6),
@@ -135,9 +136,24 @@ module hex_prism(rmin, h, res, waves, amp) {
      polyhedron(points=points, faces=faces);
 }
 
+module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp) {
+     rmaj = rmin / cos(180/6);
+     side = rmin * (2*tan(180/6));
+     row_y = 3/2 * side + gap * sin(60);
+     /* rmin: make sure to cover entire width */
+     columns = ceil((bounds.x + rmin) / (2*rmin));
+     column = which % columns;
+     row = floor(which / columns);
+     x_offset = row % 2 != 0 ? rmin + gap/2 : 0;
+     translate([column * (rmin * 2 + gap) + x_offset,
+                row * row_y, 0])
+          hex_prism(rmin, bounds.z, res, waves, amp);
+}
+          
 module my_hex_prism() {
      hex_prism(20, 40, [0, 0.5, 1], [0, 3, 4], [0, 3, 3]);
 }
+
 
 module three() {
      slop = 2;
@@ -154,4 +170,12 @@ module three() {
      }
 }
 
-three();
+module four() {
+     for(i=[0:8]) {
+          hex_prism_of_grid([220, 180, 200], i, 40, 1,
+                            [8,8,8], [5,5,5], [10, 10, 10]);
+          }
+}
+
+
+four();
