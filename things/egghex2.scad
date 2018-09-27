@@ -108,7 +108,7 @@ function hex_prism_end_faces_a(sy, sz) =
           ];
 
 function hex_prism_grid_points(rmin, sy, sz, dy, dz) =
-     concat([for(a=[0:60:360],
+     concat([for(a=[0:60:360-1],
                       v=x_grid_points(sy, sz, dy, dz, rmin))
                       [[cos(a), -sin(a), 0],
                        [sin(a), cos(a), 0],
@@ -127,6 +127,7 @@ module hex_prism(rmin, h, res, waves, amp) {
      s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
      p = [0, 0, 0];
+     echo(res);
      echo(s);
      points = hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
           f.y, f.z, p.y, p.z, amp.y, amp.z);

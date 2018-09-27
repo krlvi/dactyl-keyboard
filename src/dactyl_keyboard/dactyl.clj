@@ -479,37 +479,51 @@
 (def entire-x 180)
 (def entire-y 180)
 (def entire-z 120)
-(def bottom-slice-spacing (* mount-width 1.9))
+(def bottom-egghex-minor-radius 30)
 
-; set so that there aren't any little bits in the first slice.  also
-; note that the eggcrate box is made so that its right side bumps are
-; centered on x=0.
-(def bottom-slice-offset (+ bottom-slice-spacing (* mount-width -0.05)))
-;; (def bottom-slice-spacing (* mount-width 4.8))
+; set so that there aren't any little bits.
+(defn offset-bottom-slices [shape]
+  (translate [0 0 0] shape))
+
 (def bottom-glue-tolerance 0.2)
 (def bottom-string-hole-frequency 1/12) ; mm^-1
-(def bottom-eggcrate-resolution 3.5) ; mm
+(def bottom-eggcrate-resolution 2) ; mm
 (def bottom-eggcrate-freq-y 1/30) ; mm^-1
 (def bottom-eggcrate-freq-z 1/25) ; mm^-1
-(def bottom-eggcrate-amplitude 15) ; mm
-(defn with-eggcrate-splitters [use-splitter prepended-tags]
-  (doseq [slice (range (Math/ceil (/ entire-x bottom-slice-spacing)))]
-    (let [slice-shape (call-module "x_space_filling_eggcrate_box"
+(def bottom-eggcrate-amplitude 8) ; mm
+
+(defn with-egghex-splitters [use-splitter prepended-tags]
+  (let [rmin bottom-egghex-minor-radius
+        side (* rmin 2 (Math/tan (/ (* 1/2 τ) 6)))
+        ;; 6 : hexagon
+        rmaj (/ rmin (Math/cos (/ (* 1/2 τ) 6)))
+        egghex-columns (Math/ceil (/ (+ entire-x rmin)
+                                (+ (* 2 bottom-egghex-minor-radius)
+                                   bottom-glue-tolerance)))
+        egghex-row-spacing (+ (* 3/2 side) (* bottom-glue-tolerance
+                                              (Math/sin (/ τ 6))))
+        egghex-rows (Math/ceil (/ entire-y
+                             (+ egghex-row-spacing
+                                bottom-glue-tolerance)))]
+  (doseq [slice (range (* egghex-columns egghex-rows))]
+    (let [slice-shape (call-module "hex_prism_of_grid"
+                                   [entire-x entire-y entire-z]
                                    slice
-                                   entire-x
+                                   rmin
                                    bottom-glue-tolerance
-                                   bottom-string-hole-frequency
-                                   [bottom-slice-spacing entire-y entire-z]
                                    [bottom-eggcrate-resolution
                                     bottom-eggcrate-resolution
                                     bottom-eggcrate-resolution]
-                                   [1 bottom-eggcrate-freq-y
-                                    bottom-eggcrate-freq-z]
-                                   bottom-eggcrate-amplitude)
+                                   #_[1 bottom-eggcrate-freq-y
+                                      bottom-eggcrate-freq-z]
+                                   [1 2 5]
+                                   [bottom-eggcrate-amplitude
+                                    bottom-eggcrate-amplitude
+                                    bottom-eggcrate-amplitude])
           place (fn [shape] (->> shape
                                  (rotate (* 2/100 τ) [0 0 1])
-                                 (translate [bottom-slice-offset
-                                             (* -1/2 entire-y) 0])))
+                                 (offset-bottom-slices)
+                                 (translate [0 (* -1/2 entire-y) 0])))
           axes (union
                 (cube entire-x 10 10)
                 (translate [0 (* 1/2 entire-y) 0]
@@ -522,6 +536,7 @@
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
+                   (use "egghex2.scad")
                    (union
                     (render of-interest)
                     (place axes))))
@@ -529,19 +544,20 @@
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
+                   (use "egghex2.scad")
                    (mirror [1 0 0]
                            (union
                             (render of-interest)
-                            (place axes)))))))))
+                            (place axes))))))))))
 
-(with-eggcrate-splitters
+(with-egghex-splitters
   #(intersection bottom-right %)
   [:piece :bottom])
 
 (let [all-frame (union
                  dactyl-top-right-thumb
                  (apply union (dactyl-top-right-pieces key-holes-pieces)))]
-  (with-eggcrate-splitters
+  (with-egghex-splitters
     #(union all-frame %)
     [:debugmodel :splitter-frame]))
 
