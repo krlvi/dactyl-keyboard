@@ -541,7 +541,7 @@
                    (use "egghex2.scad")
                    (union
                     (render of-interest)
-                    (place axes))))
+                    #_(place axes))))
         (say-spit (apply vector (concat prepended-tags [:left slice]))
                   (write-scad
                    (use "key-place.scad")
