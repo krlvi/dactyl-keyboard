@@ -52,35 +52,22 @@ function x_eggcrate_points_for_hex(sy, sz, dy, dz, fy, fz,
 /* This simplification to four triangle faces for the top and bottom
  * only works if the y-amplitude of the eggcrate is zero at the top
  * and bottom, and the z component of the eggcrate is zero. */
-function hex_prism_end_faces_a(sy, sz) =
-     [
-          /* bottom */
-          [0+0*sy*(sz+1),
-           0+1*sy*(sz+1),
-           0+2*sy*(sz+1)],
-          [0+0*sy*(sz+1),
-           0+2*sy*(sz+1),
-           0+3*sy*(sz+1)],
-          [0+0*sy*(sz+1),
-           0+3*sy*(sz+1),
-           0+4*sy*(sz+1)],
-          [0+0*sy*(sz+1),
-           0+4*sy*(sz+1),
-           0+5*sy*(sz+1)],
-          /* top */
-          [sz+0*sy*(sz+1),
-           sz+2*sy*(sz+1),
-           sz+1*sy*(sz+1)],
-          [sz+0*sy*(sz+1),
-           sz+3*sy*(sz+1),
-           sz+2*sy*(sz+1)],
-          [sz+0*sy*(sz+1),
-           sz+4*sy*(sz+1),
-           sz+3*sy*(sz+1)],
-          [sz+0*sy*(sz+1),
-           sz+5*sy*(sz+1),
-           sz+4*sy*(sz+1)],
-          ];
+function hex_prism_top_and_bottom_faces(sy, sz) =
+     concat([for(y=[0:1:sy-1])
+                      [y*(sz+1)-1,
+                       (y+1)*(sz+1)-1,
+                       /* top center */
+                       sy*(sz+1)]],
+            [for(y=[0:1:sy-2])
+                      [y*(sz+1),
+                       (y+1)*(sz+1),
+                       /* bottom center */
+                       sy*(sz+1)+1]],
+            [
+                 /* last slice of top */
+                 [sy*(sz+1)-1, 1*(sz+1)-1, sy*(sz+1)],
+                 /* last slice of bottom */
+                 [(sy-1)*(sz+1), 0, sy*(sz+1)+1]]);
 
 function hex_prism_grid_points(rmin, sy, sz, dy, dz) =
      concat([for(a=[0:60:360-1],
@@ -101,13 +88,13 @@ function hex_prism_eggcrate_points(rmin, sy, sz, dy, dz, fy, fz,
                        [0,      0,       1]] * v]);
 
 function minusx_last_strip_a(sy, sz) =
-     [for(y=[0:1:sy])
+     [for(y=[0:1:sy-1])
                [y+0+(sz-1)*(sy+1),
                 y+0+0*(sy+1),
                 y+1+0*(sy+1)]];
 
 function minusx_last_strip_b(sy, sz) =
-     [for(y=[0:1:sy])
+     [for(y=[0:1:sy-1])
                [y+1+(sz-1)*(sy+1),
                 y+0+(sz-1)*(sy+1),
                 y+1+0*(sy+1)]];
@@ -119,14 +106,15 @@ module hex_prism(rmin, h, res, waves, amp) {
      p = [0, 0, 0];
      points = concat(
           hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
-                                    f.y, f.z, p.y, p.z, amp.y, amp.z));
+                                    f.y, f.z, p.y, p.z, amp.y, amp.z),
+          [[0, 0, h], [0, 0, 0]]);
      faces = concat(
           minusx_grid_faces_a(s.z, s.y*6),
-                    minusx_grid_faces_b(s.z, s.y*6),
-                    minusx_last_strip_a(s.z, s.y*6),
-                    minusx_last_strip_b(s.z, s.y*6),
-                    hex_prism_end_faces_a(s.y, s.z)
-                    );
+          minusx_grid_faces_b(s.z, s.y*6),
+          minusx_last_strip_a(s.z, s.y*6),
+          minusx_last_strip_b(s.z, s.y*6),
+          hex_prism_top_and_bottom_faces(s.y*6, s.z)
+          );
      polyhedron(points=points, faces=faces);
 }
 
