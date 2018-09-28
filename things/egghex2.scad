@@ -38,8 +38,8 @@ function ease(frac, total, x) =
 function x_eggcrate_points_for_hex(sy, sz, dy, dz, fy, fz,
                            py, pz, ay, az, x_offset, last) =
      [for(y=[0:1:sy-1], z=[0:1:sz])
-               let(ease_frac_y = max(0.25, 8/sy),
-                   ease_frac_z = max(0.25, 8/sz),
+               let(ease_frac_y = min(max(0.25, 8/sy), 0.5),
+                   ease_frac_z = min(max(0.25, 8/sz), 0.5),
                    y_ease = ease(ease_frac_y, sy, y),
                    z_ease = ease(ease_frac_z, sz, z))
 
@@ -49,13 +49,11 @@ function x_eggcrate_points_for_hex(sy, sz, dy, dz, fy, fz,
                 y*dy - (sy/2 * dy),
                 z*dz]];
 
-/* This simplification to four triangle faces for the top and bottom
- * only works if the y-amplitude of the eggcrate is zero at the top
- * and bottom, and the z component of the eggcrate is zero. */
 function hex_prism_top_and_bottom_faces(sy, sz) =
      concat([for(y=[0:1:sy-1])
-                      [y*(sz+1)-1,
+                      [
                        (y+1)*(sz+1)-1,
+                           y*(sz+1)-1,
                        /* top center */
                        sy*(sz+1)]],
             [for(y=[0:1:sy-2])
@@ -65,7 +63,7 @@ function hex_prism_top_and_bottom_faces(sy, sz) =
                        sy*(sz+1)+1]],
             [
                  /* last slice of top */
-                 [sy*(sz+1)-1, 1*(sz+1)-1, sy*(sz+1)],
+                 [1*(sz+1)-1, sy*(sz+1)-1, sy*(sz+1)],
                  /* last slice of bottom */
                  [(sy-1)*(sz+1), 0, sy*(sz+1)+1]]);
 
@@ -89,15 +87,19 @@ function hex_prism_eggcrate_points(rmin, sy, sz, dy, dz, fy, fz,
 
 function minusx_last_strip_a(sy, sz) =
      [for(y=[0:1:sy-1])
-               [y+0+(sz-1)*(sy+1),
+               [
                 y+0+0*(sy+1),
-                y+1+0*(sy+1)]];
+                    y+0+(sz-1)*(sy+1),
+                y+1+0*(sy+1)
+                    ]];
 
 function minusx_last_strip_b(sy, sz) =
      [for(y=[0:1:sy-1])
-               [y+1+(sz-1)*(sy+1),
+               [
                 y+0+(sz-1)*(sy+1),
-                y+1+0*(sy+1)]];
+                    y+1+(sz-1)*(sy+1),
+                y+1+0*(sy+1)
+                    ]];
 
 module hex_prism(rmin, h, res, waves, amp) {
      side = rmin * (2*tan(180/6));
@@ -107,15 +109,16 @@ module hex_prism(rmin, h, res, waves, amp) {
      points = concat(
           hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
                                     f.y, f.z, p.y, p.z, amp.y, amp.z),
-          [[0, 0, h], [0, 0, 0]]);
+          [[0, 0, (floor(h/res.z)*res.z)],
+           [0, 0, 0]]);
      faces = concat(
-          minusx_grid_faces_a(s.z, s.y*6),
-          minusx_grid_faces_b(s.z, s.y*6),
+          minusx_grid_faces_a(s.z, s.y*6-1),
+          minusx_grid_faces_b(s.z, s.y*6-1),
           minusx_last_strip_a(s.z, s.y*6),
           minusx_last_strip_b(s.z, s.y*6),
           hex_prism_top_and_bottom_faces(s.y*6, s.z)
           );
-     polyhedron(points=points, faces=faces);
+     polyhedron(points=points, faces=faces, convexity=20);
 }
 
 module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp) {
@@ -159,5 +162,8 @@ module hex_test_object_four() {
           }
 }
 
+module hex_test_object_five() {
+     hex_prism(10, 13, [0, 1, 2], [0, 3, 4], [0, 3, 3]);
+}
 
-hex_test_object_four();
+hex_test_object_five();
