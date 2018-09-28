@@ -37,10 +37,11 @@ function ease(frac, total, x) =
 */
 function x_eggcrate_points_for_hex(sy, sz, dy, dz, fy, fz,
                            py, pz, ay, az, x_offset, last) =
-     [for(y=[0:1:(last!=0?sy:sy-1)], z=[0:1:sz])
-               let(ease_frac = 0.2,
-                   y_ease = ease(ease_frac, sy, y),
-                   z_ease = ease(ease_frac, sz, z))
+     [for(y=[0:1:sy-1], z=[0:1:sz])
+               let(ease_frac_y = max(0.25, 8/sy),
+                   ease_frac_z = max(0.25, 8/sz),
+                   y_ease = ease(ease_frac_y, sy, y),
+                   z_ease = ease(ease_frac_z, sz, z))
 
                [x_offset+1/4*(0+ /* use 2 if you want troughs at 0 */
                               y_ease*z_ease*ay*sin((y*dy)*fy*360+py)+
@@ -99,17 +100,31 @@ function hex_prism_eggcrate_points(rmin, sy, sz, dy, dz, fy, fz,
                        [sin(a), cos(a),  0],
                        [0,      0,       1]] * v]);
 
+function minusx_last_strip_a(sy, sz) =
+     [for(y=[0:1:sy])
+               [y+0+(sz-1)*(sy+1),
+                y+0+0*(sy+1),
+                y+1+0*(sy+1)]];
+
+function minusx_last_strip_b(sy, sz) =
+     [for(y=[0:1:sy])
+               [y+1+(sz-1)*(sy+1),
+                y+0+(sz-1)*(sy+1),
+                y+1+0*(sy+1)]];
+
 module hex_prism(rmin, h, res, waves, amp) {
      side = rmin * (2*tan(180/6));
      s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
      p = [0, 0, 0];
-     echo(res);
-     echo(s);
-     points = hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
-          f.y, f.z, p.y, p.z, amp.y, amp.z);
-     faces = concat(minusx_grid_faces_a(s.z, s.y*6),
+     points = concat(
+          hex_prism_eggcrate_points(rmin, s.y, s.z, res.y, res.z,
+                                    f.y, f.z, p.y, p.z, amp.y, amp.z));
+     faces = concat(
+          minusx_grid_faces_a(s.z, s.y*6),
                     minusx_grid_faces_b(s.z, s.y*6),
+                    minusx_last_strip_a(s.z, s.y*6),
+                    minusx_last_strip_b(s.z, s.y*6),
                     hex_prism_end_faces_a(s.y, s.z)
                     );
      polyhedron(points=points, faces=faces);
@@ -150,7 +165,7 @@ module hex_test_object_three() {
 }
 
 module hex_test_object_four() {
-     for(i=[0:10]) {
+     for(i=[0:0]) {
           hex_prism_of_grid([220, 180, 200], i, 42, 1,
                             [2,2,2], [5,5,5], [10, 10, 10]);
           }
