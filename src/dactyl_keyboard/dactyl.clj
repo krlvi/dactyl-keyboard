@@ -477,20 +477,21 @@
              (mirror [1 0 0] leg))))
 
 (def entire-x 180)
-(def entire-y 180)
+(def entire-y 160)
 (def entire-z 120)
-(def bottom-egghex-minor-radius 30)
+(def bottom-egghex-minor-radius 40)
 
 ; set so that there aren't any little bits.
 (defn offset-bottom-slices [shape]
-  (translate [0 0 0] shape))
+  (translate [-5 8 0] shape))
 
 (def bottom-glue-tolerance 0.2)
 (def bottom-string-hole-frequency 1/12) ; mm^-1
 (def bottom-eggcrate-resolution 2) ; mm
 (def bottom-eggcrate-freq-y 1/30) ; mm^-1
 (def bottom-eggcrate-freq-z 1/25) ; mm^-1
-(def bottom-eggcrate-amplitude 8) ; mm
+(def bottom-eggcrate-waves [1 4 5]) ; per side, [not_used y z]
+(def bottom-eggcrate-amplitude 10) ; mm
 
 (defn with-egghex-splitters [use-splitter prepended-tags]
   (let [rmin bottom-egghex-minor-radius
@@ -516,14 +517,15 @@
                                     bottom-eggcrate-resolution]
                                    #_[1 bottom-eggcrate-freq-y
                                       bottom-eggcrate-freq-z]
-                                   [1 2 5]
+                                   bottom-eggcrate-waves
                                    [bottom-eggcrate-amplitude
                                     bottom-eggcrate-amplitude
                                     bottom-eggcrate-amplitude])
           place (fn [shape] (->> shape
                                  (rotate (* 2/100 τ) [0 0 1])
                                  (offset-bottom-slices)
-                                 (translate [0 (* -1/2 entire-y) 0])))
+                                 (translate [(* -1/2 entire-x)
+                                             (* -1/2 entire-y) 0])))
           axes (union
                 (cube entire-x 10 10)
                 (translate [0 (* 1/2 entire-y) 0]
@@ -548,7 +550,7 @@
                    (mirror [1 0 0]
                            (union
                             (render of-interest)
-                            (place axes))))))))))
+                            #_(place axes))))))))))
 
 (with-egghex-splitters
   #(intersection bottom-right %)
