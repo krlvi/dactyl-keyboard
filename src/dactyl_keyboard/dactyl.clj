@@ -480,18 +480,19 @@
 (def entire-y 160)
 (def entire-z 120)
 (def bottom-egghex-minor-radius 40)
+;; you may have to change these when you change the minor radius
+(def bottom-lace-holes-per-side 10)
+(def bottom-eggcrate-waves-per-side [0 4 5])
 
 ; set so that there aren't any little bits.
 (defn offset-bottom-slices [shape]
   (translate [-5 8 0] shape))
 
 (def bottom-glue-tolerance 0.2)
-(def bottom-string-hole-frequency 1/12) ; mm^-1
 (def bottom-eggcrate-resolution 2) ; mm
-(def bottom-eggcrate-freq-y 1/30) ; mm^-1
-(def bottom-eggcrate-freq-z 1/25) ; mm^-1
-(def bottom-eggcrate-waves [1 4 5]) ; per side, [not_used y z]
 (def bottom-eggcrate-amplitude 10) ; mm
+(def bottom-lace-hole-r 0.3) ; mm
+(def bottom-lace-hole-in-from-edge 1) ; mm
 
 (defn with-egghex-splitters [use-splitter prepended-tags]
   (let [rmin bottom-egghex-minor-radius
@@ -515,12 +516,14 @@
                                    [bottom-eggcrate-resolution
                                     bottom-eggcrate-resolution
                                     bottom-eggcrate-resolution]
-                                   #_[1 bottom-eggcrate-freq-y
-                                      bottom-eggcrate-freq-z]
-                                   bottom-eggcrate-waves
+                                   bottom-eggcrate-waves-per-side
                                    [bottom-eggcrate-amplitude
                                     bottom-eggcrate-amplitude
-                                    bottom-eggcrate-amplitude])
+                                    bottom-eggcrate-amplitude]
+                                   1 bottom-lace-holes-per-side
+                                   bottom-lace-hole-r
+                                   bottom-lace-hole-in-from-edge
+                                   )
           place (fn [shape] (->> shape
                                  (rotate (* 2/100 τ) [0 0 1])
                                  (offset-bottom-slices)

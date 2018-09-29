@@ -49,6 +49,31 @@ function x_eggcrate_points_for_hex(sy, sz, dy, dz, fy, fz,
                 y*dy - (sy/2 * dy),
                 z*dz]];
 
+module lace_holes_one_face(how_many, hole_r, from_edge,
+                           sy, sz, dy, dz, fy, fz,
+                           py, pz, ay, az, x_offset) {
+     /* these will be differenced so make them go all the way through */
+     h_fudge = 2;
+     h = sz * dz;
+     center_y = (sy*dy) / (how_many+2);
+     for(i=[0:1:how_many-2]) {
+          y = (i / how_many) * sy; // 0 to sy or so
+          ease_frac_y = min(max(0.25, 8/sy), 0.5);
+          y_ease = ease(ease_frac_y, sy, y);
+          /* for some reason this doesn't move the hole in far
+           * enough. just pass in from_edge > 0 and it will be
+           * fine. */
+          max_x = x_offset+1/4*(0+
+                                y_ease*1*ay*
+                                  sin(((y*dy)+center_y)*fy*360+py)+
+                                1*1*az*-1);
+          x = max_x - from_edge;
+          translate([x, y*dy - (sy*dy)/2 + center_y, h/2])
+               color("red")
+               cylinder(r=hole_r, h=h+h_fudge, center=true);
+     }
+}
+
 function hex_prism_top_and_bottom_faces(sy, sz) =
      concat([for(y=[0:1:sy-1])
                       [
@@ -101,7 +126,8 @@ function minusx_last_strip_b(sy, sz) =
                 y+1+0*(sy+1)
                     ]];
 
-module hex_prism(rmin, h, res, waves, amp) {
+module hex_prism(rmin, h, res, waves, amp,
+                 lace_p, lace_n, lace_r, lace_from_edge) {
      side = rmin * (2*tan(180/6));
      s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
@@ -118,10 +144,22 @@ module hex_prism(rmin, h, res, waves, amp) {
           minusx_last_strip_b(s.z, s.y*6),
           hex_prism_top_and_bottom_faces(s.y*6, s.z)
           );
-     polyhedron(points=points, faces=faces, convexity=20);
+     difference() {
+          polyhedron(points=points, faces=faces, convexity=20);
+          if(lace_p != 0) {
+               for(a=[0:60:360-1]) {
+                    rotate(a=a, v=[0,0,1])
+                         lace_holes_one_face(lace_n, lace_r, lace_from_edge,
+                                             s.y, s.z, res.y, res.z, f.y, f.z,
+                                             p.y+a*2, p.z+(a>180?180:0),
+                                             amp.y, amp.z, rmin);
+               }
+          }
+     }
 }
 
-module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp) {
+module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp,
+                         lace_p, lace_n, lace_r, lace_from_edge) {
      rmaj = rmin / cos(180/6);
      side = rmin * (2*tan(180/6));
      row_y = 3/2 * side + gap * sin(60);
@@ -132,7 +170,8 @@ module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp) {
      x_offset = row % 2 != 0 ? rmin + gap/2 : 0;
      translate([column * (rmin * 2 + gap) + x_offset,
                 row * row_y, 0])
-          hex_prism(rmin, bounds.z, res, waves, amp);
+          hex_prism(rmin, bounds.z, res, waves, amp,
+                    lace_p, lace_n, lace_r, lace_from_edge);
 }
           
 
@@ -158,12 +197,14 @@ module hex_test_object_three() {
 module hex_test_object_four() {
      for(i=[0:0]) {
           hex_prism_of_grid([220, 180, 200], i, 42, 1,
-                            [2,2,2], [5,5,5], [10, 10, 10]);
+                            [2,2,2], [5,5,5], [10, 10, 10],
+                            1, 12, 0.2, 1);
           }
 }
 
 module hex_test_object_five() {
-     hex_prism(10, 13, [0, 1, 2], [0, 3, 4], [0, 3, 3]);
+     hex_prism(10, 13, [0, 1, 2], [0, 3, 4], [0, 6, 6],
+          1, 4, 0.2, 1);
 }
 
 hex_test_object_five();
