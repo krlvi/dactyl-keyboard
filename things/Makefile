@@ -30,7 +30,7 @@ clean:
 realclean: clean
 	rm -rf $(SCADS)
 
-%.stl: %.scad
-	openscad --render -o $@ $^
+%.stl: %.scad egghex2.scad eggcrate.scad
+	openscad --render -o $@ $<
 
 .PHONY: all clean realclean right
