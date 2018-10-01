@@ -70,7 +70,7 @@ module lace_holes_one_face(how_many, hole_r, from_edge,
           x = max_x - from_edge;
           translate([x, y*dy - (sy*dy)/2 + center_y, h/2])
                color("red")
-               cylinder(r=hole_r, h=h+h_fudge, center=true);
+               cylinder(r=hole_r, h=h+h_fudge, center=true, fn=12);
      }
 }
 
@@ -104,7 +104,7 @@ function hex_prism_eggcrate_points(rmin, sy, sz, dy, dz, fy, fz,
      concat([for(a=[0:60:360-1],
                       v=x_eggcrate_points_for_hex(
                            sy, sz, dy, dz, fy, fz,
-                           py+a*2, pz+(a>180?180:0),
+                           py+[0,120,240,0,240,120][floor(a/60)], pz+(a>=180?180:0),
                            ay, az, rmin, a >= 300 ? 1 : 0))
                       [[cos(a), -sin(a), 0],
                        [sin(a), cos(a),  0],
@@ -151,7 +151,7 @@ module hex_prism(rmin, h, res, waves, amp,
                     rotate(a=a, v=[0,0,1])
                          lace_holes_one_face(lace_n, lace_r, lace_from_edge,
                                              s.y, s.z, res.y, res.z, f.y, f.z,
-                                             p.y+a*2, p.z+(a>180?180:0),
+                                             p.y+[0,120,240,0,240,120][floor(a/60)], p.z+(a>=180?180:0),
                                              amp.y, amp.z, rmin);
                }
           }
@@ -173,38 +173,3 @@ module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp,
           hex_prism(rmin, bounds.z, res, waves, amp,
                     lace_p, lace_n, lace_r, lace_from_edge);
 }
-          
-
-
-module hex_test_object_three() {
-     slop = 2;
-     minor_radius = 40;
-     tx = minor_radius + slop;
-
-     module my_hex_prism() {
-          hex_prism(20, 40, [0, 0.5, 1], [0, 3, 4], [0, 3, 3]);
-     }
-     my_hex_prism();
-
-     for(a=[0:60:360-1]) {
-          rotate(a=a, v=[0,0,1])
-               translate([tx, 0, 0])
-               rotate(a=-a, v=[0,0,1])
-               my_hex_prism();
-     }
-}
-
-module hex_test_object_four() {
-     for(i=[0:0]) {
-          hex_prism_of_grid([220, 180, 200], i, 42, 1,
-                            [2,2,2], [5,5,5], [10, 10, 10],
-                            1, 12, 0.2, 1);
-          }
-}
-
-module hex_test_object_five() {
-     hex_prism(10, 13, [0, 1, 2], [0, 3, 4], [0, 6, 6],
-          1, 4, 0.2, 1);
-}
-
-hex_test_object_five();
