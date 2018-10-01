@@ -479,10 +479,10 @@
 (def entire-x 180)
 (def entire-y 160)
 (def entire-z 120)
-(def bottom-egghex-minor-radius 40)
+(def bottom-egghex-minor-radius 30)
 ;; you may have to change these when you change the minor radius
-(def bottom-lace-holes-per-side 8)
-(def bottom-eggcrate-waves-per-side [0 3 7])
+(def bottom-lace-holes-per-side 4)
+(def bottom-eggcrate-waves-per-side [0 3 3])
 
 ; set so that there aren't any little bits.
 (defn offset-bottom-slices [shape]
