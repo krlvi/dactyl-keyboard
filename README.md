@@ -10,32 +10,96 @@ The Dactyl is a parameterized, split-hand, concave, columnar, ergonomic keyboard
 <br/>
 <img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/pieces.jpg" alt="The whole right hand of the keyboard, exploded view" />
 
-## Assembly
+## Making one of your own
 
-### Generating a Design
+The keyboard is written as a Clojure program, which emits OpenSCAD
+code, and as some lower-level OpenSCAD code. Unlike in the original
+repository, I don't tend to keep the .scad and .stl files emitted by
+the program in the repository and downloadable. Maybe once I get to
+1.0.
 
-**Setting up the Clojure environment**
+### Setting up a build environment
+
 * [Install the Clojure runtime](https://clojure.org)
 * [Install the Leiningen project manager](http://leiningen.org/)
 * [Install OpenSCAD](http://www.openscad.org/)
 
-**Generating the design**
+### Building the design
+
 * Run `lein repl`
 * Load the file `(load-file "src/dactyl_keyboard/dactyl.clj")`
-* This will regenerate the `things/*.scad` files
-* Use OpenSCAD to open a `.scad` file.
+* This will generate the `things/*.scad` files
+* In the `things` directory, `make -k -j8` (it is a GNU makefile). This will build the `.stl` files - and take a half an hour, likely.
 
-**Iterating**
-* Run `sh editloop.sh --no-fstl src/dactyl_keyboard/dactyl.clj dactyl-blank-all`.
-* Make changes to design, save files, watch as everything is rerun.
+### Iterating
 
-This is not as nice as some of the REPL integration you can do into
-Emacs using CIDER, nor as fast as running your `(load-file)` again in
-the same REPL, but if you rename a function, forget to change all the
-calls to it, and start changing the new copy, a long-running REPL will
-still have the old function with the old name hanging about, whereas a
-newly run, gosh-why-does-this-take-30-seconds-to-start REPL will catch
-your error.
+* Have an `.scad` file open in OpenSCAD.
+* Have this command running: `sh editloop.sh --no-fstl src/dactyl_keyboard/dactyl.clj dactyl-blank-all`
+* Make changes to the design, save files, watch as everything is rerun.
+
+There are faster things you can do (keep the REPL open, and do the
+`(load-file)` again), and nicer things (CIDER), but this way works for
+me and I left it at that.
+
+You can change the definitions of `skip-tags` and `emit-tags` in
+`dactyl.clj` to avoid creating some outputs. This can save time if you
+are iterating on a part and not the whole keyboard. The keywords you
+can put in are just below, in `make-filename`. For example, to avoid
+emitting the left half, change the definition of `skip-tags` to:
+
+```
+(def skip-tags #{:left})
+```
+
+### Printing
+
+Filename convention:
+
+```
+[object]-[part]-[lr][##].stl
+
+e.g.
+dm-bot-l01.stl
+```
+
+`dm` stands for Dactyl Marshmallow. Parts are `bot` for bottom, `sid`
+for sides, `fra` for frame, and `screw-hole-top`. File names are short
+so you can tell them apart on a small LCD display. Print one of each,
+and ten screw-hole-tops. (There is a `debug` object whose pieces you
+get when you turn debugging on in `dactyl.clj`. They do not make sense
+to print, only to view.) Print also a `teensy-holder-a` and a
+`teensy-holder-b`.
+
+Put your controller
+into the holder, put the two holder pieces together, and contrive to
+hold them that way, likely by gluing, but maybe temporarily with a
+rubber band. You may not want to stick the controller in permanently
+until after you've soldered the wires onto it.
+
+Numbered pieces of each `dm` part should be glued together. To glue
+the bottom, tie pieces together with fishing line, and hold tight
+while applying Sci-Grip 4 (acrylic weld, with dichloromethane, danger,
+read safety directions) or liquid cyanoacrylate. To glue the frame,
+use spring clamps while applying very thin glue such as the foregoing.
+
+Press threaded inserts into the ten screw hole tops using a soldering
+iron. Then glue them onto the waffly bits on top of the `bot`
+part. Glue the legs on the bottom.
+
+Press a threaded insert into the screw hole in the bottom of one of
+the frame pieces. This is where the `teensy-holder` screws in.
+
+Install the connectors into the sides pieces. The USB extension just
+screws on; the RJ-11... who knows. Glue?
+
+Once you've installed keyswitches into the frame, done your wiring,
+and soldered the wires to the controller, you can screw the frame to
+the bottom. Then maybe it's a good time to glue the sides on. Figure
+out how you are going to get the last piece in place with all the
+other ones already glued, before you start gluing.
+
+This is how I imagine it all goes together. I've still never gotten
+all the pieces printed yet! I keep making little changes.
 
 ## License
 
