@@ -265,12 +265,12 @@
 (defn make-filename [tags]
   (let [tag-abbrevs {:debugmodel "debug-"
                      :piece "dm-"
-                     :frame "fra-"
-                     :bottom "bot-"
-                     :sides "sid-"
-                     :legs "leg-"
-                     :right "r"
-                     :left "l"
+                     :frame "fra"
+                     :bottom "bot"
+                     :sides "sid"
+                     :legs "leg"
+                     :right "r-"
+                     :left "l-"
                      :thumb "th"}
         stringify (fn [x] (cond
                             (integer? x) (format "%02d" x)
@@ -290,14 +290,14 @@
 (say-spit [:debugmodel :single-plate]
       (write-scad chosen-single-plate))
 
-(say-spit [:piece :frame :right :thumb]
+(say-spit [:piece :right :frame :thumb]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
            dactyl-top-right-thumb
            (sides-connectors-thumb-from-notation sides-frame-joints)))
 
-(say-spit [:piece :frame :left :thumb]
+(say-spit [:piece :left :frame :thumb]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -311,19 +311,19 @@
              (dactyl-top-right-pieces key-holes-pieces)
              (sides-connectors-frame-from-notation sides-frame-joints))]
   (do
-    (say-spit [:piece :frame :right partno]
+    (say-spit [:piece :right :frame partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              (union part1 part2)))
-    (say-spit [:piece :frame :left partno]
+    (say-spit [:piece :left :frame partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              (mirror [1 0 0]
                      (union part1 part2))))))
 
-(say-spit [:debugmodel :frame :right :all]
+(say-spit [:debugmodel :right :frame :all]
           (write-scad
            (use "key-place.scad")
            (union dactyl-top-right-thumb
@@ -331,7 +331,7 @@
                   caps
                   thumbcaps)))
 
-(say-spit [:debugmodel :frame :left :all]
+(say-spit [:debugmodel :left :frame :all]
           (write-scad
            (use "key-place.scad")
            (mirror [1 0 0]
@@ -359,7 +359,7 @@
                                   (sides-connectors-sides-from-notation
                                    sides-frame-joints
                                    sides-slices-right))]
-  (say-spit [:piece :sides :right partno]
+  (say-spit [:piece :right :sides partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
@@ -375,7 +375,7 @@
                                   (sides-connectors-sides-from-notation
                                    sides-frame-joints
                                    sides-slices-right))]
-  (say-spit [:piece :sides :left partno]
+  (say-spit [:piece :left :sides partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
@@ -400,13 +400,13 @@
                    (apply union (dactyl-top-right-pieces key-holes-pieces)))
             (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
 
-(say-spit [:debugmodel :keys :right]
+(say-spit [:debugmodel :right :keys]
           (write-scad
            (use "key-place.scad")
            (union
             (union caps thumbcaps))))
 
-(say-spit [:debugmodel :keys :left]
+(say-spit [:debugmodel :left :keys]
           (write-scad
            (use "key-place.scad")
            (mirror [1 0 0] (union caps thumbcaps))))
@@ -436,7 +436,7 @@
                  ((key-place-fn teensy-bracket-at)))
             bottom-right)))
 
-(say-spit [:debugmodel :bottom :right :all]
+(say-spit [:debugmodel :right :bottom :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -446,7 +446,7 @@
                    (apply union
                           (dactyl-top-right-pieces key-holes-pieces)))))
 
-(say-spit [:debugmodel :bottom :left :all]
+(say-spit [:debugmodel :left :bottom :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -454,7 +454,7 @@
                    (union
                     bottom-right))))
 
-(say-spit [:debugmodel :legs :right :all]
+(say-spit [:debugmodel :right :legs :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
@@ -463,14 +463,14 @@
            ))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
-  (say-spit [:piece :legs :right partno]
+  (say-spit [:piece :right :legs partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              leg)))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
-  (say-spit [:piece :legs :left partno]
+  (say-spit [:piece :left :legs partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
@@ -537,7 +537,10 @@
                            (cube 10 10 entire-z)))
           of-interest (use-splitter (place slice-shape))]
       (do
-        (say-spit (apply vector (concat prepended-tags [:right slice]))
+        (say-spit (apply vector (concat [(first prepended-tags)]
+                                        [:right]
+                                        (rest prepended-tags)
+                                        [slice]))
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")
@@ -545,7 +548,10 @@
                    (union
                     (render of-interest)
                     #_(place axes))))
-        (say-spit (apply vector (concat prepended-tags [:left slice]))
+        (say-spit (apply vector (concat [(first prepended-tags)]
+                                        [:left]
+                                        (rest prepended-tags)
+                                        [slice]))
                   (write-scad
                    (use "key-place.scad")
                    (use "eggcrate.scad")

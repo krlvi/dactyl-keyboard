@@ -56,25 +56,26 @@ emitting the left half, change the definition of `skip-tags` to:
 Filename convention:
 
 ```
-[object]-[part]-[lr][##].stl
+[object]-[lr]-[part][piece].stl
 
 e.g.
-dm-bot-l01.stl
+dm-l-bot01.stl
 ```
 
-`dm` stands for Dactyl Marshmallow. Parts are `bot` for bottom, `sid`
-for sides, `fra` for frame, and `screw-hole-top`. File names are short
-so you can tell them apart on a small LCD display. Print one of each,
-and ten screw-hole-tops. (There is a `debug` object whose pieces you
-get when you turn debugging on in `dactyl.clj`. They do not make sense
-to print, only to view.) Print also a `teensy-holder-a` and a
-`teensy-holder-b`.
+`dm` stands for Dactyl Marshmallow. `lr` is `l` for the left hand, `r`
+for the right. Parts are `bot` for bottom, `sid` for sides, `fra` for
+frame, and `screw-hole-top`. File names are short so you can tell them
+apart on a small LCD display such as you may have on your 3D
+printer. There may not be `.stl` files for every numbered piece of the
+`bot` part; this is ok. Print one of each piece, and ten
+screw-hole-tops. (Don't print `debug-*` files.)  Print also a
+`teensy-holder-a` and a `teensy-holder-b`.
 
-Put your controller
-into the holder, put the two holder pieces together, and contrive to
-hold them that way, likely by gluing, but maybe temporarily with a
-rubber band. You may not want to stick the controller in permanently
-until after you've soldered the wires onto it.
+Put your controller into the holder, put the two holder pieces
+together, and contrive to hold them that way, likely by gluing, but
+maybe temporarily with a rubber band. You may not want to stick the
+controller in permanently until after you've soldered the wires onto
+it.
 
 Numbered pieces of each `dm` part should be glued together. To glue
 the bottom, tie pieces together with fishing line, and hold tight
