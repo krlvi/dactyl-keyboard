@@ -70,7 +70,7 @@ module lace_holes_one_face(how_many, hole_r, from_edge,
           x = max_x - from_edge;
           translate([x, y*dy - (sy*dy)/2 + center_y, h/2])
                color("red")
-               cylinder(r=hole_r, h=h+h_fudge, center=true, fn=12);
+               cylinder(r=hole_r, h=h+h_fudge, center=true, $fn=12);
      }
 }
 
@@ -157,6 +157,8 @@ module hex_prism(rmin, h, res, waves, amp,
           }
      }
 }
+
+hex_prism(20, 50, [3,3,3], [1, 3, 5], [0, 4, 4], 2, 5, 0.5, 2);
 
 module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp,
                          lace_p, lace_n, lace_r, lace_from_edge) {

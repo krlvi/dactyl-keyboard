@@ -488,9 +488,9 @@
 (defn offset-bottom-slices [shape]
   (translate [-5 8 0] shape))
 
-(def bottom-glue-tolerance 0.2)
-(def bottom-eggcrate-resolution 1) ; mm
-(def bottom-eggcrate-amplitude 9) ; mm
+(def bottom-glue-tolerance 0.1)
+(def bottom-eggcrate-resolution 2) ; mm
+(def bottom-eggcrate-amplitude 5) ; mm
 (def bottom-lace-hole-r 0.6) ; mm
 (def bottom-lace-hole-in-from-edge 2) ; mm
 
