@@ -73,11 +73,13 @@
                        (color [1 0 0] glue-joint-center-left))
             (color [1 0 1]
                    (hull (key-place column row web-post-tl)
+                         (key-place (- column 1/2) row
+                                    (translate [(/ glue-joint-wall-thickness 2) 0 0]
+                                               glue-post-t))
                          (key-place column row web-post-bl)
                          (key-place (- column 1/2) row
-                                    (translate [(* 1/2 glue-joint-wall-thickness) 0 0]
-                                               (x-round-cube (* 1/2 glue-joint-wall-thickness)
-                                                             mount-height glue-joint-height)))))))))
+                                    (translate [(/ glue-joint-wall-thickness 2) 0 0]
+                                               glue-post-b))))))))
 
                                         ; thumb-glue-joints doesn't
                                         ; get the same loopy
@@ -87,23 +89,25 @@
   (union
 
    (key-place 1/2 4 (color [0 1 0] glue-joint-center-right))
-   (color [1 0 1] (hull (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-tr))
-                        (key-place 1/2 4 (translate [(* -3/2 glue-joint-wall-thickness) 0 0]
-                                                    (x-round-cube (* 1/2 glue-joint-wall-thickness)
-                                                                    mount-height glue-joint-height)))
-                        (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-br))))
+   (color [1 0 1] (hull (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-tr)) (key-place 1/2 4 (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0] glue-post-t))
+                        (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-br)) (key-place 1/2 4 (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0] glue-post-b))))
 
    (key-place -3/2 3 (color [0 1 0] glue-joint-center-right))
-   (color [1 0 1] (hull (thumb-place 2 1 web-post-tr)
-                        (thumb-place 2 1 web-post-br)
-                        (key-place -3/2 3 (translate [(* -3/2 glue-joint-wall-thickness) 0 0]
-                                                     (x-round-cube (* 1/2 glue-joint-wall-thickness)
-                                                                   mount-height glue-joint-height)))))
+   (color [1 0 1] (hull (thumb-place 2 1 web-post-tr) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] glue-post-t))
+                        (thumb-place 2 1 web-post-br) (key-place -3/2 3 (translate [(- 0 (* 3/2 glue-joint-wall-thickness)) 0 0] glue-post-b))))
    ;; this below is a block so you can clamp this joint when you glue it.
-   (color [0 0 1] (->> (x-round-cube (* 6 glue-joint-wall-thickness)
-                                     mount-height glue-joint-height)
-                       (translate [(* -4 glue-joint-wall-thickness) 0 0])
-                       (key-place -3/2 3)))))
+   (color [0 0 1] (hull (->> glue-post-t
+                             (translate [(* -7 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))
+                        (->> glue-post-b
+                             (translate [(* -7 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))
+                        (->> glue-post-t
+                             (translate [(* -1 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))
+                        (->> glue-post-b
+                             (translate [(* -1 glue-joint-wall-thickness) 0 0])
+                             (key-place -3/2 3))))))
 
 (def right-glue-joints-for-fingerpieces
   (let [rgj-for-this
@@ -125,11 +129,19 @@
                                 (key-place column row web-post-tr)
                                 (key-place column row (translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-tr))
                                 (key-place joint-column row
-                                           (translate [(* -3/2 glue-joint-wall-thickness) 0 0]
-                                                      (x-round-cube (* 1/2 glue-joint-wall-thickness)
-                                                                    mount-height glue-joint-height)))
+                                           (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0]
+                                                      glue-post-t))
+                                (key-place joint-column row
+                                           (translate [(- 0 (* glue-joint-wall-thickness 2/2)) 0 0]
+                                                      glue-post-t))
                                 (key-place column row web-post-br)
-                                (key-place column row (translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-br))))))))))]
+                                (key-place column row (translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-br))
+                                (key-place joint-column row
+                                           (translate [(- 0 (* glue-joint-wall-thickness 2/2)) 0 0]
+                                                      glue-post-b))
+                                (key-place joint-column row
+                                           (translate [(- 0 (* glue-joint-wall-thickness 3/2)) 0 0]
+                                                      glue-post-b))))))))))]
     (map #_(fn [a b c] ()) rgj-for-this
          (cons true (repeat false))
          (concat (repeat (- (count columns-pieces) 1) false) '(true))
@@ -163,12 +175,12 @@
                                         ; connect paddle to key-place
                         (color [1 0 1]
                                (hull
-                                (key-place joint-column row
-                                           (translate [(* 1/2 glue-joint-wall-thickness) 0 0]
-                                                      (x-round-cube (* 1/2 glue-joint-wall-thickness)
-                                                                    mount-height glue-joint-height)))
+                                (key-place joint-column row glue-post-t)
+                                (key-place joint-column row (translate [(* glue-joint-wall-thickness 1/2) 0 0] glue-post-t))
                                 (key-place column row web-post-tl)
                                 (key-place column row (translate [(* cherry-bezel-width 1/2) 0 0] web-post-tl))
+                                (key-place joint-column row glue-post-b)
+                                (key-place joint-column row (translate [(* glue-joint-wall-thickness 1/2) 0 0] glue-post-b))
                                 (key-place column row web-post-bl)
                                 (key-place column row (translate [(* cherry-bezel-width 1/2) 0 0] web-post-bl))))))))))]
     (map #_(fn [a b c] ()) lgj-for-this
