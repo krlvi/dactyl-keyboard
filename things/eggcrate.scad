@@ -231,7 +231,7 @@ module x_double_string_holes(hole_frequency,
                     r=(hole_diameter/2),
                     h=size.z*1.1,
                     center=true,
-                    fn=hole_fn);
+                    $fn=hole_fn);
           translate([-(size.x-away_from_edge) +
                      amplitude/4*(+1+sin((y+phase.y)*frequency.y*360)),
                      y, size.z/2 ])
@@ -239,7 +239,7 @@ module x_double_string_holes(hole_frequency,
                     r=(hole_diameter/2),
                     h=size.z*1.1,
                     center=true,
-                    fn=hole_fn);
+                    $fn=hole_fn);
      }
 }
 
