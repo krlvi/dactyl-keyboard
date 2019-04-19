@@ -63,13 +63,24 @@
                (/ glue-joint-height 4)]
               shape)))
 
+(defn x-round-cube [sx sy sz]
+  (union (cube sx (+ (* 1/2 sy) 0.001) sz)
+         (difference
+         (translate [0 (* 1/4 sy) 0]
+                    (rotate [0 (* 1/4 τ) 0]
+                            (cylinder (* 0.95 1/4 sy) sx)))
+         (cube (* 1.01 sx) (+ (* 1/2 sy) 0.002) sz))
+         (translate [0 (* -1/4 sy) 0]
+                    (rotate [0 (* 1/4 τ) 0]
+                            (cylinder (* 0.95 1/4 sy) sx)))))
+                     
                                         ; glue-joint-r-shape is at the
                                         ; far left of a key space, and
                                         ; goes on the right side of a
                                         ; glue joint
 (def glue-joint-r-shape
   (difference
-         (cube glue-joint-wall-thickness
+         (x-round-cube glue-joint-wall-thickness
                mount-height
                glue-joint-height)
          (glue-joint-r-places glue-joint-not-lug)))
@@ -80,7 +91,7 @@
                                         ; a glue joint
 (def glue-joint-l-shape
   (union
-         (cube glue-joint-wall-thickness
+         (x-round-cube glue-joint-wall-thickness
                mount-height
                glue-joint-height)
          (glue-joint-l-places glue-joint-lug)))
