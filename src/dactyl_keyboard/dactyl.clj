@@ -479,8 +479,8 @@
 (def bottom-glue-tolerance 0.1)
 (def bottom-eggcrate-resolution 2) ; mm
 (def bottom-eggcrate-amplitude 5) ; mm
-(def bottom-lace-hole-r 0.6) ; mm
-(def bottom-lace-hole-in-from-edge 2) ; mm
+(def bottom-lace-hole-r 1.0) ; mm
+(def bottom-lace-hole-in-from-edge 2.2) ; mm
 
 (defn with-egghex-splitters [use-splitter prepended-tags]
   (let [rmin bottom-egghex-minor-radius
