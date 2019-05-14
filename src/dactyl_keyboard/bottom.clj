@@ -41,7 +41,7 @@
   (let [height 80
         interface-height 24
         face-size 1.5
-        amplitude 5
+        amplitude 2
         frequency [1 1/10 1/12]
         leg-radius-fudge (* 4 sides-radius)
         max-leg-radius (* 10 sides-radius) ;; includes allowance for
