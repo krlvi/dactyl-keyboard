@@ -38,6 +38,8 @@
 
 (def ^:dynamic *scad-being-written* "(unknown)")
 
+(defn basename [filename] (last (clojure.string/split filename #"/")))
+
 (defn ensure-line-in-file [line filename]
   (if (.exists (clojure.java.io/file filename))
     (let [lines (clojure.string/split-lines (slurp filename))]
@@ -47,15 +49,19 @@
 
 (defn use [library]
   (do
-   (ensure-line-in-file (format "%s: %s\n" *scad-being-written* library)
+   (ensure-line-in-file (format "%s: %s\n" (basename *scad-being-written*) library)
                         "things/.deps")
    (m/use library)))
 
 (defn import [file & args]
-  (do
-    (ensure-line-in-file (format "%s: %s\n" *scad-being-written* file)
-                         "things/.deps")
-    (apply m/import (cons file args))))
+  (let [fb (basename file)] ; the import statement is going to import
+                            ; an stl in the things directory, and it
+                            ; is being written in an scad in the
+                            ; things directory
+    (do
+      (ensure-line-in-file (format "%s: %s\n" (basename *scad-being-written*) fb)
+                           "things/.deps")
+      (apply m/import (cons fb args)))))
 
 
 (def thumb
