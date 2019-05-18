@@ -503,7 +503,7 @@
 (def bottom-egghex-minor-radius 30)
 ;; you may have to change these when you change the minor radius
 (def bottom-lace-holes-per-side 6)
-(def bottom-eggcrate-waves-per-side [0 3 8])
+(def bottom-eggcrate-waves-per-side [0 6 28])
 
 ; set so that there aren't any little bits.
 (defn offset-bottom-slices [shape]
@@ -511,7 +511,7 @@
 
 (def bottom-glue-tolerance 0.1)
 (def bottom-eggcrate-resolution 2) ; mm
-(def bottom-eggcrate-amplitude 5) ; mm
+(def bottom-eggcrate-amplitude 4) ; mm
 (def bottom-lace-hole-r 1.0) ; mm
 (def bottom-lace-hole-in-from-edge 2.2) ; mm
 
