@@ -17,8 +17,8 @@
 ;; --- END AGPLv3-preamble ---
 (ns dactyl-keyboard.dactyl
   (:refer-clojure :exclude [use import])
-  (:require [scad-clj.scad :refer :all]
-            [scad-clj.model :refer :all]
+  (:require [scad-clj.scad :refer [write-scad]]
+            [scad-clj.model :as m]
             [dactyl-keyboard.util :refer :all]
             [dactyl-keyboard.switch-hole :refer :all]
             [dactyl-keyboard.keycaps :refer :all]
@@ -36,19 +36,32 @@
             [dactyl-keyboard.adafruit-usb :refer :all]
             [dactyl-keyboard.rj11 :refer :all]))
 
+(def ^:dynamic *scad-being-written* "(unknown)")
 
+(defn ensure-line-in-file [line filename]
+  (if (.exists (clojure.java.io/file filename))
+    (let [lines (clojure.string/split-lines (slurp filename))]
+      (if (not (some #{line} lines))
+        (spit filename line :append true)))
+    (spit filename line)))
+
+(defn use [library]
+  (do
+   (ensure-line-in-file (format "%s: %s\n" *scad-being-written* library)
+                        "things/.deps")
+   (m/use library)))
 
 
 (def thumb
-  (union
+  (m/union
    thumb-connectors
-   (thumb-layout (rotate (/ π 2) [0 0 1] chosen-single-plate))
+   (thumb-layout (m/rotate (/ π 2) [0 0 1] chosen-single-plate))
    (thumb-place 0 -1/2 double-plates)
    (thumb-place 1 -1/2 double-plates)))
 
 (def thumb-blanks
-  (union
-   (thumb-layout (rotate (/ π 2) [0 0 1] chosen-blank-single-plate))
+  (m/union
+   (thumb-layout (m/rotate (/ π 2) [0 0 1] chosen-blank-single-plate))
    (thumb-place 0 -1/2 double-plates-blank)
    (thumb-place 1 -1/2 double-plates-blank)))
 
@@ -59,23 +72,23 @@
 ;; Glue Joints for top ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def glue-post (->> (cube post-size post-size glue-joint-height)
-                   (translate [0 0 (+ (/ glue-joint-height -2)
+(def glue-post (->> (m/cube post-size post-size glue-joint-height)
+                   (m/translate [0 0 (+ (/ glue-joint-height -2)
                                       plate-thickness)])))
-(def glue-post-t  (translate [0 (- (/ mount-height 2) post-adj) 0] glue-post))
-(def glue-post-b  (translate [0 (+ (/ mount-height -2) post-adj) 0] glue-post))
+(def glue-post-t  (m/translate [0 (- (/ mount-height 2) post-adj) 0] glue-post))
+(def glue-post-b  (m/translate [0 (+ (/ mount-height -2) post-adj) 0] glue-post))
 
 (defn fingers-to-thumb-glue-joints-for-columns [columns]
-  (apply union
+  (apply m/union
          (for [[column row] [ [-1 3] [1 4] ] :when (some (partial = column) columns)]
-           (union
+           (m/union
             (key-place (- column 1/2) row
-                       (color [1 0 0] glue-joint-center-left))
-            (color [1 0 1]
-                   (hull (key-place column row web-post-tl)
+                       (m/color [1 0 0] glue-joint-center-left))
+            (m/color [1 0 1]
+                   (m/hull (key-place column row web-post-tl)
                          (key-place column row web-post-bl)
                          (key-place (- column 1/2) row
-                                    (translate [(* 1/2 glue-joint-wall-thickness) 0 0]
+                                    (m/translate [(* 1/2 glue-joint-wall-thickness) 0 0]
                                                (x-round-cube (* 1/2 glue-joint-wall-thickness)
                                                              mount-height glue-joint-height)))))))))
 
@@ -84,25 +97,25 @@
                                         ; treatment, because the 2x1
                                         ; key is different
 (def thumb-to-fingers-glue-joints
-  (union
+  (m/union
 
-   (key-place 1/2 4 (color [0 1 0] glue-joint-center-right))
-   (color [1 0 1] (hull (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-tr))
-                        (key-place 1/2 4 (translate [(* -3/2 glue-joint-wall-thickness) 0 0]
+   (key-place 1/2 4 (m/color [0 1 0] glue-joint-center-right))
+   (m/color [1 0 1] (m/hull (thumb-place 0 -1/2 (m/translate [0 (/ mount-height 2) 0] web-post-tr))
+                        (key-place 1/2 4 (m/translate [(* -3/2 glue-joint-wall-thickness) 0 0]
                                                     (x-round-cube (* 1/2 glue-joint-wall-thickness)
                                                                     mount-height glue-joint-height)))
-                        (thumb-place 0 -1/2 (translate [0 (/ mount-height 2) 0] web-post-br))))
+                        (thumb-place 0 -1/2 (m/translate [0 (/ mount-height 2) 0] web-post-br))))
 
-   (key-place -3/2 3 (color [0 1 0] glue-joint-center-right))
-   (color [1 0 1] (hull (thumb-place 2 1 web-post-tr)
+   (key-place -3/2 3 (m/color [0 1 0] glue-joint-center-right))
+   (m/color [1 0 1] (m/hull (thumb-place 2 1 web-post-tr)
                         (thumb-place 2 1 web-post-br)
-                        (key-place -3/2 3 (translate [(* -3/2 glue-joint-wall-thickness) 0 0]
+                        (key-place -3/2 3 (m/translate [(* -3/2 glue-joint-wall-thickness) 0 0]
                                                      (x-round-cube (* 1/2 glue-joint-wall-thickness)
                                                                    mount-height glue-joint-height)))))
    ;; this below is a block so you can clamp this joint when you glue it.
-   (color [0 0 1] (->> (x-round-cube (* 6 glue-joint-wall-thickness)
+   (m/color [0 0 1] (->> (x-round-cube (* 6 glue-joint-wall-thickness)
                                      mount-height glue-joint-height)
-                       (translate [(* -4 glue-joint-wall-thickness) 0 0])
+                       (m/translate [(* -4 glue-joint-wall-thickness) 0 0])
                        (key-place -3/2 3)))))
 
 (def right-glue-joints-for-fingerpieces
@@ -112,24 +125,24 @@
             (let [column (last columns)
                   joint-column (+ column 1/2)
                   other-way (- column 1/2)]
-              (apply union
+              (apply m/union
                      (for [row rows :when (not (or (and (= column 0) (= row 4))
                                                    (and (= column -1) (= row 4))))]
-                       (union
+                       (m/union
                                         ; the actual paddle
                         (key-place joint-column row
-                                   (color [0 1 0] glue-joint-center-right))
+                                   (m/color [0 1 0] glue-joint-center-right))
                                         ; connect paddle to key-place
-                        (color [1 0 1]
-                               (hull
+                        (m/color [1 0 1]
+                               (m/hull
                                 (key-place column row web-post-tr)
-                                (key-place column row (translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-tr))
+                                (key-place column row (m/translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-tr))
                                 (key-place joint-column row
-                                           (translate [(* -3/2 glue-joint-wall-thickness) 0 0]
+                                           (m/translate [(* -3/2 glue-joint-wall-thickness) 0 0]
                                                       (x-round-cube (* 1/2 glue-joint-wall-thickness)
                                                                     mount-height glue-joint-height)))
                                 (key-place column row web-post-br)
-                                (key-place column row (translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-br))))))))))]
+                                (key-place column row (m/translate [(- (* cherry-bezel-width 1/2)) 0 0] web-post-br))))))))))]
     (map #_(fn [a b c] ()) rgj-for-this
          (cons true (repeat false))
          (concat (repeat (- (count columns-pieces) 1) false) '(true))
@@ -142,7 +155,7 @@
           (cond
                                         ; these columns go up relative to the previous
             (and (>= column 3) (< column 5))
-            (fn [post] (translate [1.3 0 0] post))
+            (fn [post] (m/translate [1.3 0 0] post))
                                         ; this column goes down relative to the previous
             (and (>= column 2) (< column e))
             (fn [post] post)
@@ -153,24 +166,24 @@
             (let [column (first columns)
                   joint-column (- column 1/2)
                   other-way (+ column 1/2)]
-              (apply union
+              (apply m/union
                      (for [row rows :when (not (or (and (= column 1) (= row 4))
                                                    (and (= column 0) (= row 4))))]
-                       (union
+                       (m/union
                                         ; the actual paddle
                         (key-place joint-column row
-                                   (color [1 0 0] glue-joint-center-left))
+                                   (m/color [1 0 0] glue-joint-center-left))
                                         ; connect paddle to key-place
-                        (color [1 0 1]
-                               (hull
+                        (m/color [1 0 1]
+                               (m/hull
                                 (key-place joint-column row
-                                           (translate [(* 1/2 glue-joint-wall-thickness) 0 0]
+                                           (m/translate [(* 1/2 glue-joint-wall-thickness) 0 0]
                                                       (x-round-cube (* 1/2 glue-joint-wall-thickness)
                                                                     mount-height glue-joint-height)))
                                 (key-place column row web-post-tl)
-                                (key-place column row (translate [(* cherry-bezel-width 1/2) 0 0] web-post-tl))
+                                (key-place column row (m/translate [(* cherry-bezel-width 1/2) 0 0] web-post-tl))
                                 (key-place column row web-post-bl)
-                                (key-place column row (translate [(* cherry-bezel-width 1/2) 0 0] web-post-bl))))))))))]
+                                (key-place column row (m/translate [(* cherry-bezel-width 1/2) 0 0] web-post-bl))))))))))]
     (map #_(fn [a b c] ()) lgj-for-this
          (cons true (repeat false))
          (concat (repeat (- (count columns-pieces) 1) false) '(true))
@@ -194,40 +207,40 @@
                                     (->> screw-hole-for-teensy
                                          ((key-place-fn teensy-bracket-at)))))))]
     (for [pieces-of-this-piece pieces-of-pieces]
-      (apply union pieces-of-this-piece))))
+      (apply m/union pieces-of-this-piece))))
 
 (defn dactyl-top-right-minuses [key-pieces]
   (let [pieces-of-pieces (map vector
                               screw-holes-in-fingerpieces)]
     (for [pieces-of-this-piece pieces-of-pieces]
-      (apply union pieces-of-this-piece))))
+      (apply m/union pieces-of-this-piece))))
 
 (defn dactyl-top-right-pieces [key-pieces]
   (for [[plus minus] (map vector
                           (dactyl-top-right-plusses key-pieces)
                           (dactyl-top-right-minuses key-pieces))]
-        (difference plus minus)))
+        (m/difference plus minus)))
 
 (def dactyl-top-right-thumb
-  (difference
-   (union thumb thumb-to-fingers-glue-joints)
+  (m/difference
+   (m/union thumb thumb-to-fingers-glue-joints)
    screw-holes-in-thumb))
 
 (def define-sides-with-right-ports
-  (define-module "SidesWithRightPorts"
-    (with-fn 12
-      (difference
-       (union sides-right
+  (m/define-module "SidesWithRightPorts"
+    (m/with-fn 12
+      (m/difference
+       (m/union sides-right
               usb-nice-plate
               rj11-nice-plate)
        (usb-cutout-place adafruit-usb-cutout)
        (rj11-cutout-place rj11-cutout)))))
 
 (def define-sides-with-left-ports
-  (define-module "SidesWithLeftPorts"
-    (with-fn 12
-      (difference
-       (union sides-right
+  (m/define-module "SidesWithLeftPorts"
+    (m/with-fn 12
+      (m/difference
+       (m/union sides-right
               rj11-nice-plate)
        (rj11-cutout-place rj11-cutout)))))
 
@@ -252,6 +265,7 @@
 
 (defn make-filename [tags]
   (let [tag-abbrevs {:debugmodel "debug-"
+                     :intermediate "i-"
                      :piece "dm-"
                      :frame "fra"
                      :bottom "bot"
@@ -271,8 +285,9 @@
   (if (emit? tags)
     `(let [filename# (make-filename ~tags)]
        (do
-         (print (format "%s  emitting  %s\n" ~tags filename#))
-         (spit filename# ~@body)))
+         (binding [*scad-being-written* filename#]
+           (print (format "%s  emitting  %s\n" ~tags filename#))
+           (spit filename# ~@body))))
     `(print (format "%s *SKIPPING* %s\n" ~tags (make-filename ~tags)))))
 
 (say-spit [:debugmodel :single-plate]
@@ -289,8 +304,8 @@
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
-           (mirror [1 0 0]
-                   (union
+           (m/mirror [1 0 0]
+                   (m/union
                     dactyl-top-right-thumb
                     (sides-connectors-thumb-from-notation sides-frame-joints)))))
 
@@ -303,28 +318,28 @@
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
-             (union part1 part2)))
+             (m/union part1 part2)))
     (say-spit [:piece :left :frame partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
-             (mirror [1 0 0]
-                     (union part1 part2))))))
+             (m/mirror [1 0 0]
+                     (m/union part1 part2))))))
 
 (say-spit [:debugmodel :right :frame :all]
           (write-scad
            (use "key-place.scad")
-           (union dactyl-top-right-thumb
-                  (apply union (dactyl-top-right-pieces key-holes-pieces))
+           (m/union dactyl-top-right-thumb
+                  (apply m/union (dactyl-top-right-pieces key-holes-pieces))
                   caps
                   thumbcaps)))
 
 (say-spit [:debugmodel :left :frame :all]
           (write-scad
            (use "key-place.scad")
-           (mirror [1 0 0]
-                   (union dactyl-top-right-thumb
-                          (apply union (dactyl-top-right-pieces key-holes-pieces))
+           (m/mirror [1 0 0]
+                   (m/union dactyl-top-right-thumb
+                          (apply m/union (dactyl-top-right-pieces key-holes-pieces))
                           caps
                           thumbcaps))))
 
@@ -332,14 +347,14 @@
   (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
                                 the-sides-slice-joints
                                 sides-slice-intersects
-                                (call-module "SidesWithRightPorts")
+                                (m/call-module "SidesWithRightPorts")
                                 sides-regions))
 
 (def sides-slices-left
   (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
                                 the-sides-slice-joints
                                 sides-slice-intersects
-                                (call-module "SidesWithLeftPorts")
+                                (m/call-module "SidesWithLeftPorts")
                                 sides-regions))
 
 (doseq [[partno part1 part2] (map vector (range)
@@ -352,10 +367,10 @@
              (use "key-place.scad")
              (use "eggcrate.scad")
              define-sides-with-right-ports
-             (union part1 part2
+             (m/union part1 part2
                     ;; for reference when adjusting sides downness:
-                    #_(union dactyl-top-right-thumb
-                           (apply union (dactyl-top-right-pieces
+                    #_(m/union dactyl-top-right-thumb
+                           (apply m/union (dactyl-top-right-pieces
                                          key-holes-pieces)))))))
 
 (doseq [[partno part1 part2] (map vector (range)
@@ -368,14 +383,14 @@
              (use "key-place.scad")
              (use "eggcrate.scad")
              define-sides-with-left-ports
-             (mirror [1 0 0] (union part1 part2)))))
+             (m/mirror [1 0 0] (m/union part1 part2)))))
 
 (say-spit [:debugmodel :splits]
           (write-scad
            (use "key-place.scad")
-           (union
-            (union dactyl-top-right-thumb
-                   (apply union (dactyl-top-right-pieces key-holes-pieces)))
+           (m/union
+            (m/union dactyl-top-right-thumb
+                   (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
             sides-slice-intersects
             )))
 
@@ -383,33 +398,33 @@
           (write-scad
            (use "key-place.scad")
            define-sides-with-right-ports
-           (union
-            (union dactyl-top-right-thumb
-                   (apply union (dactyl-top-right-pieces key-holes-pieces)))
-            (map #(% (rotate (* 1/4 τ) [0 1 0] (cylinder [10 0] 10))) the-sides-slice-joints))))
+           (m/union
+            (m/union dactyl-top-right-thumb
+                   (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
+            (map #(% (m/rotate (* 1/4 τ) [0 1 0] (m/cylinder [10 0] 10))) the-sides-slice-joints))))
 
 (say-spit [:debugmodel :right :keys]
           (write-scad
            (use "key-place.scad")
-           (union
-            (union caps thumbcaps))))
+           (m/union
+            (m/union caps thumbcaps))))
 
 (say-spit [:debugmodel :left :keys]
           (write-scad
            (use "key-place.scad")
-           (mirror [1 0 0] (union caps thumbcaps))))
+           (m/mirror [1 0 0] (m/union caps thumbcaps))))
 
 (say-spit [:debugmodel :photo]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
            define-sides-with-right-ports
-           (union
+           (m/union
             sides-right
             bottom-right
-            (union caps thumbcaps)
-            (union dactyl-top-right-thumb
-                   (apply union (dactyl-top-right-pieces key-holes-pieces)))
+            (m/union caps thumbcaps)
+            (m/union dactyl-top-right-thumb
+                   (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
             )))
 
 (say-spit [:debugmodel :teensy-holder-clearance-check]
@@ -417,29 +432,29 @@
            (use "key-place.scad")
            (use "eggcrate.scad")
            (use "teensy-holder.scad")
-           (union
-            (->> (call-module "teensy_holder_piece_a")
-                 (rotate (* 1/2 τ) [0 0 1])
-                 (translate [0 0 (- teensy-screw-hole-height)])
+           (m/union
+            (->> (m/call-module "teensy_holder_piece_a")
+                 (m/rotate (* 1/2 τ) [0 0 1])
+                 (m/translate [0 0 (- teensy-screw-hole-height)])
                  ((key-place-fn teensy-bracket-at)))
             bottom-right)))
 
-(say-spit [:debugmodel :right :bottom :all]
+(say-spit [:intermediate :right :bottom :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
-           (union
+           (m/union
             bottom-right)
-            #_(union dactyl-top-right-thumb
-                   (apply union
+            #_(m/union dactyl-top-right-thumb
+                   (apply m/union
                           (dactyl-top-right-pieces key-holes-pieces)))))
 
-(say-spit [:debugmodel :left :bottom :all]
+(say-spit [:intermediate :left :bottom :all]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
-           (mirror [1 0 0]
-                   (union
+           (m/mirror [1 0 0]
+                   (m/union
                     bottom-right))))
 
 (say-spit [:debugmodel :right :legs :all]
@@ -447,7 +462,7 @@
            (use "key-place.scad")
            (use "eggcrate.scad")
            (legs true)
-           (apply union (legs false))
+           (apply m/union (legs false))
            ))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
@@ -462,7 +477,7 @@
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
-             (mirror [1 0 0] leg))))
+             (m/mirror [1 0 0] leg))))
 
 (def entire-x 180)
 (def entire-y 160)
@@ -474,7 +489,7 @@
 
 ; set so that there aren't any little bits.
 (defn offset-bottom-slices [shape]
-  (translate [-5 8 0] shape))
+  (m/translate [-5 8 0] shape))
 
 (def bottom-glue-tolerance 0.1)
 (def bottom-eggcrate-resolution 2) ; mm
@@ -496,7 +511,7 @@
                              (+ egghex-row-spacing
                                 bottom-glue-tolerance)))]
   (doseq [slice (range (* egghex-columns egghex-rows))]
-    (let [slice-shape (call-module "hex_prism_of_grid"
+    (let [slice-shape (m/call-module "hex_prism_of_grid"
                                    [entire-x entire-y entire-z]
                                    slice
                                    rmin
@@ -513,16 +528,16 @@
                                    bottom-lace-hole-in-from-edge
                                    )
           place (fn [shape] (->> shape
-                                 (rotate (* 2/100 τ) [0 0 1])
+                                 (m/rotate (* 2/100 τ) [0 0 1])
                                  (offset-bottom-slices)
-                                 (translate [(* -1/2 entire-x)
+                                 (m/translate [(* -1/2 entire-x)
                                              (* -1/2 entire-y) 0])))
-          axes (union
-                (cube entire-x 10 10)
-                (translate [0 (* 1/2 entire-y) 0]
-                           (cube 10 entire-y 10))
-                (translate [0 0 (* 1/2 entire-z)]
-                           (cube 10 10 entire-z)))
+          axes (m/union
+                (m/cube entire-x 10 10)
+                (m/translate [0 (* 1/2 entire-y) 0]
+                           (m/cube 10 entire-y 10))
+                (m/translate [0 0 (* 1/2 entire-z)]
+                           (m/cube 10 10 entire-z)))
           of-interest (use-splitter (place slice-shape))]
       (do
         (say-spit (apply vector (concat [(first prepended-tags)]
@@ -533,8 +548,8 @@
                    (use "key-place.scad")
                    (use "eggcrate.scad")
                    (use "egghex2.scad")
-                   (union
-                    (render of-interest)
+                   (m/union
+                    (m/render of-interest)
                     #_(place axes))))
         (say-spit (apply vector (concat [(first prepended-tags)]
                                         [:left]
@@ -544,20 +559,20 @@
                    (use "key-place.scad")
                    (use "eggcrate.scad")
                    (use "egghex2.scad")
-                   (mirror [1 0 0]
-                           (union
-                            (render of-interest)
+                   (m/mirror [1 0 0]
+                           (m/union
+                            (m/render of-interest)
                             #_(place axes))))))))))
 
 (with-egghex-splitters
-  #(intersection bottom-right %)
+  #(m/intersection bottom-right %)
   [:piece :bottom])
 
-(let [all-frame (union
+(let [all-frame (m/union
                  dactyl-top-right-thumb
-                 (apply union (dactyl-top-right-pieces key-holes-pieces)))]
+                 (apply m/union (dactyl-top-right-pieces key-holes-pieces)))]
   (with-egghex-splitters
-    #(union all-frame %)
+    #(m/union all-frame %)
     [:debugmodel :splitter-frame]))
 
 (say-spit [:piece :screw-hole-top]

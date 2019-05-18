@@ -21,6 +21,8 @@ TARGETS = $(subst .scad,.stl,$(SCADS))
 RIGHT_TARGETS = $(subst .scad,.stl,$(RIGHT_SCADS))
 
 
+include .deps
+
 all: $(TARGETS)
 
 right: $(RIGHT_TARGETS)
@@ -30,7 +32,7 @@ clean:
 realclean: clean
 	rm -rf $(SCADS)
 
-%.stl: %.scad egghex2.scad eggcrate.scad
+%.stl: %.scad
 	openscad --render -o $@ $<
 
 .PHONY: all clean realclean right
