@@ -549,8 +549,11 @@
                 (m/translate [0 (* 1/2 entire-y) 0]
                            (m/cube 10 entire-y 10))
                 (m/translate [0 0 (* 1/2 entire-z)]
-                           (m/cube 10 10 entire-z)))
-          of-interest (use-splitter (place slice-shape))]
+                             (m/cube 10 10 entire-z)))
+          ; make this a lambda so when use-splitter is evaluated we
+          ; will be inside a (say-spit) and *scad-being-written* will
+          ; be defined
+          of-interest (fn [] (use-splitter (place slice-shape)))]
       (do
         (say-spit (apply vector (concat [(first prepended-tags)]
                                         [:right]
@@ -561,7 +564,7 @@
                    (use "eggcrate.scad")
                    (use "egghex2.scad")
                    (m/union
-                    (m/render of-interest)
+                    (m/render (of-interest))
                     #_(place axes))))
         (say-spit (apply vector (concat [(first prepended-tags)]
                                         [:left]
@@ -573,7 +576,7 @@
                    (use "egghex2.scad")
                    (m/mirror [1 0 0]
                            (m/union
-                            (m/render of-interest)
+                            (m/render (of-interest))
                             #_(place axes))))))))))
 
 (with-egghex-splitters
