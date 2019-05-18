@@ -413,7 +413,7 @@
            (use "eggcrate.scad")
            (m/mirror [1 0 0]
                    (m/union
-                    (import-bottom-right)))))
+                    bottom-right))))
 
 (say-spit [:debugmodel :splits]
           (write-scad
@@ -451,7 +451,7 @@
            define-sides-with-right-ports
            (m/union
             sides-right
-            (import-bottom-right)
+            bottom-right
             (m/union caps thumbcaps)
             (m/union dactyl-top-right-thumb
                    (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
@@ -467,7 +467,7 @@
                  (m/rotate (* 1/2 τ) [0 0 1])
                  (m/translate [0 0 (- teensy-screw-hole-height)])
                  ((key-place-fn teensy-bracket-at)))
-            (import-bottom-right))))
+            bottom-right)))
 
 (say-spit [:debugmodel :right :legs :all]
           (write-scad
@@ -580,7 +580,7 @@
                             #_(place axes))))))))))
 
 (with-egghex-splitters
-  #(m/intersection (import-bottom-right) %)
+  #(m/intersection bottom-right %)
   [:piece :bottom])
 
 (let [all-frame (m/union
