@@ -21,7 +21,6 @@ TARGETS = $(subst .scad,.stl,$(SCADS))
 RIGHT_TARGETS = $(subst .scad,.stl,$(RIGHT_SCADS))
 
 
-include .deps
 
 all: $(TARGETS)
 
@@ -36,3 +35,4 @@ realclean: clean
 	openscad --render -o $@ $<
 
 .PHONY: all clean realclean right
+include .deps
