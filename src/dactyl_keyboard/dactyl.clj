@@ -41,7 +41,7 @@
 (defn ensure-line-in-file [line filename]
   (if (.exists (clojure.java.io/file filename))
     (let [lines (clojure.string/split-lines (slurp filename))]
-      (if (not (some #{line} lines))
+      (if (not (some #{(clojure.string/trim line)} lines))
         (spit filename line :append true)))
     (spit filename line)))
 
@@ -50,6 +50,12 @@
    (ensure-line-in-file (format "%s: %s\n" *scad-being-written* library)
                         "things/.deps")
    (m/use library)))
+
+(defn import [file & args]
+  (do
+    (ensure-line-in-file (format "%s: %s\n" *scad-being-written* file)
+                         "things/.deps")
+    (apply m/import (cons file args))))
 
 
 (def thumb
@@ -263,7 +269,7 @@
          (not-any? skip-tags tags)) true
     :else false))
 
-(defn make-filename [tags]
+(defn make-filename [tags & {:keys [ext] :or {ext ".scad"}}]
   (let [tag-abbrevs {:debugmodel "debug-"
                      :intermediate "i-"
                      :piece "dm-"
@@ -277,8 +283,9 @@
         stringify (fn [x] (cond
                             (integer? x) (format "%02d" x)
                             (keyword? x) (or (tag-abbrevs x) (name x))))
-        filename (format "things/%s.scad"
-                         (clojure.string/join (map stringify tags)))]
+        filename (format "things/%s%s"
+                         (clojure.string/join (map stringify tags))
+                         ext)]
     filename))
 
 (defmacro say-spit [tags & body]
@@ -385,6 +392,29 @@
              define-sides-with-left-ports
              (m/mirror [1 0 0] (m/union part1 part2)))))
 
+(say-spit [:intermediate :right :bottom :all]
+          (write-scad
+           (use "key-place.scad")
+           (use "eggcrate.scad")
+           (m/union
+            bottom-right)
+            #_(m/union dactyl-top-right-thumb
+                   (apply m/union
+                          (dactyl-top-right-pieces key-holes-pieces)))))
+
+(defn import-bottom-right []
+  (let [bottom-right-stl-filename
+        (make-filename [:intermediate :right :bottom :all] :ext ".stl")]
+    (import bottom-right-stl-filename)))
+
+(say-spit [:intermediate :left :bottom :all]
+          (write-scad
+           (use "key-place.scad")
+           (use "eggcrate.scad")
+           (m/mirror [1 0 0]
+                   (m/union
+                    (import-bottom-right)))))
+
 (say-spit [:debugmodel :splits]
           (write-scad
            (use "key-place.scad")
@@ -421,7 +451,7 @@
            define-sides-with-right-ports
            (m/union
             sides-right
-            bottom-right
+            (import-bottom-right)
             (m/union caps thumbcaps)
             (m/union dactyl-top-right-thumb
                    (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
@@ -437,25 +467,7 @@
                  (m/rotate (* 1/2 τ) [0 0 1])
                  (m/translate [0 0 (- teensy-screw-hole-height)])
                  ((key-place-fn teensy-bracket-at)))
-            bottom-right)))
-
-(say-spit [:intermediate :right :bottom :all]
-          (write-scad
-           (use "key-place.scad")
-           (use "eggcrate.scad")
-           (m/union
-            bottom-right)
-            #_(m/union dactyl-top-right-thumb
-                   (apply m/union
-                          (dactyl-top-right-pieces key-holes-pieces)))))
-
-(say-spit [:intermediate :left :bottom :all]
-          (write-scad
-           (use "key-place.scad")
-           (use "eggcrate.scad")
-           (m/mirror [1 0 0]
-                   (m/union
-                    bottom-right))))
+            (import-bottom-right))))
 
 (say-spit [:debugmodel :right :legs :all]
           (write-scad
@@ -565,7 +577,7 @@
                             #_(place axes))))))))))
 
 (with-egghex-splitters
-  #(m/intersection bottom-right %)
+  #(m/intersection (import-bottom-right) %)
   [:piece :bottom])
 
 (let [all-frame (m/union
