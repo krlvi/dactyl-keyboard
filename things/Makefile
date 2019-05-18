@@ -30,6 +30,7 @@ clean:
 	rm -rf $(TARGETS)
 realclean: clean
 	rm -rf $(SCADS)
+	rm -rf .deps
 
 %.stl: %.scad
 	openscad --render -o $@ $<
