@@ -413,6 +413,17 @@
         (make-filename [:intermediate :right :bottom :all] :ext ".stl")]
     (import bottom-right-stl-filename)))
 
+(say-spit [:intermediate :right :clampspace :all]
+          (write-scad
+           (use "key-place.scad")
+           (use "eggcrate.scad")
+           bottom-clamp-surfaces-space))
+
+(defn import-clampspace-right []
+  (let [clampspace-right-stl-filename
+        (make-filename [:intermediate :right :clampspace :all] :ext ".stl")]
+    (import clampspace-right-stl-filename)))
+
 (say-spit [:intermediate :left :bottom :all]
           (write-scad
            (use "key-place.scad")
@@ -475,6 +486,12 @@
                  ((key-place-fn teensy-bracket-at)))
             (import-bottom-right))))
 
+(say-spit [:debugmodel :right :clampspace :all]
+          (write-scad
+           (use "key-place.scad")
+           (use "eggcrate.scad")
+           bottom-clamp-surfaces-space))
+
 (say-spit [:debugmodel :right :legs :all]
           (write-scad
            (use "key-place.scad")
@@ -515,7 +532,7 @@
 (def bottom-lace-hole-r 1.0) ; mm
 (def bottom-lace-hole-in-from-edge 2.2) ; mm
 
-(defn with-egghex-splitters [use-splitter prepended-tags]
+(defn with-egghex-splitters [use-splitter split-clamp-surfaces prepended-tags]
   (let [rmin bottom-egghex-minor-radius
         side (* rmin 2 (Math/tan (/ (* 1/2 τ) 6)))
         ;; 6 : hexagon
@@ -539,9 +556,17 @@
                                     bottom-eggcrate-resolution]
                                    bottom-eggcrate-waves-per-side
                                    bottom-eggcrate-amplitude
-                                   1 bottom-lace-holes-per-side
-                                   bottom-lace-hole-r
-                                   bottom-lace-hole-in-from-edge
+                                   )
+          clamp-surfaces-shape (m/call-module "clamp_surfaces_of_grid"
+                                   [entire-x entire-y entire-z]
+                                   slice
+                                   rmin
+                                   bottom-glue-tolerance
+                                   [bottom-eggcrate-resolution
+                                    bottom-eggcrate-resolution
+                                    bottom-eggcrate-resolution]
+                                   bottom-eggcrate-waves-per-side
+                                   bottom-eggcrate-amplitude
                                    )
           place (fn [shape] (->> shape
                                  (m/rotate (* 2/100 τ) [0 0 1])
@@ -557,7 +582,8 @@
           ; make this a lambda so when use-splitter is evaluated we
           ; will be inside a (say-spit) and *scad-being-written* will
           ; be defined
-          of-interest (fn [] (use-splitter (place slice-shape)))]
+          of-interest (fn [] (use-splitter (place slice-shape)))
+          clamp-of-interest (fn [] (split-clamp-surfaces (place clamp-surfaces-shape)))]
       (do
         (say-spit (apply vector (concat [(first prepended-tags)]
                                         [:right]
@@ -569,6 +595,7 @@
                    (use "egghex2.scad")
                    (m/union
                     (m/render (of-interest))
+                    (m/render (clamp-of-interest))
                     #_(place axes))))
         (say-spit (apply vector (concat [(first prepended-tags)]
                                         [:left]
@@ -581,10 +608,12 @@
                    (m/mirror [1 0 0]
                            (m/union
                             (m/render (of-interest))
+                            (m/render (clamp-of-interest))
                             #_(place axes))))))))))
 
 (with-egghex-splitters
   #(m/intersection (import-bottom-right) %)
+  #(m/intersection (import-clampspace-right) %)
   [:piece :bottom])
 
 (let [all-frame (m/union
@@ -592,6 +621,7 @@
                  (apply m/union (dactyl-top-right-pieces key-holes-pieces)))]
   (with-egghex-splitters
     #(m/union all-frame %)
+    #(m/intersection (import-clampspace-right) %)
     [:debugmodel :splitter-frame]))
 
 (say-spit [:piece :screw-hole-top]

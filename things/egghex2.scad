@@ -49,31 +49,6 @@ function x_eggcrate_points_for_hex(sy, sz, dy, dz, fy, fz,
                 y*dy - (sy/2 * dy),
                 z*dz]];
 
-module lace_holes_one_face(how_many, hole_r, from_edge,
-                           sy, sz, dy, dz, fy, fz,
-                           py, pz, ay, az, x_offset) {
-     /* these will be differenced so make them go all the way through */
-     h_fudge = 2;
-     h = sz * dz;
-     center_y = (sy*dy) / (how_many+2);
-     for(i=[0:1:how_many-2]) {
-          y = (i / how_many) * sy; // 0 to sy or so
-          ease_frac_y = min(max(0.25, 8/sy), 0.5);
-          y_ease = ease(ease_frac_y, sy, y);
-          /* for some reason this doesn't move the hole in far
-           * enough. just pass in from_edge > 0 and it will be
-           * fine. */
-          max_x = x_offset+1/4*(0+
-                                y_ease*1*ay*
-                                  sin(((y*dy)+center_y)*fy*360+py)+
-                                1*1*az*-1);
-          x = max_x - from_edge;
-          translate([x, y*dy - (sy*dy)/2 + center_y, h/2])
-               color("red")
-               cylinder(r=hole_r, h=h+h_fudge, center=true, $fn=12);
-     }
-}
-
 function hex_prism_top_and_bottom_faces(sy, sz) =
      concat([for(y=[0:1:sy-1])
                       [
@@ -126,8 +101,7 @@ function minusx_last_strip_b(sy, sz) =
                 y+1+0*(sy+1)
                     ]];
 
-module hex_prism(rmin, h, res, waves, amp,
-                 lace_p, lace_n, lace_r, lace_from_edge) {
+module hex_prism(rmin, h, res, waves, amp) {
      side = rmin * (2*tan(180/6));
      s = [0, floor(side / res.y), floor(h / res.z)];
      f = [0, waves.y/side, waves.z/h];
@@ -144,24 +118,19 @@ module hex_prism(rmin, h, res, waves, amp,
           minusx_last_strip_b(s.z, s.y*6),
           hex_prism_top_and_bottom_faces(s.y*6, s.z)
           );
-     difference() {
-          polyhedron(points=points, faces=faces, convexity=20);
-          if(lace_p != 0) {
-               for(a=[0:60:360-1]) {
-                    rotate(a=a, v=[0,0,1])
-                         lace_holes_one_face(lace_n, lace_r, lace_from_edge,
-                                             s.y, s.z, res.y, res.z, f.y, f.z,
-                                             p.y+[0,120,240,0,240,120][floor(a/60)], p.z+(a>=180?180:0),
-                                             amp.y, amp.z, rmin);
-               }
-          }
-     }
+     polyhedron(points=points, faces=faces, convexity=20);
 }
 
-hex_prism(20, 50, [3,3,3], [1, 3, 5], [0, 4, 4], 2, 5, 0.5, 2);
+module clamp_surfaces(rmin, h, res, waves, amp, thickness=3) {
+     side = rmin * (2*tan(180/6));
+     but_not_the_whole_side = 0.6;
+     for(i=[0:60:360-1])
+          rotate(a=i, v=[0,0,1])
+               translate([rmin - thickness/2 - (amp.y+amp.z)/2, 0, h/2])
+               cube([thickness, side * but_not_the_whole_side, h], center=true);
+}
 
-module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp,
-                         lace_p, lace_n, lace_r, lace_from_edge) {
+module _of_grid(bounds, which, rmin, gap, res, waves, amp) {
      rmaj = rmin / cos(180/6);
      side = rmin * (2*tan(180/6));
      row_y = 3/2 * side + gap * sin(60);
@@ -172,6 +141,19 @@ module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp,
      x_offset = row % 2 != 0 ? rmin + gap/2 : 0;
      translate([column * (rmin * 2 + gap) + x_offset,
                 row * row_y, 0])
-          hex_prism(rmin, bounds.z, res, waves, amp,
-                    lace_p, lace_n, lace_r, lace_from_edge);
+          children();
 }
+
+
+module hex_prism_of_grid(bounds, which, rmin, gap, res, waves, amp) {
+     _of_grid(bounds, which, rmin, gap, res, waves, amp)
+          hex_prism(rmin, bounds.z, res, waves, amp);
+}
+
+module clamp_surfaces_of_grid(bounds, which, rmin, gap, res, waves, amp) {
+     _of_grid(bounds, which, rmin, gap, res, waves, amp)
+          clamp_surfaces(rmin, bounds.z, res, waves, amp);
+}
+
+hex_prism(20, 50, [3,3,3], [1, 3, 5], [0, 4, 4]);
+color([1,0,0]) clamp_surfaces(20, 50, [3,3,3], [1,3,5], [0,4,4], 2);

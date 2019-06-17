@@ -127,6 +127,23 @@
       (intersection leg (if nubsp b a)))))
 
 
+(defn for-finger [sh]
+  (for [row rows #_(range (- (first rows) 1)
+                          (+ (last rows) 1))]
+    (for [col columns #_(range (- (first columns) 1)
+                               (+ (last columns) 1))]
+      (if (finger-has-key-place-p col row)
+        (->> sh
+             (translate [0 0 bottom-distance])
+             (key-place col row))))))
+
+(defn for-thumb [sh]
+  (for [row [-1 0 1] #_[-2 -1 0 1 2]]
+    (for [col [0 1 2] #_[-1 0 1 2 3]]
+      (->> sh
+           (translate [0 0 bottom-distance])
+           (thumb-place col row)))))
+
 (def bottom
   (let [
         finger-big-intersection-shape
@@ -136,21 +153,6 @@
         sph1 (with-fn gasket-sphere-fn (sphere sides-radius))
         sph0 (with-fn gasket-sphere-fn (sphere (- sides-radius
                                                   sides-thickness)))
-        for-finger
-        (fn [sh] (for [row rows #_(range (- (first rows) 1)
-                                         (+ (last rows) 1))]
-                   (for [col columns #_(range (- (first columns) 1)
-                                              (+ (last columns) 1))]
-                     (if (finger-has-key-place-p col row)
-                       (->> sh
-                            (translate [0 0 bottom-distance])
-                            (key-place col row))))))
-        for-thumb
-        (fn [sh] (for [row [-1 0 1] #_[-2 -1 0 1 2]]
-                   (for [col [0 1 2] #_[-1 0 1 2 3]]
-                     (->> sh
-                          (translate [0 0 bottom-distance])
-                          (thumb-place col row)))))
         ;; this -5 sets how far away from the keys the top of the
                                         ; marshmallowy sides will be.
                                         ; 6 was orig written in silo
@@ -199,3 +201,22 @@
 
 (def bottom-right
   (render bottom))
+
+(def bottom-clamp-surfaces-space
+  (let [clamp-surfaces-thickness 5
+        quite-high 100
+        a-marshmallow (fn [sh]
+                        (union (hull-a-grid (for-finger sh))
+                               (hull-a-grid (for-thumb sh))))
+        
+        small (a-marshmallow (translate [0 0 (+ (* 1/2 quite-high)
+                                                (- sides-radius)
+                                                sides-thickness
+                                                clamp-surfaces-thickness)]
+                                        (cube (* 1.1 sides-radius) (* 1.1 sides-radius)
+                                              quite-high)))
+        big (a-marshmallow (translate [0 0 (+ (* 1/2 quite-high)
+                                              (- sides-radius)
+                                              (- clamp-surfaces-thickness))]
+                                      (cube sides-radius sides-radius quite-high)))]
+    (difference big small)))
