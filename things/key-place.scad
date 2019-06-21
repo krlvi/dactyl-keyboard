@@ -49,7 +49,7 @@ function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [0, 2.82, -3.0]
 
 module KeyPlace(col, row) {
      column_angle = bet * (2 - col);
-     translate([0, 0, 45]) {
+     translate([0, 0, 33]) {
 	  rotate(a=tenting_angle, v=[0,1,0]) {
 	       translate(ColumnOffset(col)) {
 		    translate([0, 0, column_radius]) {
@@ -71,7 +71,7 @@ module KeyPlace(col, row) {
 }
 
 module ThumbPlace(col, row) {
-     translate([-53, -45, 72]) {
+     translate([-53, -45, 60]) {
 	  /* perhaps this should be tenting-angle, but look at the
           axis. that will change what the translation after it
           needs to be when you change tenting-angle. */
