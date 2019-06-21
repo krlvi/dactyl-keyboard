@@ -475,6 +475,12 @@
                  ((key-place-fn teensy-bracket-at)))
             (import-bottom-right))))
 
+(say-spit [:debugmodel :right :bottom :all]
+          (write-scad
+           (use "key-place.scad")
+           (use "eggcrate.scad")
+           (import-bottom-right)))
+
 (say-spit [:debugmodel :right :legs :all]
           (write-scad
            (use "key-place.scad")

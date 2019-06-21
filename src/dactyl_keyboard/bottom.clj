@@ -124,7 +124,8 @@
                 (splitters-for-thumb leg-pillar-splitter-b))
         ]
     (for [[leg a b] (map vector legs splitters-a splitters-b)]
-      (intersection leg (if nubsp b a)))))
+      leg)))
+      ;; (intersection leg (if nubsp b a)))))
 
 
 (def bottom
@@ -177,10 +178,10 @@
         raw-pillars
         (apply union
                (for [hole screw-holes-at]
-                 (->> (screw-hole-pillar-lower screw-hole-pillar-height)
+                 (->> (screw-hole-pillar screw-hole-pillar-height)
                       (translate [0 0 (- (- plate-thickness web-thickness))])
                       ((key-place-fn hole)))))
-        pillars (intersection raw-pillars big-marshmallow)
+        pillars (intersection raw-pillars (union big-marshmallow key-prism))
         ]
     (union
     (intersection
