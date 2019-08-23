@@ -369,7 +369,7 @@
 (def thumbcaps
   (union
    (thumb-1x-layout (sa-cap 1))
-   (thumb-15x-layout (rotate (/ π 2) [0 0 1] (sa-cap 1.5)))))
+   (thumb-15x-layout (rotate 0 [0 0 1] (sa-cap 2)))))
 
 
 (def thumb
@@ -592,6 +592,17 @@
                               (union (translate [0 2 0] (cube 10.78  9 18.38))
                                      (translate [0 0 5] (cube 10.78 13  5))))))
 
+(def rj9-socket-in-holder
+  (let [bottom-allowance 4
+        x 15 y 9 z 24]
+    (union rj9-cube
+           (translate [0 (+ 2 (* 1/2 y)) (- bottom-allowance)]
+                      ;; proper z scale depends
+                      ;; on bottom-allowance
+                      ;; below: this shape is
+                      ;; used to cut a notch out
+                      (cube x (+ y 10) z)))))
+
 (def usb-holder-position (key-position 1 0 (map + (wall-locate2 0 1) [0 (/ mount-height 2) 0])))
 (def usb-holder-size [6.5 10.0 13.6])
 (def usb-holder-thickness 4)
@@ -713,12 +724,69 @@
                    (translate [0 0 -20] (cube 350 350 40)) 
                   ))
 
+(def hole-right
+  (let [simplified (union
+                    key-holes
+                    connectors
+                    thumb
+                    thumb-connectors
+                    case-walls
+                    screw-insert-outers
+                    usb-holder
+                    wire-posts
+                    
+                    thumbcaps
+                    caps)
+        ;; determined by trial and error; not tight
+        bounding-cube-size [185 180 75]
+        bottom-allowance 3
+        ;; x and y determined by trial and error
+        bounding-cube (translate [-17 -32 (-
+                                           (* 1/2 (bounding-cube-size 2))
+                                           bottom-allowance)]
+                                 (call-module "cube_c2_fillet"
+                                              bounding-cube-size
+                                              [20 20 20]
+                                              [20 20 20]
+                                              12
+                                              true))
+        ;; make the hole some constant amount bigger than the object
+        ;; in each dimension. this probably only works with a convex
+        ;; hole.
+        add-scale (fn [plus bounding-cube-size]
+                    (map #(/ (+ % plus) %) bounding-cube-size))
+        hole-add 4
+        skin-add 14
+        hole-scale (add-scale hole-add bounding-cube-size)
+        skin-scale (add-scale skin-add bounding-cube-size)
+        the-hull (hull simplified
+                       (translate [0 0 -100]
+                                  simplified))
+        keyboard-space (scale hole-scale the-hull)
+        skin (scale skin-scale the-hull)
+        nudge #(translate [(* 0.3 hole-add) (* 0.3 hole-add) 0] %)
+                                ]
+    (intersection
+     (difference (nudge skin)
+                 keyboard-space
+                 (translate rj9-position rj9-socket-in-holder))
+                 ;; a core taken out to find the right z for the
+                 ;; bounding cube, by rendering + TLAR method
+                 ;; (translate [-50 -30 0] (cube 10 10 400)))
+     bounding-cube)))
+
+(spit "things/hole-right.scad"
+      (write-scad hole-right))
+
 (spit "things/right.scad"
       (write-scad model-right))
  
 (spit "things/left.scad"
       (write-scad (mirror [-1 0 0] model-right)))
-                  
+
+(spit "things/hole-left.scad"
+      (write-scad (mirror [-1 0 0] hole-right)))
+
 (spit "things/right-test.scad"
       (write-scad 
                    (union
@@ -758,5 +826,10 @@
          (difference usb-holder usb-holder-hole)))
 
 
+(spit "things/rj9.scad"
+      (write-scad
+       (union (translate rj9-position
+                         (translate [0 0 40] rj9-socket-in-holder))
+              (difference rj9-holder rj9-space))))
 
 (defn -main [dum] 1)  ; dummy to make it easier to batch
