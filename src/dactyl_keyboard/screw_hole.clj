@@ -55,7 +55,7 @@
 
 ;; leave room for diodes and wires; too tall and the teensy runs into
 ;; the bottom
-(def teensy-screw-hole-height (+ insert-hole-depth 5))
+(def teensy-screw-hole-height (+ insert-hole-depth 1))
 
 ;; top is at z=0
 (def insert-boss

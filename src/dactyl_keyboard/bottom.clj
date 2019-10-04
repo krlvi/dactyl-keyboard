@@ -29,7 +29,7 @@
             [dactyl-keyboard.sides :refer :all]
             [unicode-math.core :refer :all]))
 
-(def bottom-distance (- (+ sides-downness (* sides-radius 3/10))))
+(def bottom-distance 0)
 (def screw-hole-pillar-height (+ (Math/abs (float bottom-distance))
                                  (- sides-radius sides-thickness)
                                  ;; they are cut off at the bottom
@@ -183,7 +183,8 @@
                       ((key-place-fn hole)))))
         pillars (intersection raw-pillars (union big-marshmallow key-prism))
         ]
-    (union
+    big-marshmallow
+    #_(union
     (intersection
      (difference
       (union

@@ -33,16 +33,20 @@
 
 ;; if you change this you will likely need to change the
 ;; usb-cutout-place function and the rj11-cutout-place function
-(def sides-downness 3)
+;;
+;; sides-downness 0 puts the center of the sides shapes on the level
+;; of the bottom of the frame.
+(def sides-downness 0)
 (def sides-thickness 3)
-(def sides-radius 19)
+;; outer radius of sides
+(def sides-radius 18)
 (def thumb-sides-above-finger-sides -20) ; how far above the
                                          ; marshmallowy sides of the
                                          ; finger the marshmallowy
                                          ; sides of the thumb should
                                          ; be
 
-(def gasket-sphere-fn 9) ; detail of sphere minkowski'd around edges.
+(def gasket-sphere-fn 12) ; detail of sphere minkowski'd around edges.
                                         ; normally 20 or so?  severe
                                         ; performance impact. for me,
                                         ; with openscad 2015.03-2,
