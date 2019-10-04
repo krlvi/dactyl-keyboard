@@ -1,0 +1,24 @@
+layout requirements
+
+* succinctly describe the keys on the keyboard.
+* talk about their spatial relationships.
+* move from general to specific, adding details.
+** one level of details corresponds to geometry-producing functions
+** some details result in more pieces
+* express adjacencies
+** iterate around the edge
+** iterate through all the keys
+** there are some, ha, corner cases here
+*** to hull-triangles through the keys, diagonal relationships are needed
+
+what is a component?
+
+* every key placed with a certain placement function
+* a file to emit, a piece to print
+** files to emit should be implicit when we talk about glue joints: a glue joint is a single concept, but two geometry pieces
+
+component requirements
+
+* support different placement functions
+* express adjacencies between components
+** this means naming vertices inside components
