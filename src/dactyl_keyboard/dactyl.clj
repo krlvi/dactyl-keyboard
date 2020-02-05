@@ -308,14 +308,14 @@
 
 (say-spit [:piece :right :frame :thumb]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            dactyl-top-right-thumb
            (sides-connectors-thumb-from-notation sides-frame-joints)))
 
 (say-spit [:piece :left :frame :thumb]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            (m/mirror [1 0 0]
                    (m/union
@@ -329,19 +329,19 @@
   (do
     (say-spit [:piece :right :frame partno]
             (write-scad
-             (use "key-place.scad")
+             (use "hal1964-key-place.scad")
              (use "eggcrate.scad")
              (m/union part1 part2)))
     (say-spit [:piece :left :frame partno]
             (write-scad
-             (use "key-place.scad")
+             (use "hal1964-key-place.scad")
              (use "eggcrate.scad")
              (m/mirror [1 0 0]
                      (m/union part1 part2))))))
 
 (say-spit [:debugmodel :right :frame :all]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (m/union dactyl-top-right-thumb
                   (apply m/union (dactyl-top-right-pieces key-holes-pieces))
                   caps
@@ -349,7 +349,7 @@
 
 (say-spit [:debugmodel :left :frame :all]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (m/mirror [1 0 0]
                    (m/union dactyl-top-right-thumb
                           (apply m/union (dactyl-top-right-pieces key-holes-pieces))
@@ -377,7 +377,7 @@
                                    sides-slices-right))]
   (say-spit [:piece :right :sides partno]
             (write-scad
-             (use "key-place.scad")
+             (use "hal1964-key-place.scad")
              (use "eggcrate.scad")
              define-sides-with-right-ports
              (m/union part1 part2
@@ -393,14 +393,14 @@
                                    sides-slices-right))]
   (say-spit [:piece :left :sides partno]
             (write-scad
-             (use "key-place.scad")
+             (use "hal1964-key-place.scad")
              (use "eggcrate.scad")
              define-sides-with-left-ports
              (m/mirror [1 0 0] (m/union part1 part2)))))
 
 (say-spit [:intermediate :right :bottom :all]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            (m/union
             bottom-right)
@@ -415,7 +415,7 @@
 
 (say-spit [:intermediate :left :bottom :all]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            (m/mirror [1 0 0]
                    (m/union
@@ -423,7 +423,7 @@
 
 (say-spit [:debugmodel :splits]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (m/union
             (m/union dactyl-top-right-thumb
                    (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
@@ -432,7 +432,7 @@
 
 (say-spit [:debugmodel :joins]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            define-sides-with-right-ports
            (m/union
             (m/union dactyl-top-right-thumb
@@ -441,18 +441,18 @@
 
 (say-spit [:debugmodel :right :keys]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (m/union
             (m/union caps thumbcaps))))
 
 (say-spit [:debugmodel :left :keys]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (m/mirror [1 0 0] (m/union caps thumbcaps))))
 
 (say-spit [:debugmodel :photo]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            define-sides-with-right-ports
            (m/union
@@ -465,7 +465,7 @@
 
 (say-spit [:debugmodel :teensy-holder-clearance-check]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            (use "teensy-holder.scad")
            (m/union
@@ -477,13 +477,13 @@
 
 (say-spit [:debugmodel :right :bottom :all]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            (import-bottom-right)))
 
 (say-spit [:debugmodel :right :legs :all]
           (write-scad
-           (use "key-place.scad")
+           (use "hal1964-key-place.scad")
            (use "eggcrate.scad")
            (legs true)
            (apply m/union (legs false))
@@ -492,14 +492,14 @@
 (doseq [[partno leg] (map vector (range) (legs false))]
   (say-spit [:piece :right :legs partno]
             (write-scad
-             (use "key-place.scad")
+             (use "hal1964-key-place.scad")
              (use "eggcrate.scad")
              leg)))
 
 (doseq [[partno leg] (map vector (range) (legs false))]
   (say-spit [:piece :left :legs partno]
             (write-scad
-             (use "key-place.scad")
+             (use "hal1964-key-place.scad")
              (use "eggcrate.scad")
              (m/mirror [1 0 0] leg))))
 
@@ -570,7 +570,7 @@
                                         (rest prepended-tags)
                                         [slice]))
                   (write-scad
-                   (use "key-place.scad")
+                   (use "hal1964-key-place.scad")
                    (use "eggcrate.scad")
                    (use "egghex2.scad")
                    (m/union
@@ -581,7 +581,7 @@
                                         (rest prepended-tags)
                                         [slice]))
                   (write-scad
-                   (use "key-place.scad")
+                   (use "hal1964-key-place.scad")
                    (use "eggcrate.scad")
                    (use "egghex2.scad")
                    (m/mirror [1 0 0]
