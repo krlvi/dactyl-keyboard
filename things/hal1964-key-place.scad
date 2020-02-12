@@ -5,21 +5,21 @@
 main_tent = 30;
 pinky_tent = main_tent - 45;
 // from index finger out
-column_z_rotations = [ 34.56, 34.56, 29.14, 21.84, 13.96, 11.68 ];
+column_z_rotations = [ 34.56, 34.56, 28.14, 21.84, 13.96, 11.68 ];
 tent_split_rotation = -(13.96 + 21.84) / 2;
 // I measured a picture of Figure 9 from British patent 1,016,993; the
 // keys drawn in there were about 106 px wide. And real keys are 20mm
-// wide.
+// wide. Maybe these were smaller.
 p2mm9 = 18 / 106;
-column_x_translations = [ -(166+43)*p2mm9, -43*p2mm9, 0, -18*p2mm9, 25*p2mm9, 87*p2mm9 ];
-column_r_translations = [ 1490*p2mm9, 1441*p2mm9, 1498*p2mm9,
-                          1400*p2mm9, 1306*p2mm9, 1250*p2mm9 ];
+column_x_translations = [ -(166-20)*p2mm9, -20*p2mm9, 5*p2mm9, 0, 0, 87*p2mm9 ];
+column_r_translations = [ 1393*p2mm9, 1441*p2mm9, 1498*p2mm9,
+                          1456*p2mm9, 1306*p2mm9, 1306*p2mm9 ];
 base_r_translation = 1441 * p2mm9;
 r_per_key = 150 * p2mm9;
 
 // from Figure 4b. In the copy of this picture I obtained, keys might
 // be 100px wide.
-p2mm4b = 10 / 100;
+p2mm4b = 14 / 100;
 _column_graph_pixels  = [ [133, 1067], [221, 965], [363, 878], [346, 793], [206, 695], [206, 695] ];
 base_column_translation = [363, 878];
 _column_graph_offsets = [for(c = _column_graph_pixels)
@@ -41,9 +41,7 @@ function column_scoop(col, row) =
      polynomial_at(column_scoop_coefficients[col], row) * p2mm4b;
 
 module _ColumnPlace(col, row) {
-     tents = [30, 30, 30, 20, -15, -15];
-     rotate(a=tents[col], v=[0,1,0])
-          translate([84,0,0])
+          translate([84,0,20])
           translate([0, -base_r_translation, 0])
           rotate(a=column_z_rotations[col], v=[0,0,1])
           translate([column_x_translations[col], column_r_translations[col], 0])
@@ -79,9 +77,11 @@ post_size = 0.1;
 
 
 module _RowPlace(col, row) {
+     tents = [30, 30, 30, 30, -15, -15];
      alpha = 360 / 24;
     // alphas = [13, 15, 18, 24, 30];
-     alphas = [3,5,8,13,21,34,55];
+     //alphas = [3,5,8,13,21,34,55];
+     alphas = [24,24,24,24,24,24];
      keyswitch_height = 14.0;
      keyswitch_width = 14.0;
      mount_width = keyswitch_width + 3;
@@ -95,12 +95,13 @@ module _RowPlace(col, row) {
 //     echo(row, column_scoop(col, row));
 //     translate([0, r_per_key * row, 0]) {
           cgo = _column_graph_offsets[col];
-//          translate([0, 0, cgo.y])
+          translate([0, 0, cgo.y])
                translate([0, 0, row_radius])
 //               rotate(a=alpha*(2-row), v=[1,0,0])
                rotate(a=alphas[row]*(2-row), v=[1,0,0])
                translate([0, 0, -row_radius])
 //               translate([0,0,column_scoop(col, row)])
+               rotate(a=tents[col], v=[0,1,0])
                children();
 //     }
 }
