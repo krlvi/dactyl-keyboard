@@ -351,10 +351,34 @@
           (write-scad
            (use "hal1964-key-place.scad")
            (m/mirror [1 0 0]
-                   (m/union dactyl-top-right-thumb
+                   (m/union #_dactyl-top-right-thumb
                           (apply m/union (dactyl-top-right-pieces key-holes-pieces))
                           caps
-                          thumbcaps))))
+                          #_thumbcaps))))
+
+(say-spit [:debugmodel :left :keys :all]
+          (write-scad
+           (use "hal1964-key-place.scad")
+           (m/intersection
+            (m/union
+             (apply m/union
+                    (for [column columns
+                          row rows
+                          :when (finger-has-key-place-p column row)]
+                      (m/hull (key-place column row (sa-cap 1))
+                              (m/translate [0 0 -100]
+                                           (key-place column row (sa-cap 1))))))
+             (m/extrude-linear {:height 10}
+                               (m/project
+                                (apply m/hull
+                                       (for [column columns
+                                             row rows
+                                             :when (finger-has-key-place-p column row)]
+                                         (->> (sa-cap 1)
+                                              (m/scale [2 2 2])
+                                              (key-place column row)
+                                              (m/translate [0 0 -100])))))))
+            (m/translate [0 0 100] (m/cube 500 500 200)))))
 
 (def sides-slices-right
   (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
