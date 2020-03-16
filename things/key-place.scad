@@ -51,54 +51,34 @@ module KeyPlace(col, row) {
      alp = alphas[row]; // assumption: row > 0
      row_radius = cap_top_height + ( ((mount_height + 1/2) / 2) / sin(alp/2) );
      column_angle = bet * (2 - col);
-     translate([0, 0, 2]) {
-	  rotate(a=tenting_angle, v=[0,1,0]) {
-	       translate(ColumnOffset(col)) {
-		    translate([0, 0, column_radius]) {
-			 rotate(a=column_angle, v=[0, 1, 0]) {
-			      translate([0, 0, -column_radius]) {
-                                   translate(row_compensation[row]) {
-				   translate([0, 0, row_radius]) {
-					rotate(a=alp*(2-row), v=[1,0,0]) {
-					     translate([0, 0, -row_radius]) {
-						  children();
-					     }
-					}
-				   }
-                                   }
-			      }
-			 }
-		    }
-	       }
-	  }
-     }
+     translate([0, 0, 2])
+	  rotate(a=tenting_angle, v=[0,1,0])
+          translate(ColumnOffset(col))
+          translate([0, 0, column_radius])
+          rotate(a=column_angle, v=[0, 1, 0])
+          translate([0, 0, -column_radius])
+          translate(row_compensation[row])
+          translate([0, 0, row_radius])
+          rotate(a=alp*(2-row), v=[1,0,0])
+          translate([0, 0, -row_radius])
+          children();
 }
 
 module ThumbPlace(col, row) {
-     translate([-53, -45, 60]) {
+     translate([-53, -45, 60])
 	  /* perhaps this should be tenting-angle, but look at the
           axis. that will change what the translation after it
           needs to be when you change tenting-angle. */
-	  rotate(a=tau/24, v=[1,1,0]) {
-	       rotate(a=tau*(1/8 - 3/32), v=[0,0,1]) {
-		    translate([mount_width, 0, 0]) {
-			 translate([0, 0, thu_column_radius]) {
-			      rotate(a=col*thu_bet, v=[0,1,0]) {
-				   translate([0, 0, -thu_column_radius]) {
-					translate([0, 0, thu_row_radius]) {
-					     rotate(a=row*thu_alp, v=[1,0,0]) {
-						  translate([0, 0, -thu_row_radius]) {
-						       children();
-						  }
-					     }
-					}
-				   }
-			      }
-			 }
-		    }
-	       }
-	  }
-     }
+	  rotate(a=tau/24, v=[1,1,0])
+          rotate(a=tau*(1/8 - 3/32), v=[0,0,1])
+          translate([mount_width, 0, 0])
+          translate([0, 0, thu_column_radius])
+          rotate(a=col*thu_bet, v=[0,1,0])
+          translate([0, 0, -thu_column_radius])
+          translate([0, 0, thu_row_radius])
+          rotate(a=row*thu_alp, v=[1,0,0])
+          translate([0, 0, -thu_row_radius])
+          children();
 }
 
 
