@@ -13,3 +13,9 @@
 *.stl
 *.gcode
 .elapsed.*
+
+renders/*.blend1
+*-preamble
+TAGS
+
+things/.deps
