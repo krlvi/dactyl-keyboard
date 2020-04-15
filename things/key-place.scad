@@ -43,20 +43,27 @@ thu_column_radius = cap_top_height + ( ((mount_width + 2.0) / 2) / sin(thu_bet/2
 // connectors
 post_size = 0.1;
 
-function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [0, 2.82, -3.0] : (column >= 4) ? [0, -5.8, 5.64] : [0,0,0]);
+function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [0, 5.82, -4.0] : (column >= 5) ? [0, -10.8, 5.64] : (column >= 4) ? [0, -8.8, 5.64] : [0,0,0]);
 
 module KeyPlace(col, row) {
-     alphas = [ tau/16, tau/24, tau/18, tau/13, tau/12 ];
+     row_alphas = [ tau/16, tau/24, tau/18, tau/13, tau/12 ];
+     // must be >= 1.0
+     column_radius_factors = [ 1.05, 1.05, 1.12, 1.03, 1.0, 1.0 ];
      row_compensation = [ [0,2,3], [0,0,0], [0,0,0], [0,0,0], [0,0,0] ];
-     alp = alphas[row]; // assumption: row > 0
-     row_radius = cap_top_height + ( ((mount_height + 1/2) / 2) / sin(alp/2) );
+     alp = row_alphas[row]; // assumption: row > 0
+     row_radius = (cap_top_height + ( ((mount_height + 1/2) / 2) / sin(alp/2) )) * column_radius_factors[col];
      column_angle = bet * (2 - col);
-     translate([0, 0, 2])
+     column_splay = [0, 0, 5, 9, 14, 14];
+     column_splay_radius = 50;
+     translate([0, 0, 16])
 	  rotate(a=tenting_angle, v=[0,1,0])
           translate(ColumnOffset(col))
           translate([0, 0, column_radius])
           rotate(a=column_angle, v=[0, 1, 0])
           translate([0, 0, -column_radius])
+          translate([0, -column_splay_radius, 0])
+          rotate(a=-column_splay[col], v=[0,0,1])
+          translate([0, column_splay_radius, 0])
           translate(row_compensation[row])
           translate([0, 0, row_radius])
           rotate(a=alp*(2-row), v=[1,0,0])
