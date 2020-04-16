@@ -29,7 +29,7 @@
 (def layouts
   {:y-and-b
 ; we split the keyholes into pieces for smaller print volume and quicker printing
-   {:columns-pieces [(range -1 0) (range 0 2) (range 2 4) (range 4 6)]
+   {:columns-pieces [(range 0 6)]
     :rows (range 0 5)
                                         ; some of these keys are not
     ; within columns and rows. this is because the case bottom uses a
@@ -53,7 +53,6 @@
                           [[:w :k -1 1 2] [:w :t 2 0 1]]
                           [[:w :t 2 -1 0] [:s :t 2 1 -1]]
                           [[:s :t 1 0 -1] [:s :k 2 3 4]]]
-    :thumb-glue-joint-left-of [[-1 3] [1 4]]
     :silo-widenings y-and-b-key-silo-widenings
     :screw-holes-at [
                      [:k 1/2 1/2] [:k 1/2 5/2]
@@ -81,7 +80,6 @@
                   [:s :t 1 -1] [:sw :t 2 -1]
                   [:w :t 2 0] [:nw :t 2 1]
                   [:n :t 1 1]]
-    :thumb-glue-joint-left-of [[-1 3] [1 4]]
     :silo-widenings (fn [cs rs c r]
                       (cond
                         (= c (first cs)) [0 0.25]
@@ -145,11 +143,6 @@
        (not (finger-has-key-place-p (inc column) row))
        (not (finger-has-key-place-p column (inc row)))
        (not (finger-has-key-place-p (dec column) (inc row))))))
-
-
-(defn thumb-glue-joint-left-of-p [column row]
-  (some true? (for [[c r] (chosen-layout :thumb-glue-joint-left-of)]
-                (and (= c column) (= row r)))))
 
 
 (defn key-shapes-for-columns [shape columns]
