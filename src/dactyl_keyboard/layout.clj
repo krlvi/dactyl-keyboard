@@ -172,7 +172,9 @@
   (thumb-place 0 -1/2 shape))
 
 (defn thumb-2x+1-column [shape]
-  (thumb-place 1 -1/2 shape))
+  (union
+   (thumb-place 1 -1/2 shape)
+   (thumb-place 1 1 shape)))
 
 (defn thumb-1x-column [shape]
   (union (thumb-place 2 -1 shape)

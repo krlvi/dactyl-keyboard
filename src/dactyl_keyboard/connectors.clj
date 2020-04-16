@@ -138,7 +138,7 @@
   (union
    (apply union
           (concat
-           #_(for [column [2] row [1]]
+           (for [column [2] row [1]]
              (triangle-hulls (thumb-place column row web-post-br)
                              (thumb-place column row web-post-tr)
                              (thumb-place (dec column) row web-post-bl)
@@ -167,7 +167,7 @@
                       (thumb-place 1 -1/2 thumb-br))
 
       ;;Connecting the 4 with the double in the bottom left
-      #_(triangle-hulls (thumb-place 1 1 web-post-bl)
+      (triangle-hulls (thumb-place 1 1 web-post-bl)
                       (thumb-place 1 -1/2 thumb-tl)
                       (thumb-place 2 1 web-post-br)
                       (thumb-place 2 0 web-post-tr))
@@ -185,7 +185,7 @@
             (thumb-place 2 -1 web-post-br))
 
       ;;Connecting the thumb to everything
-      #_(triangle-hulls (thumb-place 0 -1/2 thumb-br)
+      (triangle-hulls (thumb-place 0 -1/2 thumb-br)
                       (key-place 1 4 web-post-bl)
                       (thumb-place 0 -1/2 thumb-tr)
                       (key-place 1 4 web-post-tl)
@@ -202,7 +202,7 @@
                       (key-place 0 3 web-post-tl)
                       (thumb-place 1 1 web-post-br)
                       (thumb-place 1 1 web-post-tr))
-      #_(hull (thumb-place 0 -1/2 web-post-tr)
+      (hull (thumb-place 0 -1/2 web-post-tr)
             (thumb-place 0 -1/2 thumb-tr)
             (key-place 1 4 web-post-bl)
             (key-place 1 4 web-post-tl))
