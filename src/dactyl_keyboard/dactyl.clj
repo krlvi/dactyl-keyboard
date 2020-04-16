@@ -25,10 +25,8 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
-            [dactyl-keyboard.sides-connectors :refer :all]
             [dactyl-keyboard.sides :refer :all]
             [dactyl-keyboard.bottom :refer :all]
-            [dactyl-keyboard.sides-pieces :refer :all]
             [dactyl-keyboard.screw-hole :refer :all]
             [unicode-math.core :refer :all]
             [dactyl-keyboard.half-circle-connectors :refer :all]
@@ -186,34 +184,30 @@
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
-           dactyl-top-right-thumb
-           (sides-connectors-thumb-from-notation sides-frame-joints)))
+           dactyl-top-right-thumb))
 
 (say-spit [:piece :left :frame :thumb]
           (write-scad
            (use "key-place.scad")
            (use "eggcrate.scad")
            (m/mirror [1 0 0]
-                   (m/union
-                    dactyl-top-right-thumb
-                    (sides-connectors-thumb-from-notation sides-frame-joints)))))
+                     dactyl-top-right-thumb)))
 
-(doseq [[partno part1 part2]
+(doseq [[partno part1]
         (map vector (range)
-             (dactyl-top-right-pieces key-holes-pieces)
-             (sides-connectors-frame-from-notation sides-frame-joints))]
+             (dactyl-top-right-pieces key-holes-pieces))]
   (do
     (say-spit [:piece :right :frame partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
-             (m/union part1 part2)))
+             (m/union part1)))
     (say-spit [:piece :left :frame partno]
             (write-scad
              (use "key-place.scad")
              (use "eggcrate.scad")
              (m/mirror [1 0 0]
-                     (m/union part1 part2))))))
+                     (m/union part1))))))
 
 (say-spit [:debugmodel :right :frame :all]
           (write-scad
@@ -231,48 +225,6 @@
                           (apply m/union (dactyl-top-right-pieces key-holes-pieces))
                           caps
                           thumbcaps))))
-
-(def sides-slices-right
-  (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
-                                the-sides-slice-joints
-                                sides-slice-intersects
-                                (m/call-module "SidesWithRightPorts")
-                                sides-regions))
-
-(def sides-slices-left
-  (pieces-with-x-pins-and-holes-faster (* sides-radius 3/4)
-                                the-sides-slice-joints
-                                sides-slice-intersects
-                                (m/call-module "SidesWithLeftPorts")
-                                sides-regions))
-
-(doseq [[partno part1 part2] (map vector (range)
-                                  sides-slices-right
-                                  (sides-connectors-sides-from-notation
-                                   sides-frame-joints
-                                   sides-slices-right))]
-  (say-spit [:piece :right :sides partno]
-            (write-scad
-             (use "key-place.scad")
-             (use "eggcrate.scad")
-             define-sides-with-right-ports
-             (m/union part1 part2
-                    ;; for reference when adjusting sides downness:
-                    #_(m/union dactyl-top-right-thumb
-                           (apply m/union (dactyl-top-right-pieces
-                                         key-holes-pieces)))))))
-
-(doseq [[partno part1 part2] (map vector (range)
-                                  sides-slices-left
-                                  (sides-connectors-sides-from-notation
-                                   sides-frame-joints
-                                   sides-slices-right))]
-  (say-spit [:piece :left :sides partno]
-            (write-scad
-             (use "key-place.scad")
-             (use "eggcrate.scad")
-             define-sides-with-left-ports
-             (m/mirror [1 0 0] (m/union part1 part2)))))
 
 (say-spit [:intermediate :right :bottom :all]
           (write-scad
@@ -296,24 +248,6 @@
            (m/mirror [1 0 0]
                    (m/union
                     (import-bottom-right)))))
-
-(say-spit [:debugmodel :splits]
-          (write-scad
-           (use "key-place.scad")
-           (m/union
-            (m/union dactyl-top-right-thumb
-                   (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
-            sides-slice-intersects
-            )))
-
-(say-spit [:debugmodel :joins]
-          (write-scad
-           (use "key-place.scad")
-           define-sides-with-right-ports
-           (m/union
-            (m/union dactyl-top-right-thumb
-                   (apply m/union (dactyl-top-right-pieces key-holes-pieces)))
-            (map #(% (m/rotate (* 1/4 τ) [0 1 0] (m/cylinder [10 0] 10))) the-sides-slice-joints))))
 
 (say-spit [:debugmodel :right :keys]
           (write-scad
