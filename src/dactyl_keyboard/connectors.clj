@@ -36,18 +36,46 @@
                    (translate [0 0 (+ (/ web-thickness -2)
                                       plate-thickness)])))
 (def web-post (call-module "WebPost"))
+;; these are like web-posts, but lying down.  horizontal or
+;; vertical (key-place-wise); bottom or top (key actuation axis wise);
+;; left, right, top and bottom (key-place-wise, as with web-posts)
+(def web-log-hbl (call-module "WebLogHBL"))
+(def web-log-hbr (call-module "WebLogHBR"))
+(def web-log-htl (call-module "WebLogHTL"))
+(def web-log-htr (call-module "WebLogHTR"))
+
 
 (def post-adj (/ post-size 2))
-(def web-post-tr (translate [(- (/ mount-width 2) post-adj) (- (/ mount-height 2) post-adj) 0] web-post))
-(def web-post-tl (translate [(+ (/ mount-width -2) post-adj) (- (/ mount-height 2) post-adj) 0] web-post))
-(def web-post-t  (translate [0 (- (/ mount-height 2) post-adj) 0] web-post))
-
-(def web-post-bl (translate [(+ (/ mount-width -2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
-(def web-post-br (translate [(- (/ mount-width 2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
-(def web-post-b  (translate [0 (+ (/ mount-height -2) post-adj) 0] web-post))
-
-(def web-post-l  (translate [(+ (/ mount-width -2) post-adj) 0 0] web-post))
-(def web-post-r  (translate [(- (/ mount-width 2) post-adj) 0 0] web-post))
+(let [br #(translate [(- (/ mount-width 2) post-adj)
+                      (+ (/ mount-height -2) post-adj) 0] %)
+      bl #(translate [(+ (/ mount-width -2) post-adj)
+                      (+ (/ mount-height -2) post-adj) 0] %)
+      tr #(translate [(- (/ mount-width 2) post-adj)
+                      (- (/ mount-height 2) post-adj) 0] %)
+      tl #(translate [(+ (/ mount-width -2) post-adj)
+                      (- (/ mount-height 2) post-adj) 0] %)
+      t #(translate [0 (- (/ mount-height 2) post-adj) 0] %)
+      b #(translate [0 (+ (/ mount-height -2) post-adj) 0] %)
+      l #(translate [(+ (/ mount-width -2) post-adj) 0 0] %)
+      r #(translate [(- (/ mount-width 2) post-adj) 0 0] %)]
+  (def web-post-tr (tr web-post))
+  (def web-post-tl (tl web-post))
+  (def web-post-bl (bl web-post))
+  (def web-post-br (br web-post))
+  (def web-post-t (t web-post))
+  (def web-post-b (b web-post))
+  (def web-post-l (l web-post))
+  (def web-post-r (r web-post))
+  ;; logs lying at the bottom of the web
+  (def web-log-hbbr (br web-log-hbr))
+  (def web-log-hbbl (bl web-log-hbl))
+  (def web-log-hbtr (tr web-log-hbr))
+  (def web-log-hbtl (tl web-log-hbl))
+  ;; logs floating at the top of the web
+  (def web-log-htbr (br web-log-htr))
+  (def web-log-htbl (bl web-log-htl))
+  (def web-log-httr (tr web-log-htr))
+  (def web-log-httl (tl web-log-htl)))
 
 (defn row-connector [column row]
   (triangle-hulls
@@ -136,18 +164,25 @@
   (union
    (apply union
           (concat
-           (for [column [2] row [1]]
+           (for [column [1 2] row [-1 0]]
              (triangle-hulls (thumb-place column row web-post-br)
                              (thumb-place column row web-post-tr)
                              (thumb-place (dec column) row web-post-bl)
                              (thumb-place (dec column) row web-post-tl)))
-           (for [column [2] row [0 1]]
+           (for [column [0 1 2] row [0]]
              (triangle-hulls
               (thumb-place column row web-post-bl)
               (thumb-place column row web-post-br)
               (thumb-place column (dec row) web-post-tl)
-              (thumb-place column (dec row) web-post-tr)))))
-   (let [plate-height (/ (- sa-double-length mount-height) 2)
+              (thumb-place column (dec row) web-post-tr)))
+           (for [column [1 2] row [0]]
+             (triangle-hulls
+              (thumb-place column row web-post-br)
+              (thumb-place (dec column) row web-post-bl)
+              (thumb-place column (dec row) web-post-tr)
+              (thumb-place (dec column) (dec row) web-post-tl)))))
+   (let [
+         plate-height (/ (- sa-double-length mount-height) 2)
          thumb-tl (->> web-post-tl
                        (translate [0 plate-height 0]))
          thumb-bl (->> web-post-bl
@@ -158,32 +193,48 @@
                        (translate [0 (- plate-height) 0]))]
      (union
 
-      ;;Connecting the two doubles
-      (triangle-hulls (thumb-place 0 -1/2 thumb-tl)
-                      (thumb-place 0 -1/2 thumb-bl)
-                      (thumb-place 1 -1/2 thumb-tr)
-                      (thumb-place 1 -1/2 thumb-br))
-
-      ;;Connecting the 4 with the double in the bottom left
-      (triangle-hulls (thumb-place 1 1 web-post-bl)
-                      (thumb-place 1 -1/2 thumb-tl)
-                      (thumb-place 2 1 web-post-br)
-                      (thumb-place 2 0 web-post-tr))
-
-      ;;Connecting the two singles with the middle double
-      (hull (thumb-place 1 -1/2 thumb-tl)
-            (thumb-place 1 -1/2 thumb-bl)
-            (thumb-place 2 0 web-post-br)
-            (thumb-place 2 -1 web-post-tr))
-      (hull (thumb-place 1 -1/2 thumb-tl)
-            (thumb-place 2 0 web-post-tr)
-            (thumb-place 2 0 web-post-br))
-      (hull (thumb-place 1 -1/2 thumb-bl)
-            (thumb-place 2 -1 web-post-tr)
-            (thumb-place 2 -1 web-post-br))
-
       ;;Connecting the thumb to everything
-      (triangle-hulls (thumb-place 0 -1/2 thumb-br)
+      (triangle-hulls
+       (thumb-place 0 -1 web-post-tr)
+       (thumb-place 0 -1 web-post-br)
+       (thumb-place 0 -1 web-log-httr)
+       (thumb-place 0 -1 web-log-htbr)
+       (key-place 1 4 web-log-hbbl)
+       (thumb-place 0 -1 web-log-htbr))
+      (triangle-hulls
+       (thumb-place 0 -1 web-post-tr)
+       (thumb-place 0 -1 web-log-httr)
+       (thumb-place 0 0 web-post-br)
+       (thumb-place 0 0 web-log-htbr)
+       (key-place 1 4 web-log-hbbl)
+       (thumb-place 0 -1 web-log-httr))
+      (triangle-hulls
+       (key-place 1 4 web-log-hbbl)
+       (thumb-place 0 0 web-log-htbr)
+       (key-place 1 4 web-log-hbtl)
+       (thumb-place 0 0 web-post-tr)
+       (thumb-place 0 0 web-post-br))
+      (triangle-hulls
+       (key-place 1 4 web-log-hbbl)
+       (key-place 1 4 web-post-bl)
+       (key-place 1 4 web-log-hbtl)
+       (key-place 1 4 web-post-tl)
+       (key-place 0 3 web-post-br)
+       (thumb-place 0 0 web-post-tr)
+       (key-place 0 3 web-post-bl)
+       (thumb-place 0 0 web-post-t)
+       ;; (key-place 1 4 web-log-hbbl)
+       ;; (thumb-place 0 0 web-post-br)
+       ;; (key-place 1 4 web-post-tl)
+       ;; (thumb-place 0 0 web-post-tr)
+       ;; (key-place 1 3 web-post-bl)
+       ;; (thumb-place 0 0 web-post-tr)
+       ;; (key-place 0 3 web-post-br)
+       ;; (thumb-place 0 0 web-post-tr)
+       ;; (key-place 0 3 web-post-bl)
+       ;; (thumb-place 0 0 web-post-tl)
+       )
+      #_(triangle-hulls (thumb-place 0 -1/2 thumb-br)
                       (key-place 1 4 web-post-bl)
                       (thumb-place 0 -1/2 thumb-tr)
                       (key-place 1 4 web-post-tl)
@@ -200,8 +251,4 @@
                       (key-place 0 3 web-post-tl)
                       (thumb-place 1 1 web-post-br)
                       (thumb-place 1 1 web-post-tr))
-      (hull (thumb-place 0 -1/2 web-post-tr)
-            (thumb-place 0 -1/2 thumb-tr)
-            (key-place 1 4 web-post-bl)
-            (key-place 1 4 web-post-tl))
       ))))

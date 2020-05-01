@@ -25,8 +25,8 @@ tau = 360; // openscad works in degrees not radians
 // placement
 bet = tau / 68;
 tenting_angle = tau / 10;
-thu_alp = tau / 20;
-thu_bet = tau / 20;
+thu_alp = tau / 10;
+thu_bet = tau / 80;
 // switch_hole
 keyswitch_height = 14.0;
 keyswitch_width = 14.0;
@@ -74,13 +74,22 @@ module KeyPlace(col, row) {
 }
 
 module ThumbPlace(col, row) {
-     translate([-39, -50, 40])
-          rotate(a=tau/12, v=[0,0,1])
-          rotate(a=-tau/30, v=[0,1,0])
+     thumb_column_splay = [0, 6, 13, 15, 15];
+     thumb_column_splay_radius = 10; // this has an interplay with the
+                               // measure added to mount_width above
+                               // in column_radius
+     thumb_column_y_compensation = [0, -1, -5, -6, -6];
+     translate([-40, -50, 60])
+          rotate(a=tau/20, v=[0,0,1])
+          rotate(a=tau/30, v=[0,1,0])
           translate([mount_width, 0, 0])
           translate([0, 0, thu_column_radius])
           rotate(a=col*thu_bet, v=[0,1,0])
           translate([0, 0, -thu_column_radius])
+          translate([0, -thumb_column_splay_radius, 0])
+          translate([0, thumb_column_y_compensation[max(floor(col),0)], 0])
+          rotate(a=thumb_column_splay[max(floor(col),0)], v=[0,0,1])
+          translate([0, thumb_column_splay_radius, 0])
           translate([0, 0, thu_row_radius])
           rotate(a=row*thu_alp, v=[1,0,0])
           translate([0, 0, -thu_row_radius])
@@ -93,6 +102,24 @@ module WebPost() {
           cube ([post_size, post_size, web_thickness], center=true);
      }
 }
+
+module WebLogHBL() {
+     translate ([-web_thickness/2, 0, (plate_thickness - web_thickness)])
+          cube ([web_thickness, post_size, post_size], center=true);
+}
+module WebLogHBR() {
+     translate ([web_thickness/2, 0, (plate_thickness - web_thickness)])
+          cube ([web_thickness, post_size, post_size], center=true);
+}
+module WebLogHTL() {
+     translate ([-web_thickness/2, 0, plate_thickness])
+          cube ([web_thickness, post_size, post_size], center=true);
+}
+module WebLogHTR() {
+     translate ([web_thickness/2, 0, plate_thickness])
+          cube ([web_thickness, post_size, post_size], center=true);
+}
+
 
 module Marker(x) {
      children();

@@ -168,31 +168,16 @@
            (->> (sa-cap (if (= column 5) 1 1))
                 (key-place column row)))))
 
-(defn thumb-2x-column [shape]
-  (thumb-place 0 -1/2 shape))
-
-(defn thumb-2x+1-column [shape]
-  (union
-   (thumb-place 1 -1/2 shape)
-   (thumb-place 1 1 shape)))
-
-(defn thumb-1x-column [shape]
-  (union (thumb-place 2 -1 shape)
-         (thumb-place 2 0 shape)
-         (thumb-place 2 1 shape)))
-
 (defn thumb-layout [shape]
   (union
-   (thumb-2x-column shape)
-   (thumb-2x+1-column shape)
-   (thumb-1x-column shape)))
+   (thumb-place 0 0 shape)
+   (thumb-place 1 0 shape)
+   (thumb-place 2 0 shape)
+   (thumb-place 0 -1 shape)
+   (thumb-place 1 -1 shape)
+   (thumb-place 2 -1 shape)))
 
-(def thumbcaps
-  (union
-   (thumb-2x-column (sa-cap 2))
-   (thumb-place 1 -1/2 (sa-cap 2))
-   #_(thumb-place 1 1 (sa-cap 1))
-   (thumb-1x-column (sa-cap 1))))
+(def thumbcaps (thumb-layout (sa-cap 1)))
 
 (defn reify-column [c] (cond (= c :first) (first columns)
                              (= c :last) (last columns)

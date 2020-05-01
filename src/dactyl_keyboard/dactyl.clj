@@ -64,15 +64,10 @@
 (def thumb
   (m/union
    thumb-connectors
-   (thumb-layout (m/rotate (/ π 2) [0 0 1] chosen-single-plate))
-   (thumb-place 0 -1/2 double-plates)
-   (thumb-place 1 -1/2 double-plates)))
+   (thumb-layout (m/rotate (/ π 2) [0 0 1] (m/color [1 1 1 0.2] chosen-single-plate)))))
 
 (def thumb-blanks
-  (m/union
-   (thumb-layout (m/rotate (/ π 2) [0 0 1] chosen-blank-single-plate))
-   (thumb-place 0 -1/2 double-plates-blank)
-   (thumb-place 1 -1/2 double-plates-blank)))
+   (thumb-layout (m/rotate (/ π 2) [0 0 1] chosen-blank-single-plate)))
 
 
 
@@ -84,7 +79,7 @@
 (defn dactyl-top-right-plusses [key-pieces]
   ; agh i made bad names and now i pay for it
   (let [pieces-of-pieces (map vector
-                              key-pieces
+                              (map #(m/color [1 1 1 0.2] %) key-pieces)
                               connectors-inside-fingerpieces
                               (for [cols columns-pieces]
                                 (let [teensy-column (nth teensy-bracket-at 1)]
@@ -214,8 +209,8 @@
            (use "key-place.scad")
            (m/union dactyl-top-right-thumb
                   (apply m/union (dactyl-top-right-pieces key-holes-pieces))
-                  caps
-                  thumbcaps)))
+                  #_caps
+                  #_thumbcaps)))
 
 (say-spit [:debugmodel :left :frame :all]
           (write-scad
