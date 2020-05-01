@@ -308,7 +308,27 @@
              (use "eggcrate.scad")
              (m/mirror [1 0 0] leg))))
 
-(say-spit [:debugmodel :left :keys :all]
+(def minimal-base-right
+  (m/extrude-linear {:height 10}
+                    (m/project
+                     (m/union
+                      (apply m/hull
+                             (for [column columns
+                                   row rows
+                                   :when (finger-has-key-place-p column row)]
+                               (->> (sa-cap 1)
+                                    (m/scale [2 2 2])
+                                    (key-place column row)
+                                    (m/translate [0 0 -100]))))
+                      (apply m/hull
+                             (for [column [0 1 2] row [-1 0]]
+                               (->> (sa-cap 1)
+                                    (m/scale [2 2 2])
+                                    (thumb-place column row)
+                                    (m/translate [0 0 -100]))))))))
+                                             
+
+(say-spit [:debugmodel :right :keys :all]
           (write-scad
            (use "key-place.scad")
            (m/intersection
@@ -317,19 +337,15 @@
                     (for [column columns
                           row rows
                           :when (finger-has-key-place-p column row)]
-                      (m/hull (key-place column row (sa-cap 1))
-                              (m/translate [0 0 -100]
-                                           (key-place column row (sa-cap 1))))))
-             (m/extrude-linear {:height 10}
-                               (m/project
-                                (apply m/hull
-                                       (for [column columns
-                                             row rows
-                                             :when (finger-has-key-place-p column row)]
-                                         (->> (sa-cap 1)
-                                              (m/scale [2 2 2])
-                                              (key-place column row)
-                                              (m/translate [0 0 -100])))))))
+                      (let [this-key (key-place column row (sa-cap 1))]
+                        (m/hull this-key
+                                (m/translate [0 0 -100] this-key)))))
+             (apply m/union
+                    (for [column [0 1 2] row [-1 0]]
+                      (let [this-key (thumb-place column row (sa-cap 1))]
+                        (m/hull this-key
+                                (m/translate [0 0 -100] this-key)))))
+             minimal-base-right)
             (m/translate [0 0 100] (m/cube 500 500 200)))))
 
 (say-spit [:piece :screw-hole-top]
