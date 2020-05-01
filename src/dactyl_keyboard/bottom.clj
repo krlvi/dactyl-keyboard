@@ -35,49 +35,6 @@
                                  ;; they are cut off at the bottom
                                  ;; so add slop
                                  3))
-(def legs-glue-tolerance 0.2)
-
-(defn leg-pillar-splitter [a-p]
-  (let [height 80
-        interface-height 24
-        face-size 1.5
-        amplitude 2
-        frequency [1 1/10 1/12]
-        leg-radius-fudge (* 4 sides-radius)
-        max-leg-radius (* 10 sides-radius) ;; includes allowance for
-        ;; being rotated athwart the leg
-        pattern-size 48
-        modname (if a-p
-                  "x_single_eggcrate_box"
-                  "x_mating_single_eggcrate_box")
-        cone-radii (if a-p
-                     [max-leg-radius leg-radius-fudge]
-                     [leg-radius-fudge max-leg-radius])
-        cone-move-way (if a-p -1 1)
-        slice (call-module modname
-                           [interface-height
-                            (* 3/2 leg-radius-fudge)
-                            (* 3/2 leg-radius-fudge)]
-                           [face-size face-size face-size]
-                           frequency
-                           amplitude)
-        interface (->> slice
-                       (color [1 0 0])
-                       (translate [0 (* -3/4 leg-radius-fudge)
-                                   (* -3/4 leg-radius-fudge)])
-                       (rotate (* -1/4 τ) [0 1 0])
-                       #_(translate [0 0 (* -1/2 interface-height)])
-                       #_(translate [0 0 (* -1/4 pattern-size)]))
-        cone (->> (cylinder cone-radii height))
-        ]
-    (union interface
-           (->> cone
-                (translate [0 0 (* cone-move-way
-                                   (+ (* 1/2 height)
-                                      (* 1/2 interface-height)))])))))
-
-(def leg-pillar-splitter-a (leg-pillar-splitter true))
-(def leg-pillar-splitter-b (leg-pillar-splitter false))
 
 (defn legs [nubsp]
   (let [leg-nub-height 2
@@ -103,29 +60,9 @@
                          (scale [floor-scale floor-scale 1])))))
         legs-for-finger (partial legs-for :k key-place rows columns)
         legs-for-thumb (partial legs-for :t thumb-place [-1 0 1] [0 1 2])
-        splitters-for
-        (fn [place-symbol place rows columns sh]
-          (for [row rows col columns
-                :when (some #(= [place-symbol col row] %) legs-at)]
-            (->> sh
-                 (translate [0 0 (- 0 screw-hole-pillar-height
-                                    leg-nub-height)])
-                 (place col row))))
-        splitters-for-thumb (partial splitters-for :t thumb-place
-                                     [-1 0 1] [0 1 2])
-        splitters-for-finger (partial splitters-for :k key-place
-                                      rows columns)
         legs (concat (legs-for-finger sph1) (legs-for-thumb sph1))
-        splitters-a
-        (concat (splitters-for-finger leg-pillar-splitter-a)
-                (splitters-for-thumb leg-pillar-splitter-a))
-        splitters-b
-        (concat (splitters-for-finger leg-pillar-splitter-b)
-                (splitters-for-thumb leg-pillar-splitter-b))
         ]
-    (for [[leg a b] (map vector legs splitters-a splitters-b)]
-      leg)))
-      ;; (intersection leg (if nubsp b a)))))
+    legs))
 
 
 (def bottom

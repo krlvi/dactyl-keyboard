@@ -78,9 +78,7 @@
 
 (defn diagonal-connectors [column]
   (for [row (drop-last rows)
-        :when (and
-               (finger-has-key-place-p (inc column) (inc row))
-               (not (thumb-glue-joint-left-of-p (inc column) (inc row))))]
+        :when (finger-has-key-place-p (inc column) (inc row))]
     (diagonal-connector column row)))
 
 (defn column-connector [column row]
