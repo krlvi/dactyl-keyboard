@@ -34,7 +34,9 @@
                                         ; some of these keys are not
     ; within columns and rows. this is because the case bottom uses a
     ; larger range
-    :finger-knockouts [[0 4] [-1 4] [-2 4] [0 5] [-1 5] [-2 5]]
+    :finger-knockouts [[1 4] [0 4] [-1 4] [-2 4] [5 4]
+                       [0 5] [-1 5] [-2 5]
+                       [0 0]]
     :around-edge [#_[:sw :k -1 3] [:w :k -1 2] [:w :k -1 1] [:nw :k -1 0]
                   [:n :k 0 0] [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
                   [:e :k 5 1] [:e :k 5 2] [:e :k 5 3] [:se :k 5 4]
