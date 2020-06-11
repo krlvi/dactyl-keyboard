@@ -24,22 +24,24 @@ tau = 360; // openscad works in degrees not radians
 
 // placement
 bet = tau / 68;
-tenting_angle = tau / 10;
-thu_alp = tau / 10;
-thu_bet = tau / 80;
+tenting_angle = tau / 8;
+thu_alp = tau / 30;
+thu_bet = tau / 8;
 // switch_hole
 keyswitch_height = 14.0;
 keyswitch_width = 14.0;
 mount_width = keyswitch_width + 3;
 mount_height = keyswitch_height + 3;
 sa_profile_key_height = 12.7;
+these_blank_keycaps_i_got_from_ebay_height = 11.5;
+key_height = these_blank_keycaps_i_got_from_ebay_height;
 plate_thickness = 4;
 web_thickness = 3.5;
 // placement
-cap_top_height = plate_thickness + sa_profile_key_height;
+cap_top_height = plate_thickness + key_height;
 column_radius = cap_top_height + ( ((mount_width + 3.0) / 2) / sin(bet/2) );
 thu_row_radius = cap_top_height + ( ((mount_height + 1/2) / 2) / sin(thu_alp/2) );
-thu_column_radius = cap_top_height + ( ((mount_width + 2.0) / 2) / sin(thu_bet/2) );
+thu_column_radius = cap_top_height + ( ((mount_width + 1.5) / 2) / sin(thu_bet/2) );
 // connectors
 post_size = 0.1;
 
@@ -49,15 +51,16 @@ module KeyPlace(col, row) {
      row_alphas = [ tau/16, tau/24, tau/18, tau/13, tau/12 ];
      // must be >= 1.0
      column_radius_factors = [ 1.05, 1.05, 1.12, 1.03, 1.0, 1.0 ];
-     row_compensation = [ [0,-2,3], [0,0,0], [0,0,0], [0,0,0], [0,2,0] ];
+     row_compensation = [ [0,-3,2], [0,0,0], [0,0,0], [0,0,0], [0,2,0] ];
      alp = row_alphas[max(floor(row),0)];
      row_radius = (cap_top_height + ( ((mount_height + 1/2) / 2) / sin(alp/2) )) * column_radius_factors[max(floor(col),0)];
      column_angle = bet * (2 - col);
-     column_splay = [0, 0, 5, 9, 14, 14];
-     column_splay_radius = 40; // this has an interplay with the
+     column_splay = [0, 0, 4, 6, 11, 11];
+     column_splay_radius = 30; // this has an interplay with the
                                // measure added to mount_width above
                                // in column_radius
-     translate([0, 0, 16])
+     translate([0,0,-42])
+     translate([0, 0, 44])
 	  rotate(a=tenting_angle, v=[0,1,0])
           translate(ColumnOffset(col))
           translate([0, 0, column_radius])
@@ -66,7 +69,8 @@ module KeyPlace(col, row) {
           translate([0, -column_splay_radius, 0])
           rotate(a=-column_splay[max(floor(col),0)], v=[0,0,1])
           translate([0, column_splay_radius, 0])
-          translate(row_compensation[max(floor(row),0)])
+          translate(row_compensation[max(floor(row),0)] *
+                    pow(column_radius_factors[max(floor(col),0)],2))
           translate([0, 0, row_radius])
           rotate(a=alp*(2-row), v=[1,0,0])
           translate([0, 0, -row_radius])
@@ -74,14 +78,15 @@ module KeyPlace(col, row) {
 }
 
 module ThumbPlace(col, row) {
-     thumb_column_splay = [0, 6, 13, 15, 15];
-     thumb_column_splay_radius = 10; // this has an interplay with the
+     thumb_column_splay = [6, 15, 22, 15, 15];
+     thumb_column_splay_radius = 12; // this has an interplay with the
                                // measure added to mount_width above
                                // in column_radius
-     thumb_column_y_compensation = [0, -1, -5, -6, -6];
-     translate([-40, -50, 60])
-          rotate(a=tau/20, v=[0,0,1])
-          rotate(a=tau/30, v=[0,1,0])
+     thumb_column_y_compensation = [0, -4, -14, -6, -6];
+     translate([0,0,-42])
+     translate([-6, -48, 50])
+          rotate(a=tau/10, v=[0,0,1])
+          rotate(a=-tau/8, v=[0,1,0])
           translate([mount_width, 0, 0])
           translate([0, 0, thu_column_radius])
           rotate(a=col*thu_bet, v=[0,1,0])
