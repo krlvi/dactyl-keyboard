@@ -39,43 +39,69 @@
 ;; these are like web-posts, but lying down.  horizontal or
 ;; vertical (key-place-wise); bottom or top (key actuation axis wise);
 ;; left, right, top and bottom (key-place-wise, as with web-posts)
-(def web-log-hbl (call-module "WebLogHBL"))
-(def web-log-hbr (call-module "WebLogHBR"))
-(def web-log-htl (call-module "WebLogHTL"))
-(def web-log-htr (call-module "WebLogHTR"))
+(def web-log-hbw (call-module "WebLogHBW"))
+(def web-log-hbe (call-module "WebLogHBE"))
+(def web-log-htw (call-module "WebLogHTW"))
+(def web-log-hte (call-module "WebLogHTE"))
+(def web-log-vbn (call-module "WebLogVBN"))
+(def web-log-vbs (call-module "WebLogVBS"))
+(def web-log-vtn (call-module "WebLogVTN"))
+(def web-log-vts (call-module "WebLogVTS"))
 
 
 (def post-adj (/ post-size 2))
-(let [br #(translate [(- (/ mount-width 2) post-adj)
+(let [se #(translate [(- (/ mount-width 2) post-adj)
                       (+ (/ mount-height -2) post-adj) 0] %)
-      bl #(translate [(+ (/ mount-width -2) post-adj)
+      sw #(translate [(+ (/ mount-width -2) post-adj)
                       (+ (/ mount-height -2) post-adj) 0] %)
-      tr #(translate [(- (/ mount-width 2) post-adj)
+      ne #(translate [(- (/ mount-width 2) post-adj)
                       (- (/ mount-height 2) post-adj) 0] %)
-      tl #(translate [(+ (/ mount-width -2) post-adj)
+      nw #(translate [(+ (/ mount-width -2) post-adj)
                       (- (/ mount-height 2) post-adj) 0] %)
-      t #(translate [0 (- (/ mount-height 2) post-adj) 0] %)
-      b #(translate [0 (+ (/ mount-height -2) post-adj) 0] %)
-      l #(translate [(+ (/ mount-width -2) post-adj) 0 0] %)
-      r #(translate [(- (/ mount-width 2) post-adj) 0 0] %)]
-  (def web-post-tr (tr web-post))
-  (def web-post-tl (tl web-post))
-  (def web-post-bl (bl web-post))
-  (def web-post-br (br web-post))
-  (def web-post-t (t web-post))
-  (def web-post-b (b web-post))
-  (def web-post-l (l web-post))
-  (def web-post-r (r web-post))
-  ;; logs lying at the bottom of the web
-  (def web-log-hbbr (br web-log-hbr))
-  (def web-log-hbbl (bl web-log-hbl))
-  (def web-log-hbtr (tr web-log-hbr))
-  (def web-log-hbtl (tl web-log-hbl))
-  ;; logs floating at the top of the web
-  (def web-log-htbr (br web-log-htr))
-  (def web-log-htbl (bl web-log-htl))
-  (def web-log-httr (tr web-log-htr))
-  (def web-log-httl (tl web-log-htl)))
+      n #(translate [0 (- (/ mount-height 2) post-adj) 0] %)
+      s #(translate [0 (+ (/ mount-height -2) post-adj) 0] %)
+      w #(translate [(+ (/ mount-width -2) post-adj) 0 0] %)
+      e #(translate [(- (/ mount-width 2) post-adj) 0 0] %)]
+  (def web-post-tr (ne web-post))
+  (def web-post-tl (nw web-post))
+  (def web-post-bl (sw web-post))
+  (def web-post-br (se web-post))
+  (def web-post-ne (ne web-post))
+  (def web-post-nw (nw web-post))
+  (def web-post-sw (sw web-post))
+  (def web-post-se (se web-post))
+  (def web-post-t (n web-post))
+  (def web-post-b (s web-post))
+  (def web-post-l (w web-post))
+  (def web-post-r (e web-post))
+  (def web-post-n (n web-post))
+  (def web-post-s (s web-post))
+  (def web-post-w (w web-post))
+  (def web-post-e (e web-post))
+  ;; -.b..: logs lying at the bottom of the web
+  ;;              -hb..: sticking off the east and west sides
+  (def web-log-hbse (se web-log-hbe)) ;;  --[    ]--
+  (def web-log-hbsw (sw web-log-hbw)) ;;    [    ]
+  (def web-log-hbne (ne web-log-hbe)) ;;    [    ]
+  (def web-log-hbnw (nw web-log-hbw)) ;;  --[    ]--
+  ;;              -vb..: sticking off the north and south
+  ;;                                        |    |
+  (def web-log-vbnw (nw web-log-vbn)) ;;    ------
+  (def web-log-vbsw (sw web-log-vbs)) ;;    |    |
+  (def web-log-vbne (ne web-log-vbn)) ;;    |    |
+  (def web-log-vbse (se web-log-vbs)) ;;    |    |
+  ;;                                        ------
+  ;;                                        |    |
+  ;; -.t..: logs floating at the top of the web
+  ;; (same places around the key hole as above)
+  (def web-log-htse (se web-log-hte))
+  (def web-log-htsw (sw web-log-htw))
+  (def web-log-htne (ne web-log-hte))
+  (def web-log-htnw (nw web-log-htw))
+  (def web-log-vtnw (nw web-log-vtn))
+  (def web-log-vtsw (sw web-log-vts))
+  (def web-log-vtne (ne web-log-vtn))
+  (def web-log-vtse (se web-log-vts)))
 
 (defn row-connector [column row]
   (triangle-hulls
@@ -106,7 +132,8 @@
 
 (defn diagonal-connectors [column]
   (for [row (drop-last rows)
-        :when (finger-has-key-place-p (inc column) (inc row))]
+        :when (and (finger-has-key-place-p (inc column) (inc row))
+                   (finger-has-key-place-p column (inc row)))]
     (diagonal-connector column row)))
 
 (defn column-connector [column row]
@@ -195,60 +222,29 @@
 
       ;;Connecting the thumb to everything
       (triangle-hulls
-       (thumb-place 0 -1 web-post-tr)
-       (thumb-place 0 -1 web-post-br)
-       (thumb-place 0 -1 web-log-httr)
-       (thumb-place 0 -1 web-log-htbr)
-       (key-place 1 4 web-log-hbbl)
-       (thumb-place 0 -1 web-log-htbr))
+       (hull (key-place 2 4 web-post-se) (key-place 2 4 web-log-vbse))
+       (hull (thumb-place 0 -1 web-post-se) (thumb-place 0 -1 web-log-hbse))
+       (hull (key-place 2 4 web-post-sw) (key-place 2 4 web-log-vbsw))
+       (hull (thumb-place 0 -1 web-post-ne) (thumb-place 0 -1 web-log-hbne))
+       (hull (key-place 2 4 web-post-sw) (key-place 2 4 web-log-vbsw))
+       (hull (thumb-place 0 0 web-post-se) (thumb-place 0 0 web-log-hbse))
+       (hull (key-place 2 4 web-post-sw) (key-place 2 4 web-log-hbsw))
+       (thumb-place 0 0 web-post-ne))
+
       (triangle-hulls
-       (thumb-place 0 -1 web-post-tr)
-       (thumb-place 0 -1 web-log-httr)
-       (thumb-place 0 0 web-post-br)
-       (thumb-place 0 0 web-log-htbr)
-       (key-place 1 4 web-log-hbbl)
-       (thumb-place 0 -1 web-log-httr))
+       (key-place 2 3 web-post-sw)
+       (key-place 2 4 web-post-nw)
+       (key-place 1 3 web-post-se))
       (triangle-hulls
-       (key-place 1 4 web-log-hbbl)
-       (thumb-place 0 0 web-log-htbr)
-       (key-place 1 4 web-log-hbtl)
-       (thumb-place 0 0 web-post-tr)
-       (thumb-place 0 0 web-post-br))
-      (triangle-hulls
-       (key-place 1 4 web-log-hbbl)
-       (key-place 1 4 web-post-bl)
-       (key-place 1 4 web-log-hbtl)
-       (key-place 1 4 web-post-tl)
-       (key-place 0 3 web-post-br)
-       (thumb-place 0 0 web-post-tr)
-       (key-place 0 3 web-post-bl)
-       (thumb-place 0 0 web-post-t)
-       ;; (key-place 1 4 web-log-hbbl)
-       ;; (thumb-place 0 0 web-post-br)
-       ;; (key-place 1 4 web-post-tl)
-       ;; (thumb-place 0 0 web-post-tr)
-       ;; (key-place 1 3 web-post-bl)
-       ;; (thumb-place 0 0 web-post-tr)
-       ;; (key-place 0 3 web-post-br)
-       ;; (thumb-place 0 0 web-post-tr)
-       ;; (key-place 0 3 web-post-bl)
-       ;; (thumb-place 0 0 web-post-tl)
-       )
-      #_(triangle-hulls (thumb-place 0 -1/2 thumb-br)
-                      (key-place 1 4 web-post-bl)
-                      (thumb-place 0 -1/2 thumb-tr)
-                      (key-place 1 4 web-post-tl)
-                      (key-place 1 3 web-post-bl)
-                      (thumb-place 0 -1/2 thumb-tr)
-                      (key-place 0 3 web-post-br)
-                      (key-place 0 3 web-post-bl)
-                      (thumb-place 0 -1/2 thumb-tr)
-                      (thumb-place 0 -1/2 thumb-tl)
-                      (key-place 0 3 web-post-bl)
-                      (thumb-place 1 -1/2 thumb-tr)
-                      (thumb-place 1 1 web-post-br)
-                      (key-place 0 3 web-post-bl)
-                      (key-place 0 3 web-post-tl)
-                      (thumb-place 1 1 web-post-br)
-                      (thumb-place 1 1 web-post-tr))
-      ))))
+       (key-place 2 3 web-post-sw)
+       (thumb-place 0 0 web-post-ne)
+       (hull (key-place 1 3 web-post-sw) (key-place 1 3 web-log-vbsw))
+       (hull (thumb-place 0 0 web-post-nw) (thumb-place 0 0 web-log-vtnw))
+       (hull (key-place 0 3 web-post-se) (key-place 0 3 web-log-vbse))
+       (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
+       (hull (key-place 0 3 web-post-sw) (key-place 0 3 web-log-vbsw))
+       (hull (key-place 0 3 web-post-sw) (key-place 0 3 web-log-vbsw))
+       (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
+       (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
+       (thumb-place 1 0 web-post-nw))))))
+

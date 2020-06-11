@@ -108,21 +108,38 @@ module WebPost() {
      }
 }
 
-module WebLogHBL() {
+module WebLogHBW() {
      translate ([-web_thickness/2, 0, (plate_thickness - web_thickness)])
           cube ([web_thickness, post_size, post_size], center=true);
 }
-module WebLogHBR() {
+module WebLogHBE() {
      translate ([web_thickness/2, 0, (plate_thickness - web_thickness)])
           cube ([web_thickness, post_size, post_size], center=true);
 }
-module WebLogHTL() {
+module WebLogHTW() {
      translate ([-web_thickness/2, 0, plate_thickness])
           cube ([web_thickness, post_size, post_size], center=true);
 }
-module WebLogHTR() {
+module WebLogHTE() {
      translate ([web_thickness/2, 0, plate_thickness])
           cube ([web_thickness, post_size, post_size], center=true);
+}
+
+module WebLogVBN() {
+     translate ([0, web_thickness/2, (plate_thickness - web_thickness)])
+          cube ([post_size, web_thickness, post_size], center=true);
+}
+module WebLogVBS() {
+     translate ([0, -web_thickness/2, (plate_thickness - web_thickness)])
+          cube ([post_size, web_thickness, post_size], center=true);
+}
+module WebLogVTN() {
+     translate ([0, web_thickness/2, plate_thickness])
+          cube ([post_size, web_thickness, post_size], center=true);
+}
+module WebLogVTS() {
+     translate ([0, -web_thickness/2, plate_thickness])
+          cube ([post_size, web_thickness, post_size], center=true);
 }
 
 
