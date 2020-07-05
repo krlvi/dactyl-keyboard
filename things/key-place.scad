@@ -30,8 +30,9 @@ thu_bet = tau / 8;
 // switch_hole
 keyswitch_height = 14.0;
 keyswitch_width = 14.0;
-mount_width = keyswitch_width + 3;
-mount_height = keyswitch_height + 3;
+cherry_bezel_width = 1.5;
+mount_width = keyswitch_width + 2*cherry_bezel_width;
+mount_height = keyswitch_height + 2*cherry_bezel_width;
 sa_profile_key_height = 12.7;
 these_blank_keycaps_i_got_from_ebay_height = 11.5;
 key_height = these_blank_keycaps_i_got_from_ebay_height;
@@ -59,7 +60,6 @@ module KeyPlace(col, row) {
      column_splay_radius = 30; // this has an interplay with the
                                // measure added to mount_width above
                                // in column_radius
-     translate([0,0,-42])
      translate([0, 0, 44])
 	  rotate(a=tenting_angle, v=[0,1,0])
           translate(ColumnOffset(col))
@@ -83,8 +83,7 @@ module ThumbPlace(col, row) {
                                // measure added to mount_width above
                                // in column_radius
      thumb_column_y_compensation = [0, -4, -14, -6, -6];
-     translate([0,0,-42])
-     translate([-6, -48, 50])
+     translate([-6, -50, 50])
           rotate(a=tau/10, v=[0,0,1])
           rotate(a=-tau/8, v=[0,1,0])
           translate([mount_width, 0, 0])

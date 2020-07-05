@@ -27,8 +27,8 @@
 ;;;;;;;;;;;;;;;;;
 
 ; you may wish to change chosen-single-plate below
-(def keyswitch-height 14.0) ;; Was 14.1, then 14.25
-(def keyswitch-width 14.0)
+(def keyswitch-height 14.1) ;; Was 14.1, then 14.25
+(def keyswitch-width 14.1)
 
 (def sa-profile-key-height 12.7)
 (def sa-length 18.25)
@@ -37,8 +37,9 @@
 (def plate-thickness 4)
 (def web-thickness 3.5)
 
-(def mount-width (+ keyswitch-width 3))
-(def mount-height (+ keyswitch-height 3))
+(def cherry-bezel-width 1.5)
+(def mount-width (+ keyswitch-width (* 2 cherry-bezel-width)))
+(def mount-height (+ keyswitch-height (* 2 cherry-bezel-width)))
 
 
 
@@ -47,13 +48,12 @@
 (def alps-notch-height 1)
 (def alps-height 13)
 
-(def cherry-bezel-width 1.5)
 (defn cherry-kailh-single-plate-common [nubs]
   (let [top-wall (->> (cube (+ keyswitch-width (* 2 cherry-bezel-width)) cherry-bezel-width plate-thickness)
                       (translate [0
                                   (+ (/ cherry-bezel-width 2) (/ keyswitch-height 2))
                                   (/ plate-thickness 2)]))
-        left-wall (->> (cube 1.5 (+ keyswitch-height (* 2 cherry-bezel-width)) plate-thickness)
+        left-wall (->> (cube cherry-bezel-width (+ keyswitch-height (* 2 cherry-bezel-width)) plate-thickness)
                        (translate [(+ (/ cherry-bezel-width 2) (/ keyswitch-width 2))
                                    0
                                    (/ plate-thickness 2)]))

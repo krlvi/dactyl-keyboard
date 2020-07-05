@@ -90,8 +90,8 @@
   (def web-log-vbsw (sw web-log-vbs)) ;;    |    |
   (def web-log-vbne (ne web-log-vbn)) ;;    |    |
   (def web-log-vbse (se web-log-vbs)) ;;    |    |
-  ;;                                        ------
-  ;;                                        |    |
+  (def web-log-vbs  (s  web-log-vbs)) ;;    ------
+  ;;                                        | |  |
   ;; -.t..: logs floating at the top of the web
   ;; (same places around the key hole as above)
   (def web-log-htse (se web-log-hte))
@@ -112,7 +112,8 @@
 
 (defn row-connectors [column]
   (for [row rows
-        :when (finger-has-key-place-p column row)]
+        :when (and (finger-has-key-place-p column row)
+                   (finger-has-key-place-p (inc column) row))]
     (row-connector column row)))
 
 (defn diagonal-connector [column row]
@@ -236,11 +237,10 @@
        (key-place 2 4 web-post-nw)
        (key-place 1 3 web-post-se))
       (triangle-hulls
-       (key-place 2 3 web-post-sw)
-       (thumb-place 0 0 web-post-ne)
-       (hull (key-place 1 3 web-post-sw) (key-place 1 3 web-log-vbsw))
+       (thumb-place 0 0 web-post-n)
+       (hull (key-place 1 3 web-post-s) (key-place 1 3 web-log-vbs))
        (hull (thumb-place 0 0 web-post-nw) (thumb-place 0 0 web-log-vtnw))
-       (hull (key-place 0 3 web-post-se) (key-place 0 3 web-log-vbse))
+       (hull (key-place 1 3 web-post-sw) (key-place 1 3 web-log-vbsw))
        (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
        (hull (key-place 0 3 web-post-sw) (key-place 0 3 web-log-vbsw))
        (hull (key-place 0 3 web-post-sw) (key-place 0 3 web-log-vbsw))
