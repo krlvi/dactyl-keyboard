@@ -37,7 +37,7 @@
 (def plate-thickness 4)
 (def web-thickness 3.5)
 
-(def cherry-bezel-width 1.5)
+(def cherry-bezel-width 2.0)
 (def mount-width (+ keyswitch-width (* 2 cherry-bezel-width)))
 (def mount-height (+ keyswitch-height (* 2 cherry-bezel-width)))
 

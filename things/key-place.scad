@@ -23,14 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 tau = 360; // openscad works in degrees not radians
 
 // placement
-bet = tau / 68;
+bet = tau / 48;
 tenting_angle = tau / 8;
 thu_alp = tau / 30;
 thu_bet = tau / 8;
 // switch_hole
 keyswitch_height = 14.0;
 keyswitch_width = 14.0;
-cherry_bezel_width = 1.5;
+cherry_bezel_width = 2.0;
 mount_width = keyswitch_width + 2*cherry_bezel_width;
 mount_height = keyswitch_height + 2*cherry_bezel_width;
 sa_profile_key_height = 12.7;
@@ -40,21 +40,30 @@ plate_thickness = 4;
 web_thickness = 3.5;
 // placement
 cap_top_height = plate_thickness + key_height;
-column_radius = cap_top_height + ( ((mount_width + 3.0) / 2) / sin(bet/2) );
+// things added to mount_width and mount_height here and below are
+// kluges. to derive them, start with 0.0, subtract if there is
+// distance between the closest switch holes, add if they overlap, and
+// hope the keys with non-minimal distance between them don't end up
+// too far apart to reach with your fingers.
+column_radius = cap_top_height + ( ((mount_width + 1.8) / 2) / sin(bet/2) );
 thu_row_radius = cap_top_height + ( ((mount_height + 1/2) / 2) / sin(thu_alp/2) );
 thu_column_radius = cap_top_height + ( ((mount_width + 1.5) / 2) / sin(thu_bet/2) );
 // connectors
 post_size = 0.1;
 
-function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [0, 5.82, -4.0] : (column >= 5) ? [0, -12.8, 5.64] : (column >= 4) ? [0, -8.8, 5.64] : [0,0,0]);
+// this is a function not an array because occasionally we may deal in
+// half-columns, can't remember where
+function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [-0.5, 5.82, -5.0] : (column >= 5) ? [0, -12.8, 5.64] : (column >= 4) ? [0, -8.8, 5.64] : [0,0,0]);
 
 module KeyPlace(col, row) {
      row_alphas = [ tau/16, tau/24, tau/18, tau/13, tau/12 ];
-     // must be >= 1.0
+     // must be >= 1.0. related somehow to the lengths of your fingers.
      column_radius_factors = [ 1.05, 1.05, 1.12, 1.03, 1.0, 1.0 ];
+     // this is to bring the number row closer without rotating its
+     // keytops to such a rakish angle
      row_compensation = [ [0,-3,2], [0,0,0], [0,0,0], [0,0,0], [0,2,0] ];
      alp = row_alphas[max(floor(row),0)];
-     row_radius = (cap_top_height + ( ((mount_height + 1/2) / 2) / sin(alp/2) )) * column_radius_factors[max(floor(col),0)];
+     row_radius = (cap_top_height + ( ((mount_height + -1.0) / 2) / sin(alp/2) )) * column_radius_factors[max(floor(col),0)];
      column_angle = bet * (2 - col);
      column_splay = [0, 0, 4, 6, 11, 11];
      column_splay_radius = 30; // this has an interplay with the
@@ -83,7 +92,7 @@ module ThumbPlace(col, row) {
                                // measure added to mount_width above
                                // in column_radius
      thumb_column_y_compensation = [0, -4, -14, -6, -6];
-     translate([-6, -50, 50])
+     translate([-6, -49, 50])
           rotate(a=tau/10, v=[0,0,1])
           rotate(a=-tau/8, v=[0,1,0])
           translate([mount_width, 0, 0])
