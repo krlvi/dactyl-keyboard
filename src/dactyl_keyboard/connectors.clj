@@ -24,21 +24,23 @@
             [dactyl-keyboard.placement :refer :all]
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.screw-hole :refer :all]
-            [unicode-math.core :refer :all]))
+            [dactyl-keyboard.connectors-positions :refer :all]
+            ))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Web Connectors ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-; web-thickness defined in switch-hole
-(def post-size 0.1)
 #_(def web-post (->> (cube post-size post-size web-thickness)
                    (translate [0 0 (+ (/ web-thickness -2)
                                       plate-thickness)])))
 (def web-post (call-module "WebPost"))
+(def above-web-post (call-module "AboveWebPost"))
+
 ;; these are like web-posts, but lying down.  horizontal or
-;; vertical (key-place-wise); bottom or top (key actuation axis wise);
-;; left, right, top and bottom (key-place-wise, as with web-posts)
+;; vertical (EW / NS key-place-wise); bottom or top (key actuation
+;; axis wise); and which way it sticks out (north, south, east, west
+;; key-place-wise).
 (def web-log-hbw (call-module "WebLogHBW"))
 (def web-log-hbe (call-module "WebLogHBE"))
 (def web-log-htw (call-module "WebLogHTW"))
@@ -49,35 +51,6 @@
 (def web-log-vts (call-module "WebLogVTS"))
 
 
-(def post-adj (/ post-size 2))
-(let [se #(translate [(- (/ mount-width 2) post-adj)
-                      (+ (/ mount-height -2) post-adj) 0] %)
-      sw #(translate [(+ (/ mount-width -2) post-adj)
-                      (+ (/ mount-height -2) post-adj) 0] %)
-      ne #(translate [(- (/ mount-width 2) post-adj)
-                      (- (/ mount-height 2) post-adj) 0] %)
-      nw #(translate [(+ (/ mount-width -2) post-adj)
-                      (- (/ mount-height 2) post-adj) 0] %)
-      n #(translate [0 (- (/ mount-height 2) post-adj) 0] %)
-      s #(translate [0 (+ (/ mount-height -2) post-adj) 0] %)
-      w #(translate [(+ (/ mount-width -2) post-adj) 0 0] %)
-      e #(translate [(- (/ mount-width 2) post-adj) 0 0] %)]
-  (def web-post-tr (ne web-post))
-  (def web-post-tl (nw web-post))
-  (def web-post-bl (sw web-post))
-  (def web-post-br (se web-post))
-  (def web-post-ne (ne web-post))
-  (def web-post-nw (nw web-post))
-  (def web-post-sw (sw web-post))
-  (def web-post-se (se web-post))
-  (def web-post-t (n web-post))
-  (def web-post-b (s web-post))
-  (def web-post-l (w web-post))
-  (def web-post-r (e web-post))
-  (def web-post-n (n web-post))
-  (def web-post-s (s web-post))
-  (def web-post-w (w web-post))
-  (def web-post-e (e web-post))
   ;; -.b..: logs lying at the bottom of the web
   ;;              -hb..: sticking off the east and west sides
   (def web-log-hbse (se web-log-hbe)) ;;  --[    ]--
@@ -101,14 +74,14 @@
   (def web-log-vtnw (nw web-log-vtn))
   (def web-log-vtsw (sw web-log-vts))
   (def web-log-vtne (ne web-log-vtn))
-  (def web-log-vtse (se web-log-vts)))
+  (def web-log-vtse (se web-log-vts))
 
 (defn row-connector [column row]
   (triangle-hulls
-     (key-place (inc column) row web-post-tl)
-     (key-place column row web-post-tr)
-     (key-place (inc column) row web-post-bl)
-     (key-place column row web-post-br)))
+     (key-place (inc column) row (nw web-post))
+     (key-place column row (ne web-post))
+     (key-place (inc column) row (sw web-post))
+     (key-place column row (se web-post))))
 
 (defn row-connectors [column]
   (for [row rows
@@ -118,10 +91,10 @@
 
 (defn diagonal-connector [column row]
   (triangle-hulls
-     (key-place column row web-post-br)
-     (key-place column (inc row) web-post-tr)
-     (key-place (inc column) row web-post-bl)
-     (key-place (inc column) (inc row) web-post-tl)))
+     (key-place column row (se web-post))
+     (key-place column (inc row) (ne web-post))
+     (key-place (inc column) row (sw web-post))
+     (key-place (inc column) (inc row) (nw web-post))))
 (defn diagonal-connector-untranslate [shape]
   (translate [(- (- (/ mount-width 2) post-adj))
               (- (- (/ mount-height 2) post-adj))
@@ -139,10 +112,10 @@
 
 (defn column-connector [column row]
   (triangle-hulls
-     (key-place column row web-post-bl)
-     (key-place column row web-post-br)
-     (key-place column (inc row) web-post-tl)
-     (key-place column (inc row) web-post-tr)))
+     (key-place column row (sw web-post))
+     (key-place column row (se web-post))
+     (key-place column (inc row) (nw web-post))
+     (key-place column (inc row) (ne web-post))))
 (defn column-connector-untranslate [shape]
   (translate [0 (- (- (/ mount-height 2) post-adj)) 0] shape))
 (defn column-connector-retranslate [shape]
@@ -166,7 +139,7 @@
                    (column-connectors column))))]
     (map connectors-for-columns columns-pieces)))
 
-(def screw-holes-in-fingerpieces
+(def screw-holes-in-fingerpieces-minus
   (for [columns columns-pieces]
     (apply union
            (for [place screw-holes-at]
@@ -174,17 +147,39 @@
                (if (and (= p :k)
                         (>= c (first columns))
                         (<= c (last columns)))
-                 (->> frame-screw-hole
+                 (->> frame-screw-hole-minus
                       (color [1 0 0])
                       ((key-place-fn place)))))))))
 
-(def screw-holes-in-thumb
+(def screw-holes-in-fingerpieces-plus
+  (for [columns columns-pieces]
+    (apply union
+           (for [place screw-holes-at]
+             (let [[p c r] place]
+               (if (and (= p :k)
+                        (>= c (first columns))
+                        (<= c (last columns)))
+                 (->> frame-screw-hole-plus
+                      ((key-place-fn place)))))))))
+
+
+(def screw-holes-in-thumb-plus
   (for [columns columns-pieces]
     (apply union
            (for [place screw-holes-at]
              (let [[p c r] place]
                (if (= p :t)
-                 (->> frame-screw-hole
+                 (->> frame-screw-hole-plus
+                      (color [1 0 0])
+                      ((key-place-fn place)))))))))
+
+(def screw-holes-in-thumb-minus
+  (for [columns columns-pieces]
+    (apply union
+           (for [place screw-holes-at]
+             (let [[p c r] place]
+               (if (= p :t)
+                 (->> frame-screw-hole-minus
                       (color [1 0 0])
                       ((key-place-fn place)))))))))
 
@@ -193,58 +188,58 @@
    (apply union
           (concat
            (for [column [1 2] row [-1 0]]
-             (triangle-hulls (thumb-place column row web-post-br)
-                             (thumb-place column row web-post-tr)
-                             (thumb-place (dec column) row web-post-bl)
-                             (thumb-place (dec column) row web-post-tl)))
+             (triangle-hulls (thumb-place column row (se web-post))
+                             (thumb-place column row (ne web-post))
+                             (thumb-place (dec column) row (sw web-post))
+                             (thumb-place (dec column) row (nw web-post))))
            (for [column [0 1 2] row [0]]
              (triangle-hulls
-              (thumb-place column row web-post-bl)
-              (thumb-place column row web-post-br)
-              (thumb-place column (dec row) web-post-tl)
-              (thumb-place column (dec row) web-post-tr)))
+              (thumb-place column row (sw web-post))
+              (thumb-place column row (se web-post))
+              (thumb-place column (dec row) (nw web-post))
+              (thumb-place column (dec row) (ne web-post))))
            (for [column [1 2] row [0]]
              (triangle-hulls
-              (thumb-place column row web-post-br)
-              (thumb-place (dec column) row web-post-bl)
-              (thumb-place column (dec row) web-post-tr)
-              (thumb-place (dec column) (dec row) web-post-tl)))))
+              (thumb-place column row (se web-post))
+              (thumb-place (dec column) row (sw web-post))
+              (thumb-place column (dec row) (ne web-post))
+              (thumb-place (dec column) (dec row) (nw web-post))))))
    (let [
          plate-height (/ (- sa-double-length mount-height) 2)
-         thumb-tl (->> web-post-tl
+         thumb-tl (->> (nw web-post)
                        (translate [0 plate-height 0]))
-         thumb-bl (->> web-post-bl
+         thumb-bl (->> (sw web-post)
                        (translate [0 (- plate-height) 0]))
-         thumb-tr (->> web-post-tr
+         thumb-tr (->> (ne web-post)
                        (translate [0 plate-height 0]))
-         thumb-br (->> web-post-br
+         thumb-br (->> (se web-post)
                        (translate [0 (- plate-height) 0]))]
      (union
 
       ;;Connecting the thumb to everything
       (triangle-hulls
-       (hull (key-place 2 4 web-post-se) (key-place 2 4 web-log-vbse))
-       (hull (thumb-place 0 -1 web-post-se) (thumb-place 0 -1 web-log-hbse))
-       (hull (key-place 2 4 web-post-sw) (key-place 2 4 web-log-vbsw))
-       (hull (thumb-place 0 -1 web-post-ne) (thumb-place 0 -1 web-log-hbne))
-       (hull (key-place 2 4 web-post-sw) (key-place 2 4 web-log-vbsw))
-       (hull (thumb-place 0 0 web-post-se) (thumb-place 0 0 web-log-hbse))
-       (hull (key-place 2 4 web-post-sw) (key-place 2 4 web-log-hbsw))
-       (thumb-place 0 0 web-post-ne))
+       (hull (key-place 2 4 (se web-post)) (key-place 2 4 web-log-vbse))
+       (hull (thumb-place 0 -1 (se web-post)) (thumb-place 0 -1 web-log-hbse))
+       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 web-log-vbsw))
+       (hull (thumb-place 0 -1 (ne web-post)) (thumb-place 0 -1 web-log-hbne))
+       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 web-log-vbsw))
+       (hull (thumb-place 0 0 (se web-post)) (thumb-place 0 0 web-log-hbse))
+       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 web-log-hbsw))
+       (thumb-place 0 0 (ne web-post)))
 
       (triangle-hulls
-       (key-place 2 3 web-post-sw)
-       (key-place 2 4 web-post-nw)
-       (key-place 1 3 web-post-se))
+       (key-place 2 3 (sw web-post))
+       (key-place 2 4 (nw web-post))
+       (key-place 1 3 (se web-post)))
       (triangle-hulls
-       (thumb-place 0 0 web-post-n)
-       (hull (key-place 1 3 web-post-s) (key-place 1 3 web-log-vbs))
-       (hull (thumb-place 0 0 web-post-nw) (thumb-place 0 0 web-log-vtnw))
-       (hull (key-place 1 3 web-post-sw) (key-place 1 3 web-log-vbsw))
-       (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
-       (hull (key-place 0 3 web-post-sw) (key-place 0 3 web-log-vbsw))
-       (hull (key-place 0 3 web-post-sw) (key-place 0 3 web-log-vbsw))
-       (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
-       (hull (thumb-place 1 0 web-post-ne) (thumb-place 1 0 web-log-vtne))
-       (thumb-place 1 0 web-post-nw))))))
+       (thumb-place 0 0 (n web-post))
+       (hull (key-place 1 3 (s web-post)) (key-place 1 3 web-log-vbs))
+       (hull (thumb-place 0 0 (nw web-post)) (thumb-place 0 0 web-log-vtnw))
+       (hull (key-place 1 3 (sw web-post)) (key-place 1 3 web-log-vbsw))
+       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 web-log-vtne))
+       (hull (key-place 0 3 (sw web-post)) (key-place 0 3 web-log-vbsw))
+       (hull (key-place 0 3 (sw web-post)) (key-place 0 3 web-log-vbsw))
+       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 web-log-vtne))
+       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 web-log-vtne))
+       (thumb-place 1 0 (nw web-post)))))))
 

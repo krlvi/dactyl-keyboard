@@ -42,6 +42,21 @@
 (def screw-diameter 3)
 (def screw-radius (* 1/2 screw-diameter))
 
+;; I can't find my caliper just now; this is a guess.
+(def screw-head-diameter 6)
+(def screw-head-radius (* 1/2 screw-head-diameter))
+
+;; How far down to set the bottom of the screw head. This factors in
+;; the height of the screw head, plus the fact that most of the screw
+;; holes are on angled parts of the web, and so must be sunk farther.
+(def screw-inset-depth 3)
+
+(def screw-inset-wall-thickness 1)
+(def extra-radius-around-screw-head 0.2)
+(def screw-inset-outer-radius (+ screw-head-radius
+                                 screw-inset-wall-thickness
+                                 extra-radius-around-screw-head))
+
 ;; this would have been (+ plate-thickness insert-height) but
 ;; they don't sell custom screws, so i did the math and figured a
 ;; standard size.
@@ -49,9 +64,22 @@
 ;; https://www.mcmaster.com/#90116A153
 (def frame-screw-length 8)
 
-(def frame-screw-hole
+(def frame-screw-hole-minus
   (with-fn 12
-    (cylinder screw-radius (* 3 web-thickness))))
+    (cylinder screw-inset-outer-radius (* 3 web-thickness))))
+
+;; This will stick up, and the caller will have to difference off the
+;; region just above the top surface of the web.
+(def frame-screw-hole-plus
+  (with-fn 12
+    (difference
+     (cylinder screw-inset-outer-radius
+               (* 2 (+ screw-inset-wall-thickness screw-inset-depth)))
+     (translate [0 0 screw-inset-depth]
+                (cylinder (- screw-inset-outer-radius
+                             screw-inset-wall-thickness)
+                          (* 2 screw-inset-depth)))
+     (cylinder screw-radius (* 3 web-thickness)))))
 
 ;; leave room for diodes and wires; too tall and the teensy runs into
 ;; the bottom

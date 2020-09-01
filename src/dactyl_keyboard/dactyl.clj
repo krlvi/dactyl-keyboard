@@ -92,20 +92,26 @@
 
 (defn dactyl-top-right-minuses [key-pieces]
   (let [pieces-of-pieces (map vector
-                              screw-holes-in-fingerpieces)]
+                              screw-holes-in-fingerpieces-minus)]
     (for [pieces-of-this-piece pieces-of-pieces]
       (apply m/union pieces-of-this-piece))))
 
 (defn dactyl-top-right-pieces [key-pieces]
-  (for [[plus minus] (map vector
-                          (dactyl-top-right-plusses key-pieces)
-                          (dactyl-top-right-minuses key-pieces))]
-        (m/difference plus minus)))
+  (for [[plus minus thenplus]
+        (map vector
+             (dactyl-top-right-plusses key-pieces)
+             (dactyl-top-right-minuses key-pieces)
+             screw-holes-in-fingerpieces-plus)]
+    (m/union
+     (m/difference plus minus)
+     thenplus)))
 
 (def dactyl-top-right-thumb
-  (m/difference
-   thumb
-   screw-holes-in-thumb))
+  (m/union
+   (m/difference
+    thumb
+    screw-holes-in-thumb-minus)
+   screw-holes-in-thumb-plus))
 
 (def define-sides-with-right-ports
   (m/define-module "SidesWithRightPorts"
