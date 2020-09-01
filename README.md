@@ -1,14 +1,11 @@
 # Dactyl Marshmallow
 The Dactyl is a parameterized, split-hand, concave, columnar, ergonomic keyboard, originally written by Matt Adereth. See [his README](https://github.com/adereth/dactyl-keyboard#readme) for general info. Here's what's different about mine:
 
-* The whole thing is split into pieces, so you can print each piece on a printer with a smaller build volume, and in a couple of hours not a dozen.
-* An extra column for duplicate "y" and "b" keys. This comes at the expense of one of the thumb keys.
 * Round, marshmallowy sides and bottom, in contrast to adereth's minimalist squarish shape.
 * (In theory) more configurability, like for different numbers of rows and columns. The thumb is still kind of hardcoded, and there are still hacks.
 
 <img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/concept-shot.jpg" alt="A rendering of the whole keyboard, assembled" />
-<br/>
-<img src="https://raw.githubusercontent.com/jaredjennings/dactyl-keyboard/master/resources/pieces.jpg" alt="The whole right hand of the keyboard, exploded view" />
+
 
 ## Making one of your own
 
@@ -23,6 +20,7 @@ the program in the repository and downloadable. Maybe once I get to
 * [Install the Clojure runtime](https://clojure.org)
 * [Install the Leiningen project manager](http://leiningen.org/)
 * [Install OpenSCAD](http://www.openscad.org/)
+* Clone https://github.com/adereth/unicode-math; `lein install` it so you have version 0.2.1 ready.
 
 ### Building the design
 
