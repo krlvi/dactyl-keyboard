@@ -143,23 +143,25 @@
   (for [columns columns-pieces]
     (apply union
            (for [place screw-holes-at]
-             (let [[p c r] place]
+             (let [[p c r z] place]
                (if (and (= p :k)
                         (>= c (first columns))
                         (<= c (last columns)))
                  (->> frame-screw-hole-minus
                       (color [1 0 0])
+                      (translate [0 0 z])
                       ((key-place-fn place)))))))))
 
 (def screw-holes-in-fingerpieces-plus
   (for [columns columns-pieces]
     (apply union
            (for [place screw-holes-at]
-             (let [[p c r] place]
+             (let [[p c r z] place]
                (if (and (= p :k)
                         (>= c (first columns))
                         (<= c (last columns)))
                  (->> frame-screw-hole-plus
+                      (translate [0 0 z])
                       ((key-place-fn place)))))))))
 
 
@@ -167,20 +169,21 @@
   (for [columns columns-pieces]
     (apply union
            (for [place screw-holes-at]
-             (let [[p c r] place]
+             (let [[p c r z] place]
                (if (= p :t)
                  (->> frame-screw-hole-plus
-                      (color [1 0 0])
+                      (translate [0 0 z])
                       ((key-place-fn place)))))))))
 
 (def screw-holes-in-thumb-minus
   (for [columns columns-pieces]
     (apply union
            (for [place screw-holes-at]
-             (let [[p c r] place]
+             (let [[p c r z] place]
                (if (= p :t)
                  (->> frame-screw-hole-minus
                       (color [1 0 0])
+                      (translate [0 0 z])
                       ((key-place-fn place)))))))))
 
 (def thumb-connectors

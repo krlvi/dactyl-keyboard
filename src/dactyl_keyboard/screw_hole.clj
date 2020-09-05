@@ -64,22 +64,30 @@
 ;; https://www.mcmaster.com/#90116A153
 (def frame-screw-length 8)
 
+
+;; The screw-hole-minus is much taller than web-thickness, and the
+;; plus is taller than it needs to be to contain the screw head,
+;; because we are placing screw holes in steeply angled portions of
+;; the web.
 (def frame-screw-hole-minus
   (with-fn 12
-    (cylinder screw-inset-outer-radius (* 3 web-thickness))))
+    (cylinder screw-inset-outer-radius (* 5 web-thickness))))
 
-;; This will stick up, and the caller will have to difference off the
-;; region just above the top surface of the web.
+;; Owing to the extra height, this will stick up above the web, and
+;; the caller will have to difference off the region just above the
+;; top surface of the web.
 (def frame-screw-hole-plus
   (with-fn 12
     (difference
+
      (cylinder screw-inset-outer-radius
-               (* 2 (+ screw-inset-wall-thickness screw-inset-depth)))
+               (+ (* 2 screw-inset-wall-thickness)
+                  (* 3 screw-inset-depth)))
      (translate [0 0 screw-inset-depth]
                 (cylinder (- screw-inset-outer-radius
                              screw-inset-wall-thickness)
                           (* 2 screw-inset-depth)))
-     (cylinder screw-radius (* 3 web-thickness)))))
+     (cylinder screw-radius (* 5 web-thickness)))))
 
 ;; leave room for diodes and wires; too tall and the teensy runs into
 ;; the bottom
