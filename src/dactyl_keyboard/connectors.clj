@@ -114,8 +114,8 @@
 ;; sa-cap is.
 (def above-key
   (hull
-   (translate [0 0 web-thickness] chosen-blank-single-plate)
-   (translate [0 0 (* web-thickness 5)] chosen-blank-single-plate)))
+   (translate [0 0 plate-thickness] chosen-blank-single-plate)
+   (translate [0 0 (* plate-thickness 5)] chosen-blank-single-plate)))
 
 (def above-key-blanks (key-shapes-for-columns above-key columns))
 (def above-finger-surface
