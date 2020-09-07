@@ -26,7 +26,12 @@
             [dactyl-keyboard.layout :refer :all]
             [dactyl-keyboard.connectors :refer :all]
             [dactyl-keyboard.screw-hole :refer :all]
-            [dactyl-keyboard.sides :refer :all]
+            [dactyl-keyboard.sides :refer
+             [sides-radius sides-thickness gasket-sphere-fn
+              finger-prism distance-below-to-intersect
+              thumb-prism thumb-distance-below
+              silo
+              thumb-key-prism finger-key-prism]]
             [unicode-math.core :refer :all]))
 
 (def bottom-distance 0)
@@ -120,8 +125,7 @@
                       ((key-place-fn hole)))))
         pillars (intersection raw-pillars (union big-marshmallow key-prism))
         ]
-    big-marshmallow
-    #_(union
+    (union
     (intersection
      (difference
       (union

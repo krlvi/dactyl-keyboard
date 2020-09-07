@@ -56,12 +56,12 @@ post_size = 0.1;
 function ColumnOffset(column) = ((column >= 2) && (column < 3) ? [-0.5, 5.82, -5.0] : (column >= 5) ? [0, -12.8, 5.64] : (column >= 4) ? [0, -8.8, 5.64] : [0,0,0]);
 
 module KeyPlace(col, row) {
-     row_alphas = [ tau/16, tau/24, tau/18, tau/13, tau/12 ];
+     row_alphas = [ tau/16, tau/24, tau/18, tau/13, tau/12, tau/12 ];
      // must be >= 1.0. related somehow to the lengths of your fingers.
-     column_radius_factors = [ 1.05, 1.05, 1.12, 1.03, 1.0, 1.0 ];
+     column_radius_factors = [ 1.05, 1.05, 1.12, 1.03, 1.0, 1.0, 1.0 ];
      // this is to bring the number row closer without rotating its
      // keytops to such a rakish angle
-     row_compensation = [ [0,-3,2], [0,0,0], [0,0,0], [0,0,0], [0,2,0] ];
+     row_compensation = [ [0,-3,2], [0,0,0], [0,0,0], [0,0,0], [0,2,0], [0,2,0] ];
      alp = row_alphas[max(floor(row),0)];
      row_radius = (cap_top_height + ( ((mount_height + -1.0) / 2) / sin(alp/2) )) * column_radius_factors[max(floor(col),0)];
      column_angle = bet * (2 - col);
