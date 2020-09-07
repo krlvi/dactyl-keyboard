@@ -70,14 +70,6 @@
      (key-place column (inc row) (ne web-post))
      (key-place (inc column) row (sw web-post))
      (key-place (inc column) (inc row) (nw web-post))))
-(defn diagonal-connector-untranslate [shape]
-  (translate [(- (- (/ mount-width 2) post-adj))
-              (- (- (/ mount-height 2) post-adj))
-              0] shape))
-(defn diagonal-connector-retranslate [shape]
-  (translate [(- (/ mount-width 2) post-adj)
-              (- (/ mount-height 2) post-adj)
-              0] shape))
 
 (defn diagonal-connectors [column]
   (for [row (drop-last rows)
@@ -91,10 +83,6 @@
      (key-place column row (se web-post))
      (key-place column (inc row) (nw web-post))
      (key-place column (inc row) (ne web-post))))
-(defn column-connector-untranslate [shape]
-  (translate [0 (- (- (/ mount-height 2) post-adj)) 0] shape))
-(defn column-connector-retranslate [shape]
-  (translate [0 (- (/ mount-height 2) post-adj) 0] shape))
 
 (defn column-connectors [column]
   (for [row (drop-last rows)
