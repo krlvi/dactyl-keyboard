@@ -214,7 +214,7 @@
           (write-scad
            (use "key-place.scad")
            (m/union dactyl-top-right-thumb
-                  (apply m/union (dactyl-top-right-pieces key-holes-pieces))
+                    (apply m/union (dactyl-top-right-pieces key-holes-pieces))
                   #_caps
                   #_thumbcaps)))
 

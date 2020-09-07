@@ -57,13 +57,13 @@
                           [[:s :t 1 0 -1] [:s :k 2 3 4]]]
     :silo-widenings y-and-b-key-silo-widenings
     :screw-holes-at [
-                     [:k 1/2 1/2 0] [:k 1/2 5/2 0]
-                     [:k 2 1/2 0]
-                     [:k (+ 2 1/2) 5/2 0]
+                     [:k 1/2 1/2 -3] [:k 1/2 5/2 1]
+                     [:k 2 1/2 -3]
+                     [:k (+ 2 1/2) 5/2 1]
                      ;; these are munged to place them at the right
                      ;; place across a sloped portion of the web
-                     [:k (+ 3 ½ 1/6) (+ 1/2 1/4) 4]
-                     [:k (+ 3 ½ 1/8) (+ 5/2 1/4) 4]
+                     [:k (+ 3 ½ 1/6) (+ 1/2 1/4) -2]
+                     [:k (+ 3 ½ 1/8) (+ 5/2 1/4) 2]
                      [:t 1/2 -1/2 2] [:t 3/2 -1/2 2] ]
     :legs-at [
               [:k -1 0] [:k 5 0] [:k 5 4] [:k 2 2]
@@ -172,15 +172,15 @@
            (->> (sa-cap (if (= column 5) 1 1))
                 (key-place column row)))))
 
-(defn thumb-layout [shape]
-  (union
-   (thumb-place 0 0 shape)
-   (thumb-place 1 0 shape)
-   (thumb-place 2 0 shape)
-   (thumb-place 0 -1 shape)
-   (thumb-place 1 -1 shape)
-   (thumb-place 2 -1 shape)))
+;; This is only this simple because my keyboard only contains 1u keys.
+(defn key-shapes-for-thumb [shape]
+  (apply union
+         (for [column [0 1 2]
+               row [-1 0]]
+           (->> shape
+                (thumb-place column row)))))
 
+(def thumb-layout key-shapes-for-thumb)
 (def thumbcaps (thumb-layout (sa-cap 1)))
 
 (defn reify-column [c] (cond (= c :first) (first columns)

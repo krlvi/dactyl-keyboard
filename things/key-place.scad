@@ -116,6 +116,17 @@ module WebPost() {
      }
 }
 
+/* the multiplier here makes the post tall enough that when you take
+   the difference of something that sticks up off of the web with
+   structures made out of hulls of this post, no detritus will be left
+   over because it extended above these AboveWebPosts. Perhaps it
+   should not be hitched to web_thickness. Oh well. */
+module AboveWebPost() {
+     translate ([0, 0, (plate_thickness + (web_thickness*5/2))]) {
+          cube ([post_size, post_size, web_thickness*5], center=true);
+     }
+}
+
 module WebLogHBW() {
      translate ([-web_thickness/2, 0, (plate_thickness - web_thickness)])
           cube ([web_thickness, post_size, post_size], center=true);

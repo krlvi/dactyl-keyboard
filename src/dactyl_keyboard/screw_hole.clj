@@ -77,17 +77,19 @@
 ;; the caller will have to difference off the region just above the
 ;; top surface of the web.
 (def frame-screw-hole-plus
-  (with-fn 12
-    (difference
-
-     (cylinder screw-inset-outer-radius
-               (+ (* 2 screw-inset-wall-thickness)
-                  (* 3 screw-inset-depth)))
-     (translate [0 0 screw-inset-depth]
-                (cylinder (- screw-inset-outer-radius
-                             screw-inset-wall-thickness)
-                          (* 2 screw-inset-depth)))
-     (cylinder screw-radius (* 5 web-thickness)))))
+  (let [height-factor 4]
+    (with-fn 12
+      (difference
+       (translate [0 0 (- (* ½ height-factor screw-inset-depth)
+                          screw-inset-wall-thickness)]
+                  (cylinder screw-inset-outer-radius
+                            (+ (* 2 screw-inset-wall-thickness)
+                               (* height-factor screw-inset-depth))))
+       (translate [0 0 screw-inset-depth]
+                  (cylinder (- screw-inset-outer-radius
+                               screw-inset-wall-thickness)
+                            (* 2 screw-inset-depth)))
+       (cylinder screw-radius (* 5 web-thickness))))))
 
 ;; leave room for diodes and wires; too tall and the teensy runs into
 ;; the bottom
