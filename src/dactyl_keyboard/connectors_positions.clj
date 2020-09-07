@@ -19,26 +19,33 @@
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
-            [dactyl-keyboard.util :refer :all]
-            [dactyl-keyboard.switch-hole :refer :all]
-            [dactyl-keyboard.placement :refer :all]
-            [dactyl-keyboard.layout :refer :all]
-            [dactyl-keyboard.screw-hole :refer :all]
+            [dactyl-keyboard.switch-hole :refer [mount-width mount-height]]
             ))
 
 (def post-size 0.1)
 (def post-adj (/ post-size 2))
 
-(def se #(translate [(- (/ mount-width 2) post-adj)
-                     (+ (/ mount-height -2) post-adj) 0] %))
-(def sw #(translate [(+ (/ mount-width -2) post-adj)
-                      (+ (/ mount-height -2) post-adj) 0] %))
-(def ne #(translate [(- (/ mount-width 2) post-adj)
-                      (- (/ mount-height 2) post-adj) 0] %))
-(def nw #(translate [(+ (/ mount-width -2) post-adj)
-                      (- (/ mount-height 2) post-adj) 0] %))
-(def n #(translate [0 (- (/ mount-height 2) post-adj) 0] %))
-(def s #(translate [0 (+ (/ mount-height -2) post-adj) 0] %))
-(def w #(translate [(+ (/ mount-width -2) post-adj) 0 0] %))
-(def e #(translate [(- (/ mount-width 2) post-adj) 0 0] %))
+(defn switch-hole-corners [direction]
+  (let [z 0
+        N (- (/ mount-height 2) post-adj)
+        S (+ (/ mount-height -2) post-adj)
+        E (- (/ mount-width 2) post-adj)
+        W (+ (/ mount-width -2) post-adj)
+        offsets {:n [0 N z]
+                 :s [0 S z]
+                 :e [E 0 z]
+                 :w [W 0 z]
+                 :nw [W N z]
+                 :ne [E N z]
+                 :sw [W S z]
+                 :se [E S z]}]
+    #(translate (offsets direction) %)))
 
+(def n (switch-hole-corners :n))
+(def s (switch-hole-corners :s))
+(def e (switch-hole-corners :e))
+(def w (switch-hole-corners :w))
+(def nw (switch-hole-corners :nw))
+(def sw (switch-hole-corners :sw))
+(def ne (switch-hole-corners :ne))
+(def se (switch-hole-corners :se))
