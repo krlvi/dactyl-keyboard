@@ -51,31 +51,6 @@
 (def web-log-vts (call-module "WebLogVTS"))
 
 
-  ;; -.b..: logs lying at the bottom of the web
-  ;;              -hb..: sticking off the east and west sides
-  (def web-log-hbse (se web-log-hbe)) ;;  --[    ]--
-  (def web-log-hbsw (sw web-log-hbw)) ;;    [    ]
-  (def web-log-hbne (ne web-log-hbe)) ;;    [    ]
-  (def web-log-hbnw (nw web-log-hbw)) ;;  --[    ]--
-  ;;              -vb..: sticking off the north and south
-  ;;                                        |    |
-  (def web-log-vbnw (nw web-log-vbn)) ;;    ------
-  (def web-log-vbsw (sw web-log-vbs)) ;;    |    |
-  (def web-log-vbne (ne web-log-vbn)) ;;    |    |
-  (def web-log-vbse (se web-log-vbs)) ;;    |    |
-  (def web-log-vbs  (s  web-log-vbs)) ;;    ------
-  ;;                                        | |  |
-  ;; -.t..: logs floating at the top of the web
-  ;; (same places around the key hole as above)
-  (def web-log-htse (se web-log-hte))
-  (def web-log-htsw (sw web-log-htw))
-  (def web-log-htne (ne web-log-hte))
-  (def web-log-htnw (nw web-log-htw))
-  (def web-log-vtnw (nw web-log-vtn))
-  (def web-log-vtsw (sw web-log-vts))
-  (def web-log-vtne (ne web-log-vtn))
-  (def web-log-vtse (se web-log-vts))
-
 (defn row-connector [column row]
   (triangle-hulls
      (key-place (inc column) row (nw web-post))
@@ -221,13 +196,13 @@
 
       ;;Connecting the thumb to everything
       (triangle-hulls
-       (hull (key-place 2 4 (se web-post)) (key-place 2 4 web-log-vbse))
-       (hull (thumb-place 0 -1 (se web-post)) (thumb-place 0 -1 web-log-hbse))
-       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 web-log-vbsw))
-       (hull (thumb-place 0 -1 (ne web-post)) (thumb-place 0 -1 web-log-hbne))
-       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 web-log-vbsw))
-       (hull (thumb-place 0 0 (se web-post)) (thumb-place 0 0 web-log-hbse))
-       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 web-log-hbsw))
+       (hull (key-place 2 4 (se web-post)) (key-place 2 4 (se web-log-vbs)))
+       (hull (thumb-place 0 -1 (se web-post)) (thumb-place 0 -1 (se web-log-hbe)))
+       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 (sw web-log-vbs)))
+       (hull (thumb-place 0 -1 (ne web-post)) (thumb-place 0 -1 (ne web-log-hbe)))
+       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 (sw web-log-vbs)))
+       (hull (thumb-place 0 0 (se web-post)) (thumb-place 0 0 (se web-log-hbe)))
+       (hull (key-place 2 4 (sw web-post)) (key-place 2 4 (sw web-log-hbw)))
        (thumb-place 0 0 (ne web-post)))
 
       (triangle-hulls
@@ -236,13 +211,13 @@
        (key-place 1 3 (se web-post)))
       (triangle-hulls
        (thumb-place 0 0 (n web-post))
-       (hull (key-place 1 3 (s web-post)) (key-place 1 3 web-log-vbs))
-       (hull (thumb-place 0 0 (nw web-post)) (thumb-place 0 0 web-log-vtnw))
-       (hull (key-place 1 3 (sw web-post)) (key-place 1 3 web-log-vbsw))
-       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 web-log-vtne))
-       (hull (key-place 0 3 (sw web-post)) (key-place 0 3 web-log-vbsw))
-       (hull (key-place 0 3 (sw web-post)) (key-place 0 3 web-log-vbsw))
-       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 web-log-vtne))
-       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 web-log-vtne))
+       (hull (key-place 1 3 (s web-post)) (key-place 1 3 (s web-log-vbs)))
+       (hull (thumb-place 0 0 (nw web-post)) (thumb-place 0 0 (nw web-log-vtn)))
+       (hull (key-place 1 3 (sw web-post)) (key-place 1 3 (sw web-log-vbs)))
+       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 (ne web-log-vtn)))
+       (hull (key-place 0 3 (sw web-post)) (key-place 0 3 (sw web-log-vbs)))
+       (hull (key-place 0 3 (sw web-post)) (key-place 0 3 (sw web-log-vbs)))
+       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 (ne web-log-vtn)))
+       (hull (thumb-place 1 0 (ne web-post)) (thumb-place 1 0 (ne web-log-vtn)))
        (thumb-place 1 0 (nw web-post)))))))
 
