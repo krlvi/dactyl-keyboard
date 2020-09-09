@@ -103,7 +103,7 @@
                (cylinder [bottom-radius top-radius] insert-hole-depth))))
 
 (def screw-hole-base-diameter 25)
-(defn screw-hole-pillar [height]
+(defn screw-hole-pillar-helper [height plusminus]
   (let [thic screw-hole-wall-thickness
         top-r (+ (* 1/2 insert-hole-top-diameter) thic)
         bottom-r (* 1/2 screw-hole-base-diameter)
@@ -120,11 +120,20 @@
                        ny-r (f ny)]
                    (->> (with-fn 12 (cylinder [y-r ny-r] step-size))
                         (translate [0 0 (- (+ y (* 1/2 step-size))
-                                           height)])))))]
-    (difference horn
-                (->> insert-boss
+                                           height)])))))
+        boss (->> insert-boss
                      (color [1 0 0])
-                     (translate [0 0 ε])))))
+                     (translate [0 0 ε]))]
+    (if plusminus horn boss)))
+
+(defn screw-hole-pillar-plus [height]
+  (screw-hole-pillar-helper height true))
+(defn screw-hole-pillar-minus [height]
+  (screw-hole-pillar-helper height false))
+
+(defn screw-hole-pillar [height]
+  (difference (screw-hole-pillar-plus height)
+              (screw-hole-pillar-minus height)))
 
 (def screw-hole-pillar-glue-tolerance 0.2)
 

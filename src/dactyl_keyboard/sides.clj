@@ -39,7 +39,7 @@
 (def sides-downness 0)
 (def sides-thickness 3)
 ;; outer radius of sides
-(def sides-radius 18)
+(def sides-radius 10)
 (def thumb-sides-above-finger-sides -20) ; how far above the
                                          ; marshmallowy sides of the
                                          ; finger the marshmallowy
@@ -153,45 +153,25 @@
 
 
 (defn thumb-key-prism [distance-below distance-above narrow-percent]
-  (let [ts #(silo distance-below distance-above narrow-percent thumb-place thumb-silo-widenings % %2 %3)]
-    (union (hull (ts 2 1 (sa-cap 1))
-                 (ts 2 0 (sa-cap 1)))
-           (hull (ts 2 0 (sa-cap 1))
-                 (ts 2 -1 (sa-cap 1))
-                 (ts 1 -1/2 (sa-cap 2)))
-           (hull (ts 1 -1/2 (sa-cap 2))
-                 (ts 0 -1/2 (sa-cap 2)))
-           (hull (ts 2 1 (sa-cap 1))
-                 (ts 1 1 (sa-cap 1)))
-           (hull (ts 1 1 (sa-cap 1))
-                 (ts 0 1 (sa-cap 1))))))
+  (let [ts #(silo distance-below distance-above narrow-percent thumb-place thumb-silo-widenings % %2 (sa-cap 1))]
+    (union (hull (ts 2 -1) (ts 2 0))
+           (hull (ts 2 -1) (ts 1 -1))
+           (hull (ts 2 -1) (ts 1 0))
+           (hull (ts 0 -1) (ts 0 0))
+           (hull (ts 0 -1) (ts 1 -1))
+           (hull (ts 0 -1) (ts 1 0)))))
 
 
 (defn thumb-prism [distance-below narrow-percent]
-  (let [tfc #(thumb-frustum distance-below narrow-percent % %2 %3)]
+  (let [tfc #(thumb-frustum distance-below narrow-percent % %2 chosen-blank-single-plate)]
     (union
                                         ; the key at thumb-place 1,1
                                         ; is not in this keyboard, but
                                         ; to make the outline be
                                         ; shaped right we need its
                                         ; frustum in our union
-     (hull (tfc 1 1 chosen-blank-single-plate)
-           (tfc 2 1 chosen-blank-single-plate)
-           (tfc 2 0 chosen-blank-single-plate))
-     (hull (tfc 1 1 chosen-blank-single-plate)
-           (tfc 1 -1/2 double-plates-blank))
-                                        ; yknow what, we're going to
-                                        ; do the same thing with 0,1
-     (hull (tfc 0 1 chosen-blank-single-plate)
-           (tfc 1 1 chosen-blank-single-plate)
-           (tfc 1 0 chosen-blank-single-plate))
-     (hull (tfc 2 1 chosen-blank-single-plate)
-           (tfc 2 0 chosen-blank-single-plate))
-     (hull (tfc 2 0    chosen-blank-single-plate)
-           (tfc 2 -1   chosen-blank-single-plate)
-           (tfc 0 -1/2 double-plates-blank))
-     (hull (tfc 0 -1/2 double-plates-blank)
-           (tfc 1 -1/2 double-plates-blank)))))
+     (triangle-hulls
+      (tfc 0 0) (tfc 0 -1) (tfc 1 0) (tfc 1 -1) (tfc 2 0) (tfc 2 -1)))))
 
 (defn finger-edge-prism [distance-below narrow-percent]
   (apply union

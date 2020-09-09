@@ -34,17 +34,16 @@
                                         ; some of these keys are not
     ; within columns and rows. this is because the case bottom uses a
     ; larger range
-    :finger-knockouts [[1 4] [0 4] [-1 4] [-2 4] [5 4]
-                       [0 5] [-1 5] [-2 5]]
-    :around-edge [#_[:sw :k -1 3] [:w :k -1 2] [:w :k -1 1] [:nw :k -1 0]
-                  [:n :k 0 0] [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
-                  [:e :k 5 1] [:e :k 5 2] [:e :k 5 3] [:se :k 5 4]
-                  [:s :k 4 4] [:s :k 3 4] [:s :k 2 4] [:sw :k 1 4]
+    :finger-knockouts [[1 4] [0 4] [5 4]]
+    :around-edge [[:w :k 0 2] [:w :k 0 1] [:nw :k 0 0]
+                  [:n :k 1 0] [:n :k 2 0] [:n :k 3 0] [:n :k 4 0] [:ne :k 5 0]
+                  [:e :k 5 1] [:e :k 5 2] [:e :k 5 3]
+                  [:s :k 4 4] [:s :k 3 4] [:s :k 2 4]
                   [:se :t 0 -1] [:s :t 1 -1] [:sw :t 2 -1]
-                  [:w :t 2 0] [:nw :t 2 1] [:n :t 1 1]]
+                  [:nw :t 2 0] [:n :t 1 0] [:sw :k 0 3]]
     :sides-partitions [[[:n-of-k 4 0] [:ne-of-k 5 0] [:se-of-k 5 4] [:s-of-k 4 4]]
-                       [[:at-k 4 1] [:n-of-k 4 0] [:nw-of-k -1 0] [:w-of-k -1 1]]
-                       [[:w-of-k -1 1] [:w-of-t 2 0] [:at-t 0 0] [:at-k 0 1]]
+                       [[:at-k 4 1] [:n-of-k 4 0] [:nw-of-k -1 0] [:w-of-k 0 1]]
+                       [[:w-of-k 0 1] [:w-of-t 2 0] [:at-t 0 0] [:at-k 0 1]]
                        [[:at-t 1 0] [:w-of-t 2 0] [:sw-of-t 2 -1] [:s-of-t 1 -1]]
                        [[:at-t 1 0] [:s-of-t 1 -1] [:s-of-k 4 1] [:at-k 4 1]]]
     :sides-slice-joints [[:s :k 4 :last] [:n :k 4 :first] [:w :k :first 1]
@@ -194,11 +193,12 @@
   "Turn a piece of notation like [:k 3 2] into a function that
   places a shape in the center of the indicated place on the
   keyboard."
-  (let [[place-kw col row] notation1
+  (let [[place-kw col row z] notation1
         c (reify-column col)
         r (reify-row row)
         place ({:k key-place, :t thumb-place} place-kw)
-        there (partial place c r)]
+        lift (if z #(translate [0 0 z] %) identity)
+        there #(place c r (lift %))]
     there))
 
 (defn sides-place-fns [down out notation1]
